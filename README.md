@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Galisencia
 
 Sistema de gestión de asistencia escolar: permite a alumnos, preceptores, directivos y administradores académicos registrar, consultar y hacer seguimiento de la asistencia de forma centralizada.
@@ -48,3 +49,6 @@ Todavía no está armado. Cuando se defina el stack, documentar acá cómo levan
 ## Cómo contribuir
 
 Antes de tocar código, leé [CONTRIBUTING.md](./CONTRIBUTING.md) — tiene la convención de ramas y el flujo de Pull Requests que vamos a usar en el equipo.
+=======
+# Proyecto-SSO
+>>>>>>> b3af0be4d25c2557b8db4969932124366aac9520
