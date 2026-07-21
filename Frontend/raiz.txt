@@ -1,0 +1,19 @@
+Frontend/
+├── index.html
+├── package.json
+├── src/
+│   ├── main.tsx
+│   ├── App.tsx
+│   ├── App.css
+│   ├── index.css
+│   ├── assets/
+│   └── components/
+│       └── asistencia/
+│           ├── AsistenciaDashboard.tsx
+│           ├── asistenciaCard.tsx
+│           ├── subjectFilter.tsx
+│           ├── HistoryTable.tsx
+│           ├── RealtimeIndicador.tsx
+│           ├── attendance.service.ts
+│           ├── attendance.types.ts
+│           └── attendance.css

@@ -1,0 +1,14 @@
+# Entornos y secretos
+.env
+.env.local
+.env.*.local
+
+# Editor / SO
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs generales
+*.log
