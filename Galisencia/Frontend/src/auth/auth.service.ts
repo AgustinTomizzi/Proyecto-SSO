@@ -1,0 +1,59 @@
+import type { Rol, Usuario } from "../data/types";
+
+// Base del backend. Cuando el server del profe esté prendido y el PHP
+// expuesto, apuntá esta variable de entorno a la URL del backend.
+const API_BASE = (import.meta as any).env?.VITE_API_URL ?? "/api";
+
+interface LoginResult {
+  usuario: Usuario;
+  modo: "backend" | "mock";
+}
+
+/**
+ * Intenta autenticar contra el backend real (api/login.php).
+ * Si el backend no responde (server apagado, fuera de línea, CORS),
+ * cae a un login MOCK para que la demo del frontend nunca se rompa.
+ */
+export async function login(
+  email: string,
+  password: string,
+  rol: Rol
+): Promise<LoginResult> {
+  // 1) Intento real contra el backend (con timeout para no quedar colgado)
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3000);
+    const res = await fetch(`${API_BASE}/login.php`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.ok && data?.usuario) {
+        return { usuario: data.usuario as Usuario, modo: "backend" };
+      }
+    }
+  } catch {
+    // backend no disponible -> mock
+  }
+
+  // 2) Fallback MOCK (demo)
+  await new Promise((r) => setTimeout(r, 450));
+  const nombrePorRol: Record<Rol, string> = {
+    alumno: "Sofía Gutiérrez",
+    preceptor: "Prof. Ramírez",
+    directivo: "Lic. Barbosa",
+    admin: "Admin Estela",
+  };
+  const usuario: Usuario = {
+    id: `mock-${rol}`,
+    nombre: nombrePorRol[rol],
+    email: email || `demo@galileo.edu.ar`,
+    rol,
+    curso: rol === "alumno" ? "1.º A" : undefined,
+  };
+  return { usuario, modo: "mock" };
+}
