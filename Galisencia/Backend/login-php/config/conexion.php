@@ -1,30 +1,46 @@
 <?php
 // config/conexion.php
-// Un solo lugar para la conexión a la base de datos. Todos los demás
-// archivos la incluyen con require en vez de repetir esta lógica.
+// Unico lugar para la conexion a la base de datos. Todos los demas
+// archivos la incluyen con require en vez de repetir esta logica.
+//
+// Conecta contra el servidor del colegio (phpMyAdmin / MySQL remoto).
+// Ajusta estos valores si cambian. Para desarrollo local podes comentar
+// el bloque remoto y usar el bloque "local" de abajo.
 
+// ---------- Configuracion REMOTA (server del profe) ----------
+$host = 'server.galileo.edu.ar';
+$port = '81';
+$db   = 'ProyectoEstela';      // BD de Galicencia
+$user = 'alumno';              // usuario de la BD
+$pass = 'alumnoGalileo';       // contrasena de la BD
+// ------------------------------------------------------------
+
+/*
+// ---------- Configuracion LOCAL (desarrollo en tu PC) ----------
 $host = 'localhost';
-$db   = 'login_app';
-$user = 'root';       // cambia esto si tu MySQL tiene otro usuario
-$pass = '';           // cambia esto si tu MySQL tiene contraseña
+$port = '3306';
+$db   = 'ProyectoEstela';
+$user = 'root';
+$pass = '';
+// ---------------------------------------------------------------
+*/
+
 $charset = 'utf8mb4';
 
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+$dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
 
 $opciones = [
-    // Que los errores de SQL lancen excepciones en vez de fallar en silencio
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    // Devolver arrays asociativos ['email' => ...] en vez de mezclados
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    // Usar sentencias preparadas reales del driver (más seguro)
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $opciones);
 } catch (PDOException $e) {
-    // No mostramos el mensaje real de la excepción al usuario final:
-    // podría filtrar detalles de la base de datos.
     error_log($e->getMessage());
-    die('No se pudo conectar a la base de datos. Intenta más tarde.');
+    header('Content-Type: application/json');
+    http_response_code(503);
+    echo json_encode(['ok' => false, 'error' => 'No se pudo conectar a la base de datos.']);
+    exit;
 }
