@@ -1,0 +1,13 @@
+.chart-bars { display: flex; flex-direction: column; gap: 12px; }
+.chart-bars__row { display: grid; grid-template-columns: 70px 1fr 52px; align-items: center; gap: 10px; }
+.chart-bars__label { font-size: 12.5px; color: var(--text-soft); font-weight: 600; }
+.chart-bars__track { background: var(--surface-2); border-radius: var(--r-full); height: 10px; overflow: hidden; border: 1px solid var(--border); }
+.chart-bars__fill { height: 100%; border-radius: var(--r-full); transition: width .9s cubic-bezier(.22,1,.36,1); }
+.chart-bars__value { font-size: 12.5px; font-weight: 700; text-align: right; color: var(--text); }
+
+.chart-donut { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center; }
+.chart-donut__legend { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.chart-donut__legend li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-soft); }
+.chart-donut__legend strong { color: var(--text); }
+
+.chart-trend { width: 100%; height: 64px; display: block; }
