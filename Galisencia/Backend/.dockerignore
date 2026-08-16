@@ -1,0 +1,33 @@
+# Archivos de configuración local
+.env
+.env.local
+
+# Archivos de logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos del IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Archivos de documentación
+README.md
+*.md
+
+# Archivos de configuración no necesarios en producción
+.editorconfig
