@@ -1,17 +1,21 @@
 import { useMemo, useState } from "react";
 import { useStore } from "../../data/StoreContext";
 import EmptyState from "../ui/EmptyState";
+import ConfirmDialog from "../ui/ConfirmDialog";
 import type { Alumno } from "../../data/types";
 
 export default function GestionPage() {
   const { alumnos, cursos, agregarAlumno, editarAlumno, borrarAlumno } = useStore();
   const [form, setForm] = useState<Partial<Alumno>>({});
   const [editId, setEditId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const CURSO_OPCIONES = useMemo(
     () => cursos.map((c) => `${c.anio} ${c.division}`),
     [cursos]
   );
+
+  const [guardado, setGuardado] = useState(false);
 
   const guardar = () => {
     if (!form.nombre || !form.curso) return;
@@ -29,6 +33,8 @@ export default function GestionPage() {
     }
     setForm({});
     setEditId(null);
+    setGuardado(true);
+    setTimeout(() => setGuardado(false), 2000);
   };
 
   const editar = (a: Alumno) => {
@@ -90,8 +96,12 @@ export default function GestionPage() {
           </div>
         </div>
         <div className="row" style={{ marginTop: 14 }}>
-          <button className="btn btn-primary" onClick={guardar}>
-            {editId ? "Guardar cambios" : "Agregar alumno"}
+          <button
+            className={`btn ${guardado ? "btn-success" : "btn-primary"}`}
+            onClick={guardar}
+            disabled={guardado}
+          >
+            {guardado ? "✓ Guardado" : editId ? "Guardar cambios" : "Agregar alumno"}
           </button>
           {editId && (
             <button
@@ -132,7 +142,10 @@ export default function GestionPage() {
                         <button className="btn btn-soft btn-sm" onClick={() => editar(a)}>
                           Editar
                         </button>
-                        <button className="btn btn-danger btn-sm" onClick={() => borrar(a.id)}>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => setConfirmId(a.id)}
+                        >
                           Borrar
                         </button>
                       </div>
@@ -144,6 +157,18 @@ export default function GestionPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmId !== null}
+        title="Borrar alumno"
+        message="Esta acción no se puede deshacer. El alumno se eliminará del sistema."
+        confirmLabel="Borrar"
+        onConfirm={() => {
+          if (confirmId) borrar(confirmId);
+          setConfirmId(null);
+        }}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   );
 }
