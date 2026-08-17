@@ -195,6 +195,9 @@ p { margin: 0; }
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: var(--bg-soft); }
 
+/* Contenedor scrolleable para tablas en pantallas chicas */
+.table-wrap { width: 100%; overflow-x: auto; }
+
 /* ---------- Layout helpers ---------- */
 .page { padding: 28px 32px 48px; max-width: 1240px; margin: 0 auto; width: 100%; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }

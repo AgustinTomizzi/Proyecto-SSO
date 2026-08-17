@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useStore } from "../../data/StoreContext";
+import EmptyState from "../ui/EmptyState";
 import type { Alumno } from "../../data/types";
 
 export default function GestionPage() {
@@ -107,35 +108,41 @@ export default function GestionPage() {
       </div>
 
       <div className="card card-pad-lg">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Alumno</th>
-              <th>Curso</th>
-              <th>Email</th>
-              <th style={{ width: 150 }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {alumnos.map((a) => (
-              <tr key={a.id}>
-                <td style={{ fontWeight: 600 }}>{a.nombre}</td>
-                <td>{a.curso}</td>
-                <td className="muted text-sm">{a.email}</td>
-                <td>
-                  <div className="row" style={{ gap: 8 }}>
-                    <button className="btn btn-soft btn-sm" onClick={() => editar(a)}>
-                      Editar
-                    </button>
-                    <button className="btn btn-danger btn-sm" onClick={() => borrar(a.id)}>
-                      Borrar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {alumnos.length === 0 ? (
+          <EmptyState icon="👥" title="No hay alumnos" description="Agregá un alumno con el formulario de arriba para empezar." />
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Alumno</th>
+                  <th>Curso</th>
+                  <th>Email</th>
+                  <th style={{ width: 150 }}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alumnos.map((a) => (
+                  <tr key={a.id}>
+                    <td style={{ fontWeight: 600 }}>{a.nombre}</td>
+                    <td>{a.curso}</td>
+                    <td className="muted text-sm">{a.email}</td>
+                    <td>
+                      <div className="row" style={{ gap: 8 }}>
+                        <button className="btn btn-soft btn-sm" onClick={() => editar(a)}>
+                          Editar
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => borrar(a.id)}>
+                          Borrar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

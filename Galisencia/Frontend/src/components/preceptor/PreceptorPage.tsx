@@ -121,39 +121,41 @@ export default function PreceptorPage() {
       </div>
 
       <div className="card card-pad-lg">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Alumno</th>
-              <th style={{ width: 320 }}>Asistencia de hoy</th>
-            </tr>
-          </thead>
-          <tbody>
-            {alumnosCurso.map((a) => (
-              <tr key={a.id}>
-                <td>
-                  <div style={{ fontWeight: 600 }}>{a.nombre}</div>
-                  <div className="muted text-sm">{a.email}</div>
-                </td>
-                <td>
-                  <div className="estado-group">
-                    {ESTADOS.map((e) => (
-                      <button
-                        key={e.key}
-                        className={`estado-btn ${e.cls} ${
-                          (estado[a.id] ?? "presente") === e.key ? "on" : ""
-                        }`}
-                        onClick={() => marcar(a.id, e.key)}
-                      >
-                        {e.label}
-                      </button>
-                    ))}
-                  </div>
-                </td>
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th style={{ width: 320 }}>Asistencia de hoy</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {alumnosCurso.map((a) => (
+                <tr key={a.id}>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{a.nombre}</div>
+                    <div className="muted text-sm">{a.email}</div>
+                  </td>
+                  <td>
+                    <div className="estado-group">
+                      {ESTADOS.map((e) => (
+                        <button
+                          key={e.key}
+                          className={`estado-btn ${e.cls} ${
+                            (estado[a.id] ?? "presente") === e.key ? "on" : ""
+                          }`}
+                          onClick={() => marcar(a.id, e.key)}
+                        >
+                          {e.label}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         <div className="spread row" style={{ marginTop: 18 }}>
           {guardado ? (

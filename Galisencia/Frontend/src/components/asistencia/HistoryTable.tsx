@@ -1,4 +1,5 @@
 import type { RegistroAsistencia } from "./attendance.types";
+import EmptyState from "../ui/EmptyState";
 
 interface Props {
   registros: RegistroAsistencia[];
@@ -19,7 +20,13 @@ export default function HistoryTable({ registros }: Props) {
   const ordenados = [...registros].sort((a, b) => b.fecha.localeCompare(a.fecha));
 
   if (ordenados.length === 0) {
-    return <p className="history-table__vacio">No hay registros para este filtro todavía.</p>;
+    return (
+      <EmptyState
+        icon="🗓️"
+        title="Sin registros todavía"
+        description="Cuando el preceptor cargue asistencia para este filtro, lo vas a ver acá."
+      />
+    );
   }
 
   return (

@@ -125,32 +125,34 @@ export default function DirectivoPage() {
 
         <div className="card card-pad-lg">
           <h3 style={{ marginBottom: 14 }}>Detalle por curso</h3>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Curso</th>
-                <th>Promedio</th>
-                <th>En riesgo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resumen.porCurso.map((c) => (
-                <tr key={c.curso}>
-                  <td style={{ fontWeight: 600 }}>{c.curso}</td>
-                  <td style={{ color: colorPorPct(c.promedio), fontWeight: 700 }}>
-                    {c.promedio}%
-                  </td>
-                  <td>
-                    {c.enRiesgo > 0 ? (
-                      <span className="badge badge-danger">{c.enRiesgo}</span>
-                    ) : (
-                      <span className="badge badge-success">0</span>
-                    )}
-                  </td>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Curso</th>
+                  <th>Promedio</th>
+                  <th>En riesgo</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {resumen.porCurso.map((c) => (
+                  <tr key={c.curso}>
+                    <td style={{ fontWeight: 600 }}>{c.curso}</td>
+                    <td style={{ color: colorPorPct(c.promedio), fontWeight: 700 }}>
+                      {c.promedio}%
+                    </td>
+                    <td>
+                      {c.enRiesgo > 0 ? (
+                        <span className="badge badge-danger">{c.enRiesgo}</span>
+                      ) : (
+                        <span className="badge badge-success">0</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
