@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . "/Galileo_Auth/config/database.php";
+require_once __DIR__ . "/../config/database.php";
 
 
 /**

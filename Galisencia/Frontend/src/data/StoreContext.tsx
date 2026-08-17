@@ -22,6 +22,7 @@ import {
   type EstadisticaAlumno,
   type ResumenInstitucional,
 } from "./mock";
+import { apiGet, apiSend } from "./apiClient";
 
 const STORAGE_KEY = "galisencia.data";
 
@@ -51,6 +52,7 @@ export interface StoreState {
   alumnos: Alumno[];
   cursos: Curso[];
   registros: RegistroAsistencia[];
+  modo: "backend" | "mock" | null;
   getRegistrosDeAlumno: (alumnoId: string) => RegistroAsistencia[];
   estadisticasAlumno: (alumnoId: string) => EstadisticaAlumno | null;
   resumen: ResumenInstitucional;
@@ -72,8 +74,38 @@ const StoreContext = createContext<StoreState | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const inicial = useMemo(cargarInicial, []);
   const [alumnos, setAlumnos] = useState<Alumno[]>(inicial.alumnos);
-  const [cursos] = useState<Curso[]>(inicial.cursos);
+  const [cursos, setCursos] = useState<Curso[]>(inicial.cursos);
   const [registros, setRegistros] = useState<RegistroAsistencia[]>(inicial.registros);
+  const [modo, setModo] = useState<"backend" | "mock" | null>(null);
+
+  // Carga desde el backend real; si no responde, cae al mock local.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [al, cu, as] = await Promise.all([
+          apiGet<{ ok: true; alumnos: Alumno[] }>("/alumnos.php"),
+          apiGet<{ ok: true; cursos: Curso[] }>("/cursos.php"),
+          apiGet<{ ok: true; registros: RegistroAsistencia[] }>("/asistencias.php"),
+        ]);
+        if (cancelled) return;
+        setAlumnos(al.alumnos);
+        setCursos(cu.cursos);
+        setRegistros(as.registros);
+        setModo("backend");
+      } catch {
+        if (cancelled) return;
+        const init = cargarInicial();
+        setAlumnos(init.alumnos);
+        setCursos(init.cursos);
+        setRegistros(init.registros);
+        setModo("mock");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -117,6 +149,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           { id: `${alumnoId}-${materia}-${fecha}`, alumnoId, materia, fecha, estado },
         ];
       });
+      // Best-effort: persiste en el backend si está disponible.
+      apiSend("/asistencias.php", "POST", { alumnoId, fecha, materia, estado }).catch(() => {});
     },
     []
   );
@@ -131,27 +165,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const agregarAlumno = useCallback(
     (datos: Omit<Alumno, "id"> & { id?: string }) => {
-      setAlumnos((prev) => [
-        ...prev,
-        {
-          id: datos.id ?? `nuevo-${Date.now()}`,
-          nombre: datos.nombre,
-          curso: datos.curso,
-          email:
-            datos.email ||
-            `${datos.nombre.toLowerCase().replace(/[^a-z]/g, ".")}@galileo.edu.ar`,
-        },
-      ]);
+      const nuevo: Alumno = {
+        id: datos.id ?? `nuevo-${Date.now()}`,
+        nombre: datos.nombre,
+        curso: datos.curso,
+        email:
+          datos.email ||
+          `${datos.nombre.toLowerCase().replace(/[^a-z]/g, ".")}@galileo.edu.ar`,
+      };
+      setAlumnos((prev) => [...prev, nuevo]);
+      apiSend("/alumnos.php", "POST", {
+        nombre: datos.nombre,
+        curso: datos.curso,
+        email: datos.email,
+      }).catch(() => {});
     },
     []
   );
 
   const editarAlumno = useCallback((id: string, datos: Partial<Alumno>) => {
     setAlumnos((prev) => prev.map((a) => (a.id === id ? { ...a, ...datos } : a)));
+    apiSend("/alumnos.php", "PUT", {
+      id,
+      nombre: datos.nombre,
+      curso: datos.curso,
+      email: datos.email,
+    }).catch(() => {});
   }, []);
 
   const borrarAlumno = useCallback((id: string) => {
     setAlumnos((prev) => prev.filter((a) => a.id !== id));
+    apiSend(`/alumnos.php?id=${encodeURIComponent(id)}`, "DELETE").catch(() => {});
   }, []);
 
   const resetDemo = useCallback(() => {
@@ -164,6 +208,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     alumnos,
     cursos,
     registros,
+    modo,
     getRegistrosDeAlumno,
     estadisticasAlumno,
     resumen,

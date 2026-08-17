@@ -1,0 +1,42 @@
+# Dependencias de node
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de configuración de desarrollo
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de logs
+logs
+*.log
+
+# Directorios de producción
+dist
+build
+
+# Archivos del IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de testing
+coverage
+.nyc_output
+
+# Otros archivos que no son necesarios en la imagen
+.git
+.gitignore
+README.md
+.eslintrc*
+.prettierrc*

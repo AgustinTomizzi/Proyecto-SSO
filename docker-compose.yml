@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL (única, compartida: ProyectoEstela)
+  mysql:
+    image: mysql:8.0
+    container_name: galisencia-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ProyectoEstela
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d
+    networks:
+      - galisencia-network
+    restart: unless-stopped
+
+  # Backend PHP (Galileo_Auth) exponiendo la API JSON en /api
+  backend:
+    build:
+      context: ./Galisencia/Galileo_Auth
+      dockerfile: Dockerfile
+    container_name: galisencia-backend
+    environment:
+      - DB_HOST=mysql
+      - DB_NAME=ProyectoEstela
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+    depends_on:
+      - mysql
+    networks:
+      - galisencia-network
+    restart: unless-stopped
+
+  # Frontend React (build estático servido por nginx) en el puerto 3000
+  frontend:
+    build:
+      context: ./Galisencia/Frontend
+      dockerfile: Dockerfile
+    container_name: galisencia-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - galisencia-network
+    restart: unless-stopped
+
+networks:
+  galisencia-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
