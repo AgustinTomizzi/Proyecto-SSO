@@ -1,17 +1,18 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { resumenInstitucional, colorPorPct, REGISTROS } from "../../data/mock";
+import { colorPorPct } from "../../data/mock";
+import { useStore } from "../../data/StoreContext";
 import { useCountUp } from "../../hooks/useCountUp";
 import { Bars, Donut } from "../../components/ui/Chart";
 
 export default function AdminPage() {
-  const resumen = useMemo(() => resumenInstitucional(), []);
+  const { resumen, registros } = useStore();
 
   const conteo = useMemo(() => {
     const c = { presente: 0, tarde: 0, ausente: 0 };
-    REGISTROS.forEach((r) => (c[r.estado] += 1));
+    registros.forEach((r) => (c[r.estado] += 1));
     return c;
-  }, []);
+  }, [registros]);
 
   const donut = [
     { label: "Presente", value: conteo.presente, color: "var(--success)" },

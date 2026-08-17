@@ -1,29 +1,33 @@
 import { useMemo, useState } from "react";
-import { ALUMNOS, REGISTROS } from "../../data/mock";
+import { useStore } from "../../data/StoreContext";
 import { MATERIAS } from "../../data/types";
 import { useToast } from "../../components/ui/Toast";
 
-const CURSO_OPCIONES = ["1.º A", "1.º B", "2.º A", "2.º B", "3.º A"];
-
 export default function ReportesPage() {
+  const { alumnos, registros, cursos } = useStore();
   const [curso, setCurso] = useState("todos");
   const { push } = useToast();
   const [materia, setMateria] = useState("todas");
 
+  const CURSO_OPCIONES = useMemo(
+    () => cursos.map((c) => `${c.anio} ${c.division}`),
+    [cursos]
+  );
+
   const alumnoMap = useMemo(() => {
-    const m = new Map<string, (typeof ALUMNOS)[number]>();
-    ALUMNOS.forEach((a) => m.set(a.id, a));
+    const m = new Map<string, (typeof alumnos)[number]>();
+    alumnos.forEach((a) => m.set(a.id, a));
     return m;
-  }, []);
+  }, [alumnos]);
 
   const filtrados = useMemo(() => {
-    return REGISTROS.filter((r) => {
+    return registros.filter((r) => {
       const a = alumnoMap.get(r.alumnoId);
       if (curso !== "todos" && a?.curso !== curso) return false;
       if (materia !== "todas" && r.materia !== materia) return false;
       return true;
     });
-  }, [curso, materia, alumnoMap]);
+  }, [curso, materia, registros, alumnoMap]);
 
   const conteo = useMemo(() => {
     const c = { presente: 0, tarde: 0, ausente: 0 };

@@ -1,5 +1,5 @@
-import type { EstadisticaAlumno } from "./attendance.types";
-import { UMBRAL_REGULARIDAD } from "./attendance.types";
+import type { EstadisticaAlumno } from "../../data/mock";
+import { UMBRAL_REGULARIDAD } from "../../data/types";
 import { colorPorPct } from "./attendance.service";
 
 interface Props {

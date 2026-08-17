@@ -1,17 +1,18 @@
 import { useMemo } from "react";
-import { resumenInstitucional, colorPorPct, REGISTROS } from "../../data/mock";
+import { colorPorPct } from "../../data/mock";
 import { UMBRAL_REGULARIDAD, PESO_ASISTENCIA } from "../../data/types";
+import { useStore } from "../../data/StoreContext";
 import { useCountUp } from "../../hooks/useCountUp";
 import { Bars, Donut, Trend } from "../../components/ui/Chart";
 
 export default function DirectivoPage() {
-  const resumen = useMemo(() => resumenInstitucional(), []);
+  const { resumen, registros } = useStore();
 
   const conteo = useMemo(() => {
     const c = { presente: 0, tarde: 0, ausente: 0 };
-    REGISTROS.forEach((r) => (c[r.estado] += 1));
+    registros.forEach((r) => (c[r.estado] += 1));
     return c;
-  }, []);
+  }, [registros]);
 
   const donut = [
     { label: "Presente", value: conteo.presente, color: "var(--success)" },
@@ -20,13 +21,13 @@ export default function DirectivoPage() {
   ];
 
   const trend = useMemo(() => {
-    const fechas = [...new Set(REGISTROS.map((r) => r.fecha))].sort();
+    const fechas = [...new Set(registros.map((r) => r.fecha))].sort();
     return fechas.map((f) => {
-      const regs = REGISTROS.filter((r) => r.fecha === f);
+      const regs = registros.filter((r) => r.fecha === f);
       const puntos = regs.reduce((s, r) => s + PESO_ASISTENCIA[r.estado], 0);
       return Math.round((puntos / regs.length) * 100);
     });
-  }, []);
+  }, [registros]);
 
   const promedio = useCountUp(resumen.promedio);
 

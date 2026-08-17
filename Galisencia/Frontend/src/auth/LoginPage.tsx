@@ -25,9 +25,15 @@ export default function LoginPage() {
   const [rol, setRol] = useState<Rol>("alumno");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!email.trim()) {
+      setError("El email institucional es obligatorio.");
+      return;
+    }
+    setError(null);
     await login(email, password, rol);
     navigate(HOME[rol]);
   }
@@ -75,9 +81,14 @@ export default function LoginPage() {
               id="email"
               className="input"
               type="email"
+              required
               placeholder="demo@galileo.edu.ar"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError(null);
+              }}
+              aria-invalid={error ? true : undefined}
               autoComplete="username"
             />
           </div>
@@ -99,9 +110,11 @@ export default function LoginPage() {
             {loading ? "Ingresando…" : "Entrar"}
           </button>
 
+          {error && <p className="login__error">{error}</p>}
+
           <p className="login__hint">
-            Demo: podés ingresar con cualquier email/contraseña. Si el servidor
-            del colegio está conectado, valida contra la base de datos real.
+            Demo: el email es obligatorio; la contraseña podés dejarla en blanco.
+            Si el servidor del colegio está conectado, valida contra la base de datos real.
           </p>
         </form>
       </main>

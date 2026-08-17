@@ -115,3 +115,19 @@
   text-align: center;
   line-height: 1.5;
 }
+
+.login__error {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--danger-bg);
+  color: var(--danger-ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px var(--danger-bg);
+}

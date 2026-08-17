@@ -27,7 +27,7 @@ const NOMBRES = [
   "Dylan Arce", "Candelaria Campos",
 ];
 
-const CURSOS: Curso[] = [
+export const CURSOS: Curso[] = [
   { id: "1A", anio: "1.º", division: "A", turno: "Mañana", preceptor: "Prof. Ramírez" },
   { id: "1B", anio: "1.º", division: "B", turno: "Mañana", preceptor: "Prof. Lagos" },
   { id: "2A", anio: "2.º", division: "A", turno: "Tarde", preceptor: "Prof. Medina" },
@@ -35,13 +35,13 @@ const CURSOS: Curso[] = [
   { id: "3A", anio: "3.º", division: "A", turno: "Mañana", preceptor: "Prof. Spinelli" },
 ];
 
-function cursoLabel(c: Curso) {
+export function cursoLabel(c: Curso): string {
   return `${c.anio} ${c.division}`;
 }
 
 const FECHAS = ["2026-06-09", "2026-06-10", "2026-06-11", "2026-06-16", "2026-06-17", "2026-06-18"];
 
-function buildAlumnos(): Alumno[] {
+export function buildAlumnos(): Alumno[] {
   const alumnos: Alumno[] = [];
   let i = 0;
   for (const curso of CURSOS) {
@@ -60,7 +60,7 @@ function buildAlumnos(): Alumno[] {
   return alumnos;
 }
 
-function buildRegistros(alumnos: Alumno[]): RegistroAsistencia[] {
+export function buildRegistros(alumnos: Alumno[]): RegistroAsistencia[] {
   const registros: RegistroAsistencia[] = [];
   // Cada alumno tiene entre 2 y 4 materias cursando (para que el % sea realista)
   for (const a of alumnos) {
@@ -76,20 +76,6 @@ function buildRegistros(alumnos: Alumno[]): RegistroAsistencia[] {
     }
   }
   return registros;
-}
-
-export const ALUMNOS = buildAlumnos();
-export const CURSOS_DISP = CURSOS;
-export const REGISTROS = buildRegistros(ALUMNOS);
-
-export function getAlumnos(): Alumno[] {
-  return ALUMNOS;
-}
-export function getCursos(): Curso[] {
-  return CURSOS;
-}
-export function getRegistros(): RegistroAsistencia[] {
-  return REGISTROS;
 }
 
 export interface EstadisticaMateria {
@@ -115,9 +101,13 @@ function pctDe(regs: RegistroAsistencia[]): number | null {
   return Math.round((puntos / regs.length) * 100);
 }
 
-export function calcularEstadisticasAlumno(alumnoId: string): EstadisticaAlumno {
-  const alumno = ALUMNOS.find((a) => a.id === alumnoId);
-  const regs = REGISTROS.filter((r) => r.alumnoId === alumnoId);
+export function calcularEstadisticasAlumno(
+  alumnos: Alumno[],
+  registros: RegistroAsistencia[],
+  alumnoId: string
+): EstadisticaAlumno {
+  const alumno = alumnos.find((a) => a.id === alumnoId);
+  const regs = registros.filter((r) => r.alumnoId === alumnoId);
   const materias = [...new Set(regs.map((r) => r.materia))];
   const porMateria: EstadisticaMateria[] = materias.map((materia) => {
     const r = regs.filter((x) => x.materia === materia);
@@ -151,16 +141,20 @@ export interface ResumenInstitucional {
   alumnosEnRiesgo: IndicadorRiesgo[];
 }
 
-export function resumenInstitucional(): ResumenInstitucional {
-  const porAlumno = ALUMNOS.map((a) => {
-    const g = calcularEstadisticasAlumno(a.id).general ?? 100;
+export function resumenInstitucional(
+  alumnos: Alumno[],
+  registros: RegistroAsistencia[],
+  cursos: Curso[]
+): ResumenInstitucional {
+  const porAlumno = alumnos.map((a) => {
+    const g = calcularEstadisticasAlumno(alumnos, registros, a.id).general ?? 100;
     return { alumno: a, general: g };
   });
   const promedio = Math.round(
     porAlumno.reduce((s, x) => s + x.general, 0) / (porAlumno.length || 1)
   );
   const enRiesgo = porAlumno.filter((x) => x.general < UMBRAL_REGULARIDAD);
-  const porCurso = CURSOS.map((c) => {
+  const porCurso = cursos.map((c) => {
     const delCurso = porAlumno.filter((x) => x.alumno.curso === cursoLabel(c));
     const prom = delCurso.length
       ? Math.round(delCurso.reduce((s, x) => s + x.general, 0) / delCurso.length)
@@ -173,7 +167,7 @@ export function resumenInstitucional(): ResumenInstitucional {
   });
   return {
     promedio,
-    totalAlumnos: ALUMNOS.length,
+    totalAlumnos: alumnos.length,
     enRiesgo: enRiesgo.length,
     porCurso,
     alumnosEnRiesgo: enRiesgo
@@ -182,8 +176,8 @@ export function resumenInstitucional(): ResumenInstitucional {
   };
 }
 
-export function getAlumnosPorCurso(curso: string): Alumno[] {
-  return ALUMNOS.filter((a) => a.curso === curso);
+export function getAlumnosPorCurso(alumnos: Alumno[], curso: string): Alumno[] {
+  return alumnos.filter((a) => a.curso === curso);
 }
 
 export function colorPorPct(pct: number | null): string {

@@ -1,4 +1,5 @@
 import type { Rol, Usuario } from "../data/types";
+import { buildAlumnos } from "../data/mock";
 
 // Base del backend. Cuando el server del profe esté prendido y el PHP
 // expuesto, apuntá esta variable de entorno a la URL del backend.
@@ -48,12 +49,21 @@ export async function login(
     directivo: "Lic. Barbosa",
     admin: "Admin Estela",
   };
+
+  // El alumno de demo se mapea a un alumno sembrado real para que su
+  // dashboard de asistencia tenga datos coherentes con el resto del sistema.
+  const seed = buildAlumnos();
+  const alumnoDemo =
+    rol === "alumno"
+      ? seed.find((a) => a.nombre === nombrePorRol.alumno) ?? seed[0]
+      : null;
+
   const usuario: Usuario = {
-    id: `mock-${rol}`,
-    nombre: nombrePorRol[rol],
-    email: email || `demo@galileo.edu.ar`,
+    id: alumnoDemo ? alumnoDemo.id : `mock-${rol}`,
+    nombre: alumnoDemo ? nombrePorRol[rol] : nombrePorRol[rol],
+    email: alumnoDemo ? alumnoDemo.email : email || `demo@galileo.edu.ar`,
     rol,
-    curso: rol === "alumno" ? "1.º A" : undefined,
+    curso: alumnoDemo ? alumnoDemo.curso : rol === "alumno" ? "1.º A" : undefined,
   };
   return { usuario, modo: "mock" };
 }

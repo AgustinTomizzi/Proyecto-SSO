@@ -1,20 +1,20 @@
-import { useState } from "react";
-import { getAlumnos } from "../../data/mock";
+import { useMemo, useState } from "react";
+import { useStore } from "../../data/StoreContext";
 import type { Alumno } from "../../data/types";
 
-const CURSO_OPCIONES = [
-  "1.º A", "1.º B", "2.º A", "2.º B", "3.º A",
-];
-
 export default function GestionPage() {
-  const [alumnos, setAlumnos] = useState<Alumno[]>(() => getAlumnos());
+  const { alumnos, cursos, agregarAlumno, editarAlumno, borrarAlumno } = useStore();
   const [form, setForm] = useState<Partial<Alumno>>({});
   const [editId, setEditId] = useState<string | null>(null);
 
+  const CURSO_OPCIONES = useMemo(
+    () => cursos.map((c) => `${c.anio} ${c.division}`),
+    [cursos]
+  );
+
   const guardar = () => {
     if (!form.nombre || !form.curso) return;
-    const base: Alumno = {
-      id: editId ?? `nuevo-${Date.now()}`,
+    const datos = {
       nombre: form.nombre,
       curso: form.curso,
       email:
@@ -22,9 +22,9 @@ export default function GestionPage() {
         `${form.nombre.toLowerCase().replace(/[^a-z]/g, ".")}@galileo.edu.ar`,
     };
     if (editId) {
-      setAlumnos((prev) => prev.map((a) => (a.id === editId ? base : a)));
+      editarAlumno(editId, datos);
     } else {
-      setAlumnos((prev) => [...prev, base]);
+      agregarAlumno(datos);
     }
     setForm({});
     setEditId(null);
@@ -36,7 +36,7 @@ export default function GestionPage() {
   };
 
   const borrar = (id: string) => {
-    setAlumnos((prev) => prev.filter((a) => a.id !== id));
+    borrarAlumno(id);
     if (editId === id) {
       setForm({});
       setEditId(null);
