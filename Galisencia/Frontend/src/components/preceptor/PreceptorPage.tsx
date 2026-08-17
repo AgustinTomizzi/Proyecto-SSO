@@ -60,6 +60,7 @@ export default function PreceptorPage() {
     }
     setGuardado(true);
     push("Registro de asistencia guardado");
+    setTimeout(() => setGuardado(false), 2000);
   };
 
   return (
@@ -101,7 +102,7 @@ export default function PreceptorPage() {
         </div>
         <div className="field" style={{ margin: 0 }}>
           <label>Materia</label>
-          <select className="select" value={materia} onChange={(e) => setMateria(e.target.value)}>
+          <select className="select" value={materia} onChange={(e) => { setMateria(e.target.value); setGuardado(false); }}>
             {MATERIAS.map((m) => (
               <option key={m} value={m}>
                 {m}
@@ -115,7 +116,7 @@ export default function PreceptorPage() {
             className="input"
             type="date"
             value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
+            onChange={(e) => { setFecha(e.target.value); setGuardado(false); }}
           />
         </div>
       </div>
@@ -163,8 +164,12 @@ export default function PreceptorPage() {
               Los cambios se guardan en el sistema y se reflejan en los demás módulos.
             </span>
           )}
-          <button className="btn btn-primary" onClick={guardar}>
-            Guardar registro
+          <button
+            className={`btn ${guardado ? "btn-success" : "btn-primary"}`}
+            onClick={guardar}
+            disabled={guardado}
+          >
+            {guardado ? "✓ Guardado" : "Guardar registro"}
           </button>
         </div>
       </div>
