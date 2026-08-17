@@ -67,8 +67,8 @@ export function calcularEstadisticas(
 }
 
 export function colorPorPct(pct: number | null): string {
-  if (pct === null) return "#646B77";
-  if (pct < 75) return "#B23B2B";
-  if (pct < 85) return "#B07D2A";
-  return "#2E7D52";
+  if (pct === null) return "var(--text-muted)";
+  if (pct < 75) return "var(--danger)";
+  if (pct < 85) return "var(--warning)";
+  return "var(--success)";
 }
