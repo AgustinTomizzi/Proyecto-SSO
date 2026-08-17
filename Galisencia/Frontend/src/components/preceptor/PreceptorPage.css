@@ -1,0 +1,11 @@
+.estado-group { display: inline-flex; gap: 6px; }
+.estado-btn {
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  padding: 6px 12px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-soft);
+  transition: all .15s;
+}
+.estado-btn:hover { border-color: var(--border-strong); }
+.estado-btn.presente.on { background: var(--success-bg); color: var(--success-ink); border-color: transparent; }
+.estado-btn.tarde.on    { background: var(--warning-bg); color: var(--warning-ink); border-color: transparent; }
+.estado-btn.ausente.on  { background: var(--danger-bg);  color: var(--danger-ink);  border-color: transparent; }
