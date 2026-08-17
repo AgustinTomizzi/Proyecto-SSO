@@ -1,0 +1,63 @@
+/* =========================================================
+   Galisencia — Animaciones de entrada
+   Solo CSS, sin librerías. Se respetan prefers-reduced-motion.
+   ========================================================= */
+
+@keyframes fd-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fd-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.anim-fade-up {
+  animation: fd-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.anim-fade-in {
+  animation: fd-fade-in 0.4s ease both;
+}
+
+/* Entrada escalonada para hijos directos (usado en grids) */
+.anim-stagger > * {
+  animation: fd-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.anim-stagger > *:nth-child(2) { animation-delay: 0.08s; }
+.anim-stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.anim-stagger > *:nth-child(4) { animation-delay: 0.16s; }
+.anim-stagger > *:nth-child(5) { animation-delay: 0.20s; }
+.anim-stagger > *:nth-child(6) { animation-delay: 0.24s; }
+.anim-stagger > *:nth-child(7) { animation-delay: 0.28s; }
+.anim-stagger > *:nth-child(8) { animation-delay: 0.32s; }
+
+/* Las páginas entran con un leve fade-up */
+.page {
+  animation: fd-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Las tarjetas/stats dentro de grids entran escalonadas */
+.grid > * {
+  animation: fd-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.grid > *:nth-child(1) { animation-delay: 0.04s; }
+.grid > *:nth-child(2) { animation-delay: 0.08s; }
+.grid > *:nth-child(3) { animation-delay: 0.12s; }
+.grid > *:nth-child(4) { animation-delay: 0.16s; }
+.grid > *:nth-child(5) { animation-delay: 0.20s; }
+.grid > *:nth-child(6) { animation-delay: 0.24s; }
+.grid > *:nth-child(7) { animation-delay: 0.28s; }
+.grid > *:nth-child(8) { animation-delay: 0.32s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-up,
+  .anim-fade-in,
+  .anim-stagger > *,
+  .page,
+  .grid > * {
+    animation: none !important;
+  }
+}

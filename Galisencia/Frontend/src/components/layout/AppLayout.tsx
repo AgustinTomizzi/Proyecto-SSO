@@ -45,6 +45,18 @@ function iniciales(nombre: string) {
     .toUpperCase();
 }
 
+// Color de avatar estable por nombre (hue derivado de un hash simple).
+function avatarColor(nombre: string): { background: string; color: string } {
+  let h = 0;
+  for (let i = 0; i < nombre.length; i++) {
+    h = (h * 31 + nombre.charCodeAt(i)) % 360;
+  }
+  return {
+    background: `hsl(${h} 62% 52%)`,
+    color: `hsl(${h} 80% 14%)`,
+  };
+}
+
 export default function AppLayout() {
   const { usuario, logout, modo } = useAuth();
   const { theme, toggle } = useTheme();
@@ -90,7 +102,9 @@ export default function AppLayout() {
         </nav>
 
         <div className="app__user">
-          <div className="app__avatar">{iniciales(usuario.nombre)}</div>
+          <div className="app__avatar" style={avatarColor(usuario.nombre)}>
+            {iniciales(usuario.nombre)}
+          </div>
           <div className="app__user-info">
             <div className="app__user-name">{usuario.nombre}</div>
             <div className="app__user-rol">{ROL_LABEL[usuario.rol]}</div>

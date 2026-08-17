@@ -1,5 +1,6 @@
 @import "./styles/theme.css";
 @import "./styles/theme-dark.css";
+@import "./styles/animations.css";
 
 #root {
   min-height: 100vh;
