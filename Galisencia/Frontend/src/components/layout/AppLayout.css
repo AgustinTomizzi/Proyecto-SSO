@@ -2,6 +2,7 @@
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   min-height: 100vh;
+  animation: fd-fade-in 0.4s ease both;
 }
 @media (max-width: 860px) {
   .app { grid-template-columns: 1fr; }
@@ -100,7 +101,7 @@
   font-size: 12px; font-weight: 700;
   padding: 4px 10px; border-radius: var(--r-full);
 }
-.app__content { flex: 1; }
+.app__content { flex: 1; animation: fd-fade-in 0.45s ease both; }
 
 /* Controles de la topbar */
 .app__menu-btn, .app__theme-btn {
