@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import "./ConfirmDialog.css";
 
 interface Props {
@@ -33,7 +34,7 @@ export default function ConfirmDialog({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onCancel}>
       <div
         className="modal"
@@ -57,6 +58,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
