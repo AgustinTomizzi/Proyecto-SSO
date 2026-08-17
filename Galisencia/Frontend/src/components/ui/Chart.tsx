@@ -11,7 +11,7 @@ export function Bars({ data, max, unit = "%" }: { data: Bar[]; max?: number; uni
   return (
     <div className="chart-bars">
       {data.map((d) => (
-        <div className="chart-bars__row" key={d.label}>
+        <div className="chart-bars__row" key={d.label} title={`${d.label}: ${d.value}${unit}`}>
           <span className="chart-bars__label">{d.label}</span>
           <div className="chart-bars__track">
             <div
@@ -64,7 +64,9 @@ export function Donut({
                 strokeDasharray={`${len} ${c - len}`}
                 strokeDashoffset={-offset}
                 strokeLinecap="round"
-              />
+              >
+                <title>{`${d.label}: ${Math.round((d.value / total) * 100)}%`}</title>
+              </circle>
             );
             offset += len;
             return seg;
