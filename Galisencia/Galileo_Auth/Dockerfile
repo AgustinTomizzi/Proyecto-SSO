@@ -4,10 +4,9 @@ FROM php:8.2-apache
 RUN docker-php-ext-install pdo pdo_mysql
 
 # Sesiones persistentes y cookie accesible en todo /api
-RUN mkdir -p /var/lib/php/sessions \
-    && chmod 1733 /var/lib/php/sessions \
-    && { \
-        echo "session.save_path = /var/lib/php/sessions"; \
+# Usamos /tmp (world-writable) para evitar problemas de permisos con www-data.
+RUN { \
+        echo "session.save_path = /tmp"; \
         echo "session.cookie_path = /"; \
         echo "session.cookie_httponly = 1"; \
         echo "session.cookie_samesite = Lax"; \
