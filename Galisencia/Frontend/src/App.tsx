@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
+import { useStore } from "./data/StoreContext";
 import LoginPage from "./auth/LoginPage";
 import AppLayout, { HOME } from "./components/layout/AppLayout";
 import type { Rol } from "./data/types";
@@ -26,9 +27,26 @@ function RutaProtegida({
 
 export default function App() {
   const { usuario } = useAuth();
+  const { modo: modoStore } = useStore();
 
   return (
-    <Routes>
+    <>
+      <div
+        style={{
+          position: "fixed",
+          bottom: 8,
+          right: 8,
+          zIndex: 9999,
+          fontSize: 12,
+          padding: "2px 8px",
+          borderRadius: 999,
+          background: modoStore === "backend" ? "#16a34a" : "#f59e0b",
+          color: "#fff",
+        }}
+      >
+        {modoStore === "backend" ? "Backend" : "Demo (mock)"}
+      </div>
+      <Routes>
       <Route
         path="/login"
         element={usuario ? <Navigate to={HOME[usuario.rol]} replace /> : <LoginPage />}
@@ -87,5 +105,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to={usuario ? HOME[usuario.rol] : "/login"} replace />} />
     </Routes>
+    </>
   );
 }
