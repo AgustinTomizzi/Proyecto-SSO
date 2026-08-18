@@ -23,6 +23,7 @@ import {
   type ResumenInstitucional,
 } from "./mock";
 import { apiGet, apiSend } from "./apiClient";
+import { useAuth } from "../auth/AuthContext";
 
 const STORAGE_KEY = "galisencia.data";
 
@@ -77,9 +78,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cursos, setCursos] = useState<Curso[]>(inicial.cursos);
   const [registros, setRegistros] = useState<RegistroAsistencia[]>(inicial.registros);
   const [modo, setModo] = useState<"backend" | "mock" | null>(null);
+  const { usuario } = useAuth();
 
-  // Carga desde el backend real; si no responde, cae al mock local.
+  // Carga los datos del backend autenticado. Se re-ejecuta al cambiar el
+  // usuario (login / sesion restaurada). Sin sesion usa mock local.
   useEffect(() => {
+    if (!usuario) {
+      const init = cargarInicial();
+      setAlumnos(init.alumnos);
+      setCursos(init.cursos);
+      setRegistros(init.registros);
+      setModo("mock");
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -105,7 +116,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [usuario?.id]);
 
   useEffect(() => {
     try {
