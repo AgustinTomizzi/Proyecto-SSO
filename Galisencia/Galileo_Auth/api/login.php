@@ -28,7 +28,6 @@ if (!$u || !password_verify($password, $u["contrasena"])) {
     api_json(["ok" => false, "error" => "credenciales inválidas"], 401);
 }
 
-session_regenerate_id(true);
 $_SESSION["id_usuario"] = $u["id_usuario"];
 $_SESSION["nombre"] = $u["nombre"];
 $_SESSION["apellido"] = $u["apellido"];

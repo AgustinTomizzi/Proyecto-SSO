@@ -81,7 +81,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const { usuario } = useAuth();
 
   // Carga los datos del backend autenticado. Se re-ejecuta al cambiar el
-  // usuario (login / sesion restaurada). Sin sesion usa mock local.
+  // usuario (login / sesion restaurada). El alumno solo puede ver sus propias
+  // asistencias; el resto de roles ve el listado completo. Sin sesion usa mock.
   useEffect(() => {
     if (!usuario) {
       const init = cargarInicial();
@@ -94,16 +95,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const [al, cu, as] = await Promise.all([
-          apiGet<{ ok: true; alumnos: Alumno[] }>("/alumnos.php"),
-          apiGet<{ ok: true; cursos: Curso[] }>("/cursos.php"),
-          apiGet<{ ok: true; registros: RegistroAsistencia[] }>("/asistencias.php"),
-        ]);
-        if (cancelled) return;
-        setAlumnos(al.alumnos);
-        setCursos(cu.cursos);
-        setRegistros(as.registros);
-        setModo("backend");
+        if (usuario.rol === "alumno") {
+          const as = await apiGet<{ ok: true; registros: RegistroAsistencia[] }>(
+            `/asistencias.php?alumnoId=${encodeURIComponent(usuario.id)}`
+          );
+          if (cancelled) return;
+          const miAlumno: Alumno = {
+            id: usuario.id,
+            nombre: usuario.nombre,
+            curso: usuario.curso ?? "",
+            email: usuario.email,
+          };
+          setAlumnos([miAlumno]);
+          setCursos([]);
+          setRegistros(as.registros);
+          setModo("backend");
+        } else {
+          const [al, cu, as] = await Promise.all([
+            apiGet<{ ok: true; alumnos: Alumno[] }>("/alumnos.php"),
+            apiGet<{ ok: true; cursos: Curso[] }>("/cursos.php"),
+            apiGet<{ ok: true; registros: RegistroAsistencia[] }>("/asistencias.php"),
+          ]);
+          if (cancelled) return;
+          setAlumnos(al.alumnos);
+          setCursos(cu.cursos);
+          setRegistros(as.registros);
+          setModo("backend");
+        }
       } catch {
         if (cancelled) return;
         const init = cargarInicial();
