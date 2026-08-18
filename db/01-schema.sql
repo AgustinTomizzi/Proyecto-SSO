@@ -4,6 +4,7 @@
 
 CREATE DATABASE IF NOT EXISTS ProyectoEstela CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE ProyectoEstela;
+SET NAMES utf8mb4;
 
 CREATE TABLE roles (
   id_rol INT UNSIGNED NOT NULL AUTO_INCREMENT,

@@ -4,6 +4,7 @@
 -- $2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy
 
 USE ProyectoEstela;
+SET NAMES utf8mb4;
 
 -- Roles (el orden define los ids: 1 Alumno, 2 Preceptor, 3 Directivo, 4 Admin Acad, 5 Docente, 6 Admin)
 INSERT IGNORE INTO roles (nombre) VALUES
