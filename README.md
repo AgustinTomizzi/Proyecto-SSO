@@ -60,3 +60,16 @@ La conexión apunta a la BD remota del colegio (`ProyectoEstela`). Para usarla:
 ## Cómo contribuir
 
 Antes de tocar código, leé [CONTRIBUTING.md](./CONTRIBUTING.md) — tiene la convención de ramas y el flujo de Pull Requests que vamos a usar en el equipo.
+
+## Estado conocido (integración backend Docker)
+
+La app quedó integrada con un backend PHP puro + MySQL única (`ProyectoEstela`), levantada con
+`docker compose up --build` (ver `db/`, `Galisencia/Galileo_Auth/`, `docker-compose.yml`).
+
+- Usuarios demo (password `demo1234`): `admin@galileo.edu.ar`, `preceptor@galileo.edu.ar`,
+  `directivo@galileo.edu.ar`, `alumno@galileo.edu.ar`.
+- El login emite una sola cookie de sesión; el `StoreContext` carga los datos del backend
+  (role-aware: el alumno ve solo sus asistencias).
+- **Pendiente de verificar en navegador**: las vistas de admin/alumno muestran el badge
+  "Backend" pero no renderizan aún los datos del backend (posible desajuste de forma de datos
+  entre la API y los componentes). Se continúa en `feat/galisencia-backend`.
