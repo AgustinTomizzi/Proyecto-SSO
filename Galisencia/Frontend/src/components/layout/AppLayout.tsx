@@ -99,6 +99,18 @@ export default function AppLayout() {
               {it.label}
             </NavLink>
           ))}
+
+          <div className="app__nav-section">Sistemas</div>
+          <a
+            className="app__nav-link"
+            href="/galiservas/"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => setDrawer(false)}
+          >
+            <span className="app__nav-icon">🏢</span>
+            Galiservas
+          </a>
         </nav>
 
         <div className="app__user">
