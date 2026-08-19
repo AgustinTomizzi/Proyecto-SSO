@@ -34,15 +34,25 @@ $_SESSION["apellido"] = $u["apellido"];
 $_SESSION["email"] = $u["email"];
 $_SESSION["rol"] = $u["rol"];
 
+function normalizarRol($nombre)
+{
+    $reemplazos = [
+        "á" => "a", "é" => "e", "í" => "i", "ó" => "o", "ú" => "u",
+        "Á" => "A", "É" => "E", "Í" => "I", "Ó" => "O", "Ú" => "U",
+        "ñ" => "n", "Ñ" => "N",
+    ];
+    return strtr(trim($nombre), $reemplazos);
+}
+
 $map = [
-    "Alumno" => "alumno",
-    "Preceptor" => "preceptor",
-    "Directivo" => "directivo",
-    "Administrador Académico" => "admin",
-    "Administrador" => "admin",
-    "Docente" => "preceptor",
+    "alumno" => "alumno",
+    "preceptor" => "preceptor",
+    "directivo" => "directivo",
+    "administrador academico" => "admin",
+    "administrador" => "admin",
+    "docente" => "preceptor",
 ];
-$rol = $map[$u["rol"]] ?? "alumno";
+$rol = $map[strtolower(normalizarRol($u["rol"]))] ?? "alumno";
 
 $usuario = [
     "id" => (string) $u["id_usuario"],

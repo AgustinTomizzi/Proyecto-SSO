@@ -17,5 +17,8 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    die("Error de conexion a la base de datos.");
+    http_response_code(500);
+    header("Content-Type: application/json; charset=utf-8");
+    echo json_encode(["ok" => false, "error" => "error de conexion a la base de datos"]);
+    exit;
 }
