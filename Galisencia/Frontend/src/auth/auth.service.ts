@@ -21,6 +21,7 @@ export async function login(
   rol: Rol
 ): Promise<LoginResult> {
   // 1) Intento real contra el backend (con timeout para no quedar colgado)
+  let backendDisponible = false;
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 3000);
@@ -31,14 +32,19 @@ export async function login(
       signal: ctrl.signal,
     });
     clearTimeout(timer);
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.ok && data?.usuario) {
-        return { usuario: data.usuario as Usuario, modo: "backend" };
-      }
+    backendDisponible = true;
+    const data = await res.json();
+    if (res.ok && data?.ok && data?.usuario) {
+      return { usuario: data.usuario as Usuario, modo: "backend" };
     }
-  } catch {
-    // backend no disponible -> mock
+    // El backend respondió pero rechazó el login: no enmascarar con mock.
+    throw new Error(data?.error || `HTTP ${res.status}`);
+  } catch (err) {
+    if (backendDisponible) {
+      throw err;
+    }
+    // Backend inalcanzable (apagado, timeout, fuera de línea) -> mock
+    console.warn("[auth] Backend no disponible, usando login mock:", err);
   }
 
   // 2) Fallback MOCK (demo)

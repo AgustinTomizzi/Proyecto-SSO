@@ -33,6 +33,14 @@ interface Persistido {
   registros: RegistroAsistencia[];
 }
 
+function normalizarRegistros(registros: RegistroAsistencia[]): RegistroAsistencia[] {
+  return registros.map((r) => ({
+    ...r,
+    id: String(r.id),
+    alumnoId: String(r.alumnoId),
+  }));
+}
+
 function cargarInicial(): Persistido {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -108,7 +116,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           };
           setAlumnos([miAlumno]);
           setCursos([]);
-          setRegistros(as.registros);
+          setRegistros(normalizarRegistros(as.registros));
           setModo("backend");
         } else {
           const [al, cu, as] = await Promise.all([
@@ -117,9 +125,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             apiGet<{ ok: true; registros: RegistroAsistencia[] }>("/asistencias.php"),
           ]);
           if (cancelled) return;
-          setAlumnos(al.alumnos);
-          setCursos(cu.cursos);
-          setRegistros(as.registros);
+          setAlumnos(al.alumnos.map((a) => ({ ...a, id: String(a.id) })));
+          setCursos(cu.cursos.map((c) => ({ ...c, id: String(c.id) })));
+          setRegistros(normalizarRegistros(as.registros));
           setModo("backend");
         }
       } catch {

@@ -34,8 +34,12 @@ export default function LoginPage() {
       return;
     }
     setError(null);
-    await login(email, password, rol);
-    navigate(HOME[rol]);
+    try {
+      await login(email, password, rol);
+      navigate(HOME[rol]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo iniciar sesión.");
+    }
   }
 
   return (
