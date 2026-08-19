@@ -1,0 +1,37 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 100;
+  animation: fd-fade-in 0.18s ease both;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  animation: fd-fade-up 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.modal__title {
+  font-size: 17px;
+  font-weight: 700;
+}
+.modal__msg {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
