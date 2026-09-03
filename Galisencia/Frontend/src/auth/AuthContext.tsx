@@ -5,7 +5,6 @@ import { login as loginService } from "./auth.service";
 interface AuthState {
   usuario: Usuario | null;
   loading: boolean;
-  modo: "backend" | "mock" | null;
   login: (email: string, password: string, rol: Rol) => Promise<void>;
   logout: () => void;
 }
@@ -16,7 +15,6 @@ const STORAGE_KEY = "galisencia.session";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [modo, setModo] = useState<"backend" | "mock" | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Restaurar sesión persistida
@@ -26,7 +24,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const data = JSON.parse(raw);
         setUsuario(data.usuario);
-        setModo(data.modo);
       }
     } catch {
       /* noop */
@@ -38,10 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await loginService(email, password, rol);
       setUsuario(result.usuario);
-      setModo(result.modo);
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ usuario: result.usuario, modo: result.modo })
+        JSON.stringify({ usuario: result.usuario })
       );
     } finally {
       setLoading(false);
@@ -50,12 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function logout() {
     setUsuario(null);
-    setModo(null);
     localStorage.removeItem(STORAGE_KEY);
   }
 
   return (
-    <AuthContext.Provider value={{ usuario, loading, modo, login, logout }}>
+    <AuthContext.Provider value={{ usuario, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -21,6 +21,7 @@ export default function GestionPage() {
     if (!form.nombre || !form.curso) return;
     const datos = {
       nombre: form.nombre,
+      apellido: form.apellido,
       curso: form.curso,
       email:
         form.email ||
@@ -62,14 +63,23 @@ export default function GestionPage() {
 
       <div className="card card-pad-lg" style={{ marginBottom: 18 }}>
         <h3 style={{ marginBottom: 14 }}>{editId ? "Editar alumno" : "Nuevo alumno"}</h3>
-        <div className="grid grid-3">
+        <div className="grid grid-2">
           <div className="field" style={{ margin: 0 }}>
-            <label>Nombre y apellido</label>
+            <label>Nombre</label>
             <input
               className="input"
               value={form.nombre ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-              placeholder="Ej. María Pérez"
+              placeholder="Ej. María"
+            />
+          </div>
+          <div className="field" style={{ margin: 0 }}>
+            <label>Apellido</label>
+            <input
+              className="input"
+              value={form.apellido ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, apellido: e.target.value }))}
+              placeholder="Ej. Pérez"
             />
           </div>
           <div className="field" style={{ margin: 0 }}>

@@ -1,6 +1,7 @@
 -- 01-schema.sql
 -- Base unica compartida ProyectoEstela (Galisencia + Galiservas despues).
 -- Tablas compartidas + dominio Galisencia. Corrige contrasena/contrasena y FKs.
+-- Incluye preceptor_id en cursos y tabla auditoria (antes en migracion 03).
 
 CREATE DATABASE IF NOT EXISTS ProyectoEstela CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE ProyectoEstela;
@@ -61,7 +62,9 @@ CREATE TABLE cursos (
   division VARCHAR(20) NOT NULL,
   turno VARCHAR(20) NOT NULL DEFAULT 'Mañana',
   preceptor VARCHAR(255) DEFAULT NULL,
-  PRIMARY KEY (id_cursos)
+  preceptor_id INT UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (id_cursos),
+  CONSTRAINT fk_curso_preceptor FOREIGN KEY (preceptor_id) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE alumnos (
@@ -109,4 +112,21 @@ CREATE TABLE profesores (
   nombre VARCHAR(255) NOT NULL,
   apellido VARCHAR(255) NOT NULL DEFAULT '',
   PRIMARY KEY (id_profesor)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Tabla de auditoria (para logging de acciones del sistema)
+CREATE TABLE auditoria (
+  id_auditoria BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  usuario_id INT UNSIGNED DEFAULT NULL,
+  usuario_nombre VARCHAR(255) DEFAULT NULL,
+  rol VARCHAR(100) DEFAULT NULL,
+  accion VARCHAR(100) NOT NULL,
+  entidad VARCHAR(100) NOT NULL,
+  entidad_id VARCHAR(100) DEFAULT NULL,
+  detalle JSON DEFAULT NULL,
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_auditoria),
+  KEY idx_auditoria_fecha (fecha),
+  KEY idx_auditoria_usuario (usuario_id),
+  CONSTRAINT fk_auditoria_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

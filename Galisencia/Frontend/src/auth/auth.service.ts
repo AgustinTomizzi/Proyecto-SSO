@@ -44,7 +44,6 @@ export async function login(
       throw err;
     }
     // Backend inalcanzable (apagado, timeout, fuera de línea) -> mock
-    console.warn("[auth] Backend no disponible, usando login mock:", err);
   }
 
   // 2) Fallback MOCK (demo)

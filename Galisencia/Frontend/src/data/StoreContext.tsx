@@ -61,7 +61,6 @@ export interface StoreState {
   alumnos: Alumno[];
   cursos: Curso[];
   registros: RegistroAsistencia[];
-  modo: "backend" | "mock" | null;
   getRegistrosDeAlumno: (alumnoId: string) => RegistroAsistencia[];
   estadisticasAlumno: (alumnoId: string) => EstadisticaAlumno | null;
   resumen: ResumenInstitucional;
@@ -85,7 +84,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [alumnos, setAlumnos] = useState<Alumno[]>(inicial.alumnos);
   const [cursos, setCursos] = useState<Curso[]>(inicial.cursos);
   const [registros, setRegistros] = useState<RegistroAsistencia[]>(inicial.registros);
-  const [modo, setModo] = useState<"backend" | "mock" | null>(null);
   const { usuario } = useAuth();
 
   // Carga los datos del backend autenticado. Se re-ejecuta al cambiar el
@@ -97,7 +95,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setAlumnos(init.alumnos);
       setCursos(init.cursos);
       setRegistros(init.registros);
-      setModo("mock");
       return;
     }
     let cancelled = false;
@@ -117,7 +114,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setAlumnos([miAlumno]);
           setCursos([]);
           setRegistros(normalizarRegistros(as.registros));
-          setModo("backend");
         } else {
           const [al, cu, as] = await Promise.all([
             apiGet<{ ok: true; alumnos: Alumno[] }>("/alumnos.php"),
@@ -128,7 +124,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setAlumnos(al.alumnos.map((a) => ({ ...a, id: String(a.id) })));
           setCursos(cu.cursos.map((c) => ({ ...c, id: String(c.id) })));
           setRegistros(normalizarRegistros(as.registros));
-          setModo("backend");
         }
       } catch {
         if (cancelled) return;
@@ -136,7 +131,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setAlumnos(init.alumnos);
         setCursos(init.cursos);
         setRegistros(init.registros);
-        setModo("mock");
       }
     })();
     return () => {
@@ -213,6 +207,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setAlumnos((prev) => [...prev, nuevo]);
       apiSend("/alumnos.php", "POST", {
         nombre: datos.nombre,
+        apellido: datos.apellido,
         curso: datos.curso,
         email: datos.email,
       }).catch(() => {});
@@ -225,6 +220,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     apiSend("/alumnos.php", "PUT", {
       id,
       nombre: datos.nombre,
+      apellido: datos.apellido,
       curso: datos.curso,
       email: datos.email,
     }).catch(() => {});
@@ -245,7 +241,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     alumnos,
     cursos,
     registros,
-    modo,
     getRegistrosDeAlumno,
     estadisticasAlumno,
     resumen,

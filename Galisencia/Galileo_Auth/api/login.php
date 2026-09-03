@@ -15,7 +15,7 @@ if ($email === "" || $password === "") {
 }
 
 $stmt = $pdo->prepare("
-    SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.contrasena, r.nombre AS rol
+    SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.contrasena, u.rol_id, r.nombre AS rol
     FROM usuarios u
     INNER JOIN roles r ON u.rol_id = r.id_rol
     WHERE u.email = ?
@@ -28,11 +28,14 @@ if (!$u || !password_verify($password, $u["contrasena"])) {
     api_json(["ok" => false, "error" => "credenciales inválidas"], 401);
 }
 
+session_regenerate_id(true);
+
 $_SESSION["id_usuario"] = $u["id_usuario"];
 $_SESSION["nombre"] = $u["nombre"];
 $_SESSION["apellido"] = $u["apellido"];
 $_SESSION["email"] = $u["email"];
 $_SESSION["rol"] = $u["rol"];
+$_SESSION["rol_id"] = $u["rol_id"];
 
 function normalizarRol($nombre)
 {

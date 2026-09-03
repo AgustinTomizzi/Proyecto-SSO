@@ -24,6 +24,7 @@ export interface Alumno {
   nombre: string;
   curso: string;
   email: string;
+  apellido?: string;
 }
 
 export interface Curso {

@@ -10,19 +10,23 @@ SET NAMES utf8mb4;
 INSERT IGNORE INTO roles (nombre) VALUES
   ('Alumno'), ('Preceptor'), ('Directivo'), ('Administrador Academico'), ('Docente'), ('Administrador');
 
--- Permisos (Galisencia)
+-- Permisos (Galisencia + nuevos para admin/auditoria)
 INSERT IGNORE INTO permisos (nombre, descripcion) VALUES
   ('alumnos.ver','Ver alumnos'),
   ('alumnos.crear','Crear alumnos'),
   ('alumnos.editar','Editar alumnos'),
   ('alumnos.dar_baja','Dar de baja alumnos'),
   ('cursos.ver','Ver cursos'),
+  ('cursos.asignar','Asignar/reasignar preceptor a un curso'),
   ('asistencia.ver','Ver asistencias'),
   ('asistencia.registrar','Registrar asistencias'),
   ('asistencia.editar','Editar asistencias'),
   ('notas.ver','Ver notas'),
   ('notas.crear','Crear notas'),
-  ('reportes.ver','Ver reportes');
+  ('reportes.ver','Ver reportes'),
+  ('usuarios.ver','Ver listado de usuarios'),
+  ('usuarios.editar_rol','Cambiar el rol de un usuario'),
+  ('auditoria.ver','Ver el registro de auditoria del sistema');
 
 -- Sistema
 INSERT IGNORE INTO sistemas (nombre, descripcion) VALUES
@@ -41,7 +45,7 @@ WHERE r.nombre = 'Alumno' AND p.nombre IN ('asistencia.ver','notas.ver');
 
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Preceptor' AND p.nombre IN ('asistencia.ver','asistencia.registrar','asistencia.editar','alumnos.ver','cursos.ver');
+WHERE r.nombre = 'Preceptor' AND p.nombre IN ('asistencia.ver','asistencia.registrar','asistencia.editar','alumnos.ver','cursos.ver','alumnos.crear','alumnos.dar_baja');
 
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
@@ -52,7 +56,13 @@ SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
 WHERE r.nombre = 'Administrador Academico' AND p.nombre IN
   ('asistencia.ver','asistencia.registrar','asistencia.editar',
    'alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja',
-   'cursos.ver','notas.ver','notas.crear','reportes.ver');
+   'cursos.ver','cursos.asignar','notas.ver','notas.crear','reportes.ver');
+
+-- FIX: El rol "Administrador" (id 6) debe tener TODOS los permisos
+INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
+SELECT r.id_rol, p.id_permiso
+FROM roles r CROSS JOIN permisos p
+WHERE r.nombre = 'Administrador';
 
 -- Usuarios demo (password: demo1234)
 INSERT INTO usuarios (nombre, apellido, email, contrasena, rol_id) VALUES
@@ -61,13 +71,13 @@ INSERT INTO usuarios (nombre, apellido, email, contrasena, rol_id) VALUES
   ('Lic.','Barbosa','directivo@galileo.edu.ar','$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy',3),
   ('Sofia','Gutierrez','alumno@galileo.edu.ar','$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy',1);
 
--- Cursos
-INSERT INTO cursos (anio, division, turno, preceptor) VALUES
-  ('1','A','Manana','Prof. Ramirez'),
-  ('1','B','Manana','Prof. Lagos'),
-  ('2','A','Tarde','Prof. Medina'),
-  ('2','B','Tarde','Prof. Sosa'),
-  ('3','A','Manana','Prof. Spinelli');
+-- Cursos (preceptor_id se rellena via backfill en script o manualmente)
+INSERT INTO cursos (anio, division, turno, preceptor, preceptor_id) VALUES
+  ('1','A','Mañana','Prof. Ramirez',2),
+  ('1','B','Mañana','Prof. Lagos',NULL),
+  ('2','A','Tarde','Prof. Medina',NULL),
+  ('2','B','Tarde','Prof. Sosa',NULL),
+  ('3','A','Mañana','Prof. Spinelli',NULL);
 
 -- Alumnos (15)
 INSERT INTO alumnos (nombre, apellido, email, curso_id, estado) VALUES

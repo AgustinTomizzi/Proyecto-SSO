@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { colorPorPct } from "../../data/mock";
 import { useStore } from "../../data/StoreContext";
@@ -7,6 +7,12 @@ import { Bars, Donut } from "../../components/ui/Chart";
 
 export default function AdminPage() {
   const { resumen, registros } = useStore();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 400);
+    return () => clearTimeout(timer);
+  }, []);
 
   const conteo = useMemo(() => {
     const c = { presente: 0, tarde: 0, ausente: 0 };
@@ -23,6 +29,14 @@ export default function AdminPage() {
   const alumnos = useCountUp(resumen.totalAlumnos);
   const promedio = useCountUp(resumen.promedio);
 
+  const statSkeleton = () => (
+    <div className="stat">
+      <div className="stat__icon skeleton skeleton-avatar" />
+      <div className="stat__label skeleton skeleton-text" style={{ width: "80px" }} />
+      <div className="stat__value skeleton skeleton-text" style={{ width: "60px", height: "28px", marginTop: "4px" }} />
+    </div>
+  );
+
   return (
     <div className="page">
       <div className="page-head">
@@ -33,57 +47,92 @@ export default function AdminPage() {
       </div>
 
       <div className="grid grid-4" style={{ marginBottom: 18 }}>
-        <div className="stat">
-          <div className="stat__icon">👥</div>
-          <div className="stat__label">Alumnos</div>
-          <div className="stat__value">{alumnos}</div>
-        </div>
-        <div className="stat">
-          <div className="stat__icon">🏫</div>
-          <div className="stat__label">Cursos</div>
-          <div className="stat__value">{resumen.porCurso.length}</div>
-        </div>
-        <div className="stat">
-          <div className="stat__icon">📈</div>
-          <div className="stat__label">Asistencia prom.</div>
-          <div className="stat__value" style={{ color: colorPorPct(resumen.promedio) }}>
-            {promedio}%
-          </div>
-        </div>
-        <div className="stat">
-          <div className="stat__icon">⚠️</div>
-          <div className="stat__label">En riesgo</div>
-          <div className="stat__value" style={{ color: "var(--danger)" }}>
-            {resumen.enRiesgo}
-          </div>
-        </div>
+        {loading ? (
+          <>
+            {statSkeleton()}
+            {statSkeleton()}
+            {statSkeleton()}
+            {statSkeleton()}
+          </>
+        ) : (
+          <>
+            <div className="stat">
+              <div className="stat__icon">👥</div>
+              <div className="stat__label">Alumnos</div>
+              <div className="stat__value">{alumnos}</div>
+            </div>
+            <div className="stat">
+              <div className="stat__icon">🏫</div>
+              <div className="stat__label">Cursos</div>
+              <div className="stat__value">{resumen.porCurso.length}</div>
+            </div>
+            <div className="stat">
+              <div className="stat__icon">📈</div>
+              <div className="stat__label">Asistencia prom.</div>
+              <div className="stat__value" style={{ color: colorPorPct(resumen.promedio) }}>
+                {promedio}%
+              </div>
+            </div>
+            <div className="stat">
+              <div className="stat__icon">⚠️</div>
+              <div className="stat__label">En riesgo</div>
+              <div className="stat__value" style={{ color: "var(--danger)" }}>
+                {resumen.enRiesgo}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="grid grid-3" style={{ marginBottom: 18 }}>
-        <div className="card card-pad-lg">
-          <h3 style={{ marginBottom: 14 }}>Asistencia por curso</h3>
-          <Bars data={resumen.porCurso.map((c) => ({ label: c.curso, value: c.promedio }))} max={100} />
-        </div>
-        <div className="card card-pad-lg">
-          <h3 style={{ marginBottom: 14 }}>Distribución de estados</h3>
-          <Donut data={donut} />
-        </div>
-        <div className="card card-pad-lg" style={{ display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
-          <Link to="/gestion" className="quick-card">
-            <span className="quick-card__icon">👥</span>
-            <span>
-              <strong>Gestión académica</strong>
-              <span className="muted text-sm">Altas, bajas y cambios de curso.</span>
-            </span>
-          </Link>
-          <Link to="/reportes" className="quick-card">
-            <span className="quick-card__icon">📊</span>
-            <span>
-              <strong>Reportes</strong>
-              <span className="muted text-sm">Filtros y exportación.</span>
-            </span>
-          </Link>
-        </div>
+        {loading ? (
+          <>
+            <div className="card card-pad-lg skeleton skeleton-card" />
+            <div className="card card-pad-lg skeleton skeleton-card" />
+            <div className="card card-pad-lg skeleton skeleton-card" />
+          </>
+        ) : (
+          <>
+            <div className="card card-pad-lg">
+              <h3 style={{ marginBottom: 14 }}>Asistencia por curso</h3>
+              <Bars data={resumen.porCurso.map((c) => ({ label: c.curso, value: c.promedio }))} max={100} />
+            </div>
+            <div className="card card-pad-lg">
+              <h3 style={{ marginBottom: 14 }}>Distribución de estados</h3>
+              <Donut data={donut} />
+            </div>
+            <div className="card card-pad-lg" style={{ display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
+              <Link to="/gestion" className="quick-card">
+                <span className="quick-card__icon">👥</span>
+                <span>
+                  <strong>Gestión académica</strong>
+                  <span className="muted text-sm">Altas, bajas y cambios de curso.</span>
+                </span>
+              </Link>
+              <Link to="/reportes" className="quick-card">
+                <span className="quick-card__icon">📊</span>
+                <span>
+                  <strong>Reportes</strong>
+                  <span className="muted text-sm">Filtros y exportación.</span>
+                </span>
+              </Link>
+              <Link to="/auditoria" className="quick-card">
+                <span className="quick-card__icon">📋</span>
+                <span>
+                  <strong>Auditoría</strong>
+                  <span className="muted text-sm">Registro de acciones del sistema.</span>
+                </span>
+              </Link>
+              <Link to="/usuarios" className="quick-card">
+                <span className="quick-card__icon">👤</span>
+                <span>
+                  <strong>Usuarios</strong>
+                  <span className="muted text-sm">Gestión de roles y accesos.</span>
+                </span>
+              </Link>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

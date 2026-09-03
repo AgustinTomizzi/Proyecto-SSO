@@ -1,9 +1,12 @@
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import type { Rol } from "../data/types";
 import { ROL_LABEL } from "../data/types";
 import "./LoginPage.css";
+
+const CSSVAR = (v: Record<string, string | number>) => v as CSSProperties;
 
 const ROLES: { rol: Rol; icono: string; desc: string }[] = [
   { rol: "alumno", icono: "🎓", desc: "Consultá tu asistencia" },
@@ -49,9 +52,9 @@ export default function LoginPage() {
         <h1 className="login__title">Galisencia</h1>
         <p className="login__tag">Sistema de Asistencia Escolar</p>
         <ul className="login__features">
-          <li>✓ Seguimiento de asistencia en tiempo real</li>
-          <li>✓ Alertas de alumnos en riesgo</li>
-          <li>✓ Acceso único para toda la institución</li>
+          <li style={CSSVAR({ '--i': 0 })}>✓ Seguimiento de asistencia en tiempo real</li>
+          <li style={CSSVAR({ '--i': 1 })}>✓ Alertas de alumnos en riesgo</li>
+          <li style={CSSVAR({ '--i': 2 })}>✓ Acceso único para toda la institución</li>
         </ul>
         <p className="login__sso">
           🔐 <strong>SSO</strong> — un solo inicio de sesión para Galisencia y
@@ -65,10 +68,11 @@ export default function LoginPage() {
           <p className="login__form-sub">Elegí tu rol y continuá.</p>
 
           <div className="rol-grid">
-            {ROLES.map((r) => (
+            {ROLES.map((r, i) => (
               <button
                 type="button"
                 key={r.rol}
+                style={CSSVAR({ '--i': i })}
                 className={`rol-card ${rol === r.rol ? "on" : ""}`}
                 onClick={() => setRol(r.rol)}
               >
@@ -86,7 +90,7 @@ export default function LoginPage() {
               className="input"
               type="email"
               required
-              placeholder="demo@galileo.edu.ar"
+              placeholder=" "
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -103,7 +107,7 @@ export default function LoginPage() {
               id="password"
               className="input"
               type="password"
-              placeholder="••••••••"
+              placeholder=" "
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
@@ -115,11 +119,6 @@ export default function LoginPage() {
           </button>
 
           {error && <p className="login__error">{error}</p>}
-
-          <p className="login__hint">
-            Demo: el email es obligatorio; la contraseña podés dejarla en blanco.
-            Si el servidor del colegio está conectado, valida contra la base de datos real.
-          </p>
         </form>
       </main>
     </div>

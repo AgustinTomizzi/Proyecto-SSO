@@ -1,7 +1,6 @@
 import { type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
-import { useStore } from "./data/StoreContext";
 import LoginPage from "./auth/LoginPage";
 import AppLayout, { HOME } from "./components/layout/AppLayout";
 import type { Rol } from "./data/types";
@@ -11,6 +10,8 @@ import DirectivoPage from "./components/directivo/DirectivoPage";
 import AdminPage from "./components/admin/AdminPage";
 import GestionPage from "./components/gestion/GestionPage";
 import ReportesPage from "./components/reportes/ReportesPage";
+import AuditoriaPage from "./components/auditoria/AuditoriaPage";
+import UsuariosPage from "./components/admin/UsuariosPage";
 
 function RutaProtegida({
   rol,
@@ -27,84 +28,84 @@ function RutaProtegida({
 
 export default function App() {
   const { usuario } = useAuth();
-  const { modo: modoStore } = useStore();
 
   return (
     <>
-      <div
-        style={{
-          position: "fixed",
-          bottom: 8,
-          right: 8,
-          zIndex: 9999,
-          fontSize: 12,
-          padding: "2px 8px",
-          borderRadius: 999,
-          background: modoStore === "backend" ? "#16a34a" : "#f59e0b",
-          color: "#fff",
-        }}
-      >
-        {modoStore === "backend" ? "Backend" : "Demo (mock)"}
-      </div>
       <Routes>
-      <Route
-        path="/login"
-        element={usuario ? <Navigate to={HOME[usuario.rol]} replace /> : <LoginPage />}
-      />
+        <Route
+          path="/login"
+          element={usuario ? <Navigate to={HOME[usuario.rol]} replace /> : <LoginPage />}
+        />
 
-      <Route element={usuario ? <AppLayout /> : <Navigate to="/login" replace />}>
-        <Route
-          path="/alumno"
-          element={
-            <RutaProtegida rol="alumno">
-              <AlumnoPage />
-            </RutaProtegida>
-          }
-        />
-        <Route
-          path="/preceptor"
-          element={
-            <RutaProtegida rol="preceptor">
-              <PreceptorPage />
-            </RutaProtegida>
-          }
-        />
-        <Route
-          path="/directivo"
-          element={
-            <RutaProtegida rol="directivo">
-              <DirectivoPage />
-            </RutaProtegida>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <RutaProtegida rol="admin">
-              <AdminPage />
-            </RutaProtegida>
-          }
-        />
-        <Route
-          path="/gestion"
-          element={
-            <RutaProtegida rol="admin">
-              <GestionPage />
-            </RutaProtegida>
-          }
-        />
-        <Route
-          path="/reportes"
-          element={
-            <RutaProtegida rol={usuario?.rol ?? "alumno"}>
-              <ReportesPage />
-            </RutaProtegida>
-          }
-        />
-      </Route>
+        <Route element={usuario ? <AppLayout /> : <Navigate to="/login" replace />}>
+          <Route
+            path="/alumno"
+            element={
+              <RutaProtegida rol="alumno">
+                <AlumnoPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/preceptor"
+            element={
+              <RutaProtegida rol="preceptor">
+                <PreceptorPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/directivo"
+            element={
+              <RutaProtegida rol="directivo">
+                <DirectivoPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RutaProtegida rol="admin">
+                <AdminPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/gestion"
+            element={
+              <RutaProtegida rol="admin">
+                <GestionPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/reportes"
+            element={
+              <RutaProtegida rol={usuario?.rol ?? "alumno"}>
+                <ReportesPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/auditoria"
+            element={
+              <RutaProtegida rol="admin">
+                <AuditoriaPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/usuarios"
+            element={
+              <RutaProtegida rol="admin">
+                <UsuariosPage />
+              </RutaProtegida>
+            }
+          />
+        </Route>
 
-      <Route path="*" element={<Navigate to={usuario ? HOME[usuario.rol] : "/login"} replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to={usuario ? HOME[usuario.rol] : "/login"} replace />} />
+      </Routes>
     </>
   );
 }

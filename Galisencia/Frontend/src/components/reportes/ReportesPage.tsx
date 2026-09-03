@@ -1,14 +1,26 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../../data/StoreContext";
 import { MATERIAS } from "../../data/types";
 import { useToast } from "../../components/ui/Toast";
 import EmptyState from "../../components/ui/EmptyState";
+import { apiGet } from "../../data/apiClient";
+
+interface ResumenBackend {
+  promedio: number;
+  totalAlumnos: number;
+  enRiesgo: number;
+  porCurso: { curso: string; promedio: number; enRiesgo: number }[];
+  alumnosEnRiesgo: { alumno: { id: string; nombre: string; curso: string; email: string }; general: number }[];
+}
 
 export default function ReportesPage() {
   const { alumnos, registros, cursos } = useStore();
   const [curso, setCurso] = useState("todos");
-  const { push } = useToast();
   const [materia, setMateria] = useState("todas");
+  const { push } = useToast();
+  const [backendData, setBackendData] = useState<ResumenBackend | null>(null);
+  const [usingBackend, setUsingBackend] = useState(false);
+  const [loadingBackend, setLoadingBackend] = useState(true);
 
   const CURSO_OPCIONES = useMemo(
     () => cursos.map((c) => `${c.anio} ${c.division}`),
@@ -20,6 +32,30 @@ export default function ReportesPage() {
     alumnos.forEach((a) => m.set(a.id, a));
     return m;
   }, [alumnos]);
+
+  // Cargar datos del backend si está disponible
+  useEffect(() => {
+    let cancelled = false;
+    apiGet<{ ok: true; resumen: ResumenBackend }>("/reportes.php")
+      .then((data) => {
+        if (!cancelled) {
+          setBackendData(data.resumen);
+          setUsingBackend(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setUsingBackend(false);
+          setBackendData(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingBackend(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filtrados = useMemo(() => {
     return registros.filter((r) => {
@@ -65,9 +101,17 @@ export default function ReportesPage() {
           <h1>Reportes de asistencia</h1>
           <p className="sub">Filtra y exporta el registro de asistencia.</p>
         </div>
-        <button className="btn btn-primary" onClick={exportarCSV}>
-          ⬇ Exportar CSV
-        </button>
+        <div className="row" style={{ gap: 8 }}>
+          {usingBackend && (
+            <span className="badge badge-success">Datos del backend</span>
+          )}
+          {!usingBackend && !loadingBackend && (
+            <span className="badge badge-warning">Modo demo (mock)</span>
+          )}
+          <button className="btn btn-primary" onClick={exportarCSV}>
+            ⬇ Exportar CSV
+          </button>
+        </div>
       </div>
 
       <div className="card card-pad-lg" style={{ marginBottom: 18 }}>
@@ -99,6 +143,45 @@ export default function ReportesPage() {
           <span className="badge">{filtrados.length} registros</span>
         </div>
       </div>
+
+      {/* Resumen institucional del backend */}
+      {usingBackend && backendData && (
+        <div className="card card-pad-lg" style={{ marginBottom: 18 }}>
+          <h3 style={{ margin: "0 0 16px" }}>Resumen institucional (backend)</h3>
+          <div className="grid grid-4">
+            <div className="stat">
+              <div className="stat__label">Promedio general</div>
+              <div className="stat__value">{backendData.promedio}%</div>
+            </div>
+            <div className="stat">
+              <div className="stat__label">Total alumnos</div>
+              <div className="stat__value">{backendData.totalAlumnos}</div>
+            </div>
+            <div className="stat">
+              <div className="stat__label">En riesgo (&lt;75%)</div>
+              <div className="stat__value" style={{ color: "var(--danger)" }}>{backendData.enRiesgo}</div>
+            </div>
+            <div className="stat">
+              <div className="stat__label">Cursos</div>
+              <div className="stat__value">{backendData.porCurso.length}</div>
+            </div>
+          </div>
+          {backendData.porCurso.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ margin: "0 0 12px", fontSize: 14 }}>Por curso</h4>
+              <div className="grid grid-3">
+                {backendData.porCurso.map((c) => (
+                  <div key={c.curso} className="stat">
+                    <div className="stat__label">{c.curso}</div>
+                    <div className="stat__value">{c.promedio}%</div>
+                    <div className="stat__hint">{c.enRiesgo} en riesgo</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="card card-pad-lg">
         {filtrados.length === 0 ? (

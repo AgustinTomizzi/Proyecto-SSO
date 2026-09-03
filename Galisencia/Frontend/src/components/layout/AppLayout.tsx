@@ -26,6 +26,8 @@ const NAV: Record<Rol, NavItem[]> = {
     { to: "/admin", label: "Panel", icon: "📈" },
     { to: "/gestion", label: "Gestión académica", icon: "👥" },
     { to: "/reportes", label: "Reportes", icon: "📊" },
+    { to: "/auditoria", label: "Auditoría", icon: "📋" },
+    { to: "/usuarios", label: "Usuarios", icon: "👤" },
   ],
 };
 
@@ -58,7 +60,7 @@ function avatarColor(nombre: string): { background: string; color: string } {
 }
 
 export default function AppLayout() {
-  const { usuario, logout, modo } = useAuth();
+  const { usuario, logout } = useAuth();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const [drawer, setDrawer] = useState(false);
@@ -141,12 +143,6 @@ export default function AppLayout() {
               <span className="app__sso-pill" title="Login compartido con Galiservas">
                 🔐 SSO
               </span>
-              {modo === "mock" && (
-                <span className="badge badge-warning">demo · datos de prueba</span>
-              )}
-              {modo === "backend" && (
-                <span className="badge badge-success">conectado a la base</span>
-              )}
             </div>
           </div>
           <div className="row" style={{ gap: 12 }}>
