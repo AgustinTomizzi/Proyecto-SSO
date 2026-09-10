@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reservá tu aula — Sistema de reservas</title>
+<title>Galiservas — Reserva de aulas y recursos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -12,121 +12,98 @@
 
 <header>
   <img class="brand-logo" src="galiservas.png" alt="Galiservas">
-  <div class="eyebrow">Galiservas · Gestión de espacios</div>
-  <h1>Reservá tu aula</h1>
-  <p>Elegí el aula en el plano, la fecha en el calendario y una franja horaria de dos horas. Confirmás abajo y listo.</p>
+  <div class="eyebrow">Galiservas · Reservas institucionales</div>
+  <h1>Reservá un aula o un recurso</h1>
+  <p>
+    Elegí un aula con computadoras (208 · 209 · 210) o un recurso del pañol,
+    la fecha en el calendario y una franja horaria. La disponibilidad se
+    actualiza al instante contra el stock real.
+  </p>
+  <div class="header-actions">
+    <div id="session-chip"></div>
+    <button id="logout-btn" class="chip-btn" hidden>⎋ Cerrar sesión</button>
+  </div>
 </header>
 
-<main>
+<main id="app-main">
 
-  <!-- DONDE VA EL SVG Y AGREGAR EL BOTON PARA SELECCIONAR PISOS -->
-  <section>
-    <div class="section-label">01 · Plano</div>
-    <div class="section-title">Planta baja</div>
-
-    <div class="floorplan-wrap">
-      <svg viewBox="0 0 720 340" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" id="floorplan-svg">
-        
-        <rect x="20" y="20" width="680" height="300" fill="none" stroke="var(--line)" stroke-width="2"/>
-        
-        <rect x="20" y="150" width="680" height="40" fill="none" stroke="var(--line)" stroke-width="1" stroke-dasharray="4 4"/>
-        <text x="360" y="175" text-anchor="middle" class="room-cap" style="fill:var(--line); opacity:.7;">PASILLO CENTRAL</text>
-
-        
-        <line x1="330" y1="320" x2="390" y2="320" stroke="var(--accent)" stroke-width="4"/>
-        <text x="360" y="335" text-anchor="middle" class="room-cap" style="fill:var(--accent);">ENTRADA</text>
-
-        
-        <g transform="translate(660,45)">
-          <circle r="18" fill="none" stroke="var(--line)" stroke-width="1"/>
-          <line x1="0" y1="-14" x2="0" y2="14" stroke="var(--line)" stroke-width="1"/>
-          <line x1="-14" y1="0" x2="14" y2="0" stroke="var(--line)" stroke-width="1"/>
-          <text x="0" y="-20" text-anchor="middle" class="room-cap">N</text>
-        </g>
-
-        <!-- AULAS -->
-        <g class="room" data-room="Aula 101" data-cap="30 personas" onclick="selectRoom(this)">
-          <rect class="room-fill" x="30" y="30" width="200" height="110" rx="2"/>
-          <text x="130" y="80" text-anchor="middle" class="room-label">AULA 101</text>
-          <text x="130" y="98" text-anchor="middle" class="room-cap">30 pers · proyector</text>
-        </g>
-
-        <g class="room" data-room="Aula 102" data-cap="24 personas" onclick="selectRoom(this)">
-          <rect class="room-fill" x="240" y="30" width="200" height="110" rx="2"/>
-          <text x="340" y="80" text-anchor="middle" class="room-label">AULA 102</text>
-          <text x="340" y="98" text-anchor="middle" class="room-cap">24 pers · pizarra</text>
-        </g>
-
-        <g class="room" data-room="Laboratorio 103" data-cap="20 personas" onclick="selectRoom(this)">
-          <rect class="room-fill" x="450" y="30" width="240" height="110" rx="2"/>
-          <text x="570" y="80" text-anchor="middle" class="room-label">LAB. 103</text>
-          <text x="570" y="98" text-anchor="middle" class="room-cap">20 pers · PCs</text>
-        </g>
-
-        <!-- AULAS -->
-        <g class="room" data-room="Aula 104" data-cap="28 personas" onclick="selectRoom(this)">
-          <rect class="room-fill" x="30" y="200" width="200" height="100" rx="2"/>
-          <text x="130" y="245" text-anchor="middle" class="room-label">AULA 104</text>
-          <text x="130" y="263" text-anchor="middle" class="room-cap">28 pers · pizarra</text>
-        </g>
-
-        <g class="room" data-room="Aula 105" data-cap="24 personas" onclick="selectRoom(this)">
-          <rect class="room-fill" x="240" y="200" width="200" height="100" rx="2"/>
-          <text x="340" y="245" text-anchor="middle" class="room-label">AULA 105</text>
-          <text x="340" y="263" text-anchor="middle" class="room-cap">24 pers · proyector</text>
-        </g>
-
-        <g class="room" data-room="Laboratorio 106" data-cap="18 personas" onclick="selectRoom(this)">
-          <rect class="room-fill" x="450" y="200" width="240" height="100" rx="2"/>
-          <text x="570" y="245" text-anchor="middle" class="room-label">LAB. 106</text>
-          <text x="570" y="263" text-anchor="middle" class="room-cap">18 pers · PCs</text>
-        </g>
-      </svg>
-
-      <div class="floorplan-legend">
-        <span><span class="swatch" style="background:var(--navy-deep); border:1px solid var(--line);"></span>Disponible</span>
-        <span><span class="swatch" style="background:rgba(232,135,30,.28); border:1px solid var(--accent);"></span>Seleccionada</span>
-      </div>
-
-      <div id="selected-room-tag">Ningún aula seleccionada todavía.</div>
+  <div id="access-denied" hidden>
+    <div class="denied-card">
+      <div class="denied-icon">🚫</div>
+      <h2>Sin acceso a Galiservas</h2>
+      <p>
+        Este sistema es solo para <b>Preceptores</b>, <b>Docentes</b> y
+        <b>Administradores</b>. Iniciá sesión en Galisencia con una cuenta
+        habilitada para usar el módulo de reservas.
+      </p>
+      <a class="chip-btn" href="/">Ir a Galisencia →</a>
     </div>
-  </section>
+  </div>
 
-  <!-- CALENDARIO -->
-  <section>
-    <div class="section-label">02 · Fecha y horario</div>
-    <div class="section-title">Elegí cuándo</div>
+  <div id="app-content" hidden>
+    <section>
+      <div class="section-label">01 · Aulas con computadoras</div>
+      <div class="section-title">Aulas 208 · 209 · 210</div>
+      <div class="room-grid" id="room-grid"></div>
+      <div class="hint">La cantidad de computadoras que reservás no puede superar el stock del aula ni lo que quede libre en la franja.</div>
+    </section>
 
-    <div class="booking-grid">
+    <section>
+      <div class="section-label">02 · Pañol</div>
+      <div class="section-title">Recursos reservables</div>
+      <div class="cat-pills" id="cat-pills"></div>
+      <div class="panel-list" id="panel-list"></div>
+    </section>
 
-      <div class="panel">
-        <div class="cal-header">
-          <div class="month" id="cal-month-label">—</div>
-          <div class="cal-nav">
-            <button onclick="changeMonth(-1)" aria-label="Mes anterior">‹</button>
-            <button onclick="changeMonth(1)" aria-label="Mes siguiente">›</button>
+    <section>
+      <div class="section-label">03 · Fecha, horario y cantidad</div>
+      <div class="section-title">Elegí cuándo y cuántos</div>
+
+      <div class="booking-grid">
+
+        <div class="panel">
+          <div class="cal-header">
+            <div class="month" id="cal-month-label">—</div>
+            <div class="cal-nav">
+              <button id="prev-month" aria-label="Mes anterior">‹</button>
+              <button id="next-month" aria-label="Mes siguiente">›</button>
+            </div>
           </div>
+          <div class="cal-weekdays">
+            <div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div><div>Do</div>
+          </div>
+          <div class="cal-days" id="cal-days"></div>
         </div>
-        <div class="cal-weekdays">
-          <div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div><div>Do</div>
+
+        <div class="panel">
+          <div class="section-title" style="font-size:16px; margin-bottom:14px;">Disponibilidad</div>
+          <div class="selected-info" id="selected-info">Elegí un aula o recurso y una fecha.</div>
+          <div class="slot-list" id="slot-list"></div>
+
+          <div id="quantity-row" class="quantity-row" hidden>
+            <label for="quantity">Cantidad</label>
+            <input id="quantity" class="quantity-input" type="number" min="1" value="1">
+            <span class="quantity-max" id="quantity-max"></span>
+          </div>
+
+          <div class="reserve-error" id="reserve-error" hidden></div>
+          <div class="hint">Cada franja dura 2 horas, de 8:00 a 21:00.</div>
         </div>
-        <div class="cal-days" id="cal-days"></div>
-      </div>
 
-      <div class="panel">
-        <div class="section-title" style="font-size:16px; margin-bottom:14px;">Franjas horarias</div>
-        <div class="slot-list" id="slot-list"></div>
-        <div class="hint">Cada franja dura 2 horas, de 8:00 a 21:00.</div>
       </div>
+    </section>
 
+    <div id="mis-reservas" class="panel" style="margin-top:28px;" hidden>
+      <div class="section-title" style="font-size:16px; margin-bottom:12px;">Mis reservas</div>
+      <div class="my-reservas-list" id="my-reservas-list"></div>
     </div>
-  </section>
+  </div>
 
 </main>
 
 <div class="confirm-bar">
-  <div class="confirm-summary" id="confirm-summary">Seleccioná aula, fecha y horario para reservar.</div>
-  <button class="confirm-btn" id="confirm-btn" disabled onclick="confirmBooking()">Confirmar reserva</button>
+  <div class="confirm-summary" id="confirm-summary">Seleccioná recurso, fecha y horario para reservar.</div>
+  <button class="confirm-btn" id="confirm-btn" disabled>Confirmar reserva</button>
 </div>
 
 <div class="toast" id="toast">Reserva confirmada ✓</div>

@@ -2,44 +2,30 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import type { Rol } from "../data/types";
-import { ROL_LABEL } from "../data/types";
+import { HOME } from "../components/layout/AppLayout";
+import { validarLogin } from "../utils/validate";
 import "./LoginPage.css";
 
 const CSSVAR = (v: Record<string, string | number>) => v as CSSProperties;
 
-const ROLES: { rol: Rol; icono: string; desc: string }[] = [
-  { rol: "alumno", icono: "🎓", desc: "Consultá tu asistencia" },
-  { rol: "preceptor", icono: "📋", desc: "Registrá tu curso" },
-  { rol: "directivo", icono: "📊", desc: "Seguimiento institucional" },
-  { rol: "admin", icono: "⚙️", desc: "Gestión académica" },
-];
-
-const HOME: Record<Rol, string> = {
-  alumno: "/alumno",
-  preceptor: "/preceptor",
-  directivo: "/directivo",
-  admin: "/admin",
-};
-
 export default function LoginPage() {
   const { login, loading } = useAuth();
   const navigate = useNavigate();
-  const [rol, setRol] = useState<Rol>("alumno");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) {
-      setError("El email institucional es obligatorio.");
+    const errores = validarLogin(email, password);
+    if (errores.length > 0) {
+      setError(errores[0]);
       return;
     }
     setError(null);
     try {
-      await login(email, password, rol);
-      navigate(HOME[rol]);
+      const usuario = await login(email, password);
+      navigate(HOME[usuario.rol]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo iniciar sesión.");
     }
@@ -63,25 +49,9 @@ export default function LoginPage() {
       </aside>
 
       <main className="login__panel">
-        <form className="login__form" onSubmit={onSubmit}>
+        <form className="login__form" onSubmit={onSubmit} noValidate>
           <h2 className="login__form-title">Iniciar sesión</h2>
-          <p className="login__form-sub">Elegí tu rol y continuá.</p>
-
-          <div className="rol-grid">
-            {ROLES.map((r, i) => (
-              <button
-                type="button"
-                key={r.rol}
-                style={CSSVAR({ '--i': i })}
-                className={`rol-card ${rol === r.rol ? "on" : ""}`}
-                onClick={() => setRol(r.rol)}
-              >
-                <span className="rol-card__icon">{r.icono}</span>
-                <span className="rol-card__label">{ROL_LABEL[r.rol]}</span>
-                <span className="rol-card__desc">{r.desc}</span>
-              </button>
-            ))}
-          </div>
+          <p className="login__form-sub">Ingresá con tu email institucional.</p>
 
           <div className="field">
             <label htmlFor="email">Email institucional</label>
@@ -89,14 +59,12 @@ export default function LoginPage() {
               id="email"
               className="input"
               type="email"
-              required
               placeholder=" "
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (error) setError(null);
               }}
-              aria-invalid={error ? true : undefined}
               autoComplete="username"
             />
           </div>
@@ -109,7 +77,10 @@ export default function LoginPage() {
               type="password"
               placeholder=" "
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError(null);
+              }}
               autoComplete="current-password"
             />
           </div>
@@ -119,6 +90,10 @@ export default function LoginPage() {
           </button>
 
           {error && <p className="login__error">{error}</p>}
+
+          <p className="login__demo">
+            Demo: <code>admin@galileo.edu.ar</code> · <code>preceptor@galileo.edu.ar</code>
+          </p>
         </form>
       </main>
     </div>

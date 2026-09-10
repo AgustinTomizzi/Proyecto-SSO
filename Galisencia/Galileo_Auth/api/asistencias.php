@@ -29,9 +29,14 @@ if ($method === "GET") {
         $where[] = "s.materia = ?";
         $params[] = $_GET["materia"];
     }
+    if (!empty($_GET["anio"])) {
+        $where[] = "YEAR(s.fecha) = ?";
+        $params[] = (int) $_GET["anio"];
+    }
 
     $sql = "
-        SELECT s.id_asistencia AS id, s.alumno_id AS alumnoId, s.materia, s.fecha, s.estado
+        SELECT s.id_asistencia AS id, s.alumno_id AS alumnoId, s.materia, s.fecha, s.estado,
+               YEAR(s.fecha) AS anio
         FROM asistencias s
         INNER JOIN alumnos a ON a.id_alumno = s.alumno_id
     ";

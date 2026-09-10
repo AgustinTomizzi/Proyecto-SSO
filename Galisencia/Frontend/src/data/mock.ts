@@ -186,3 +186,34 @@ export function colorPorPct(pct: number | null): string {
   if (pct < 85) return "var(--warning)";
   return "var(--success)";
 }
+
+/**
+ * Alumnos Libres / en riesgo con filtro opcional de curso y materia.
+ * Libera el recálculo: cada alumno mira SOLO los registros del filtro
+ * (no mezcla años ni materias). Devuelve los que quedan bajo el umbral.
+ */
+export function alumnosEnRiesgoFiltro(
+  alumnos: Alumno[],
+  registros: RegistroAsistencia[],
+  filtro: { curso?: string; materia?: string } = {}
+): { alumno: Alumno; pct: number | null; total: number }[] {
+  const resultado: { alumno: Alumno; pct: number | null; total: number }[] = [];
+
+  for (const a of alumnos) {
+    if (filtro.curso && a.curso !== filtro.curso) continue;
+    const regs = registros.filter(
+      (r) =>
+        r.alumnoId === a.id &&
+        (!filtro.materia || r.materia === filtro.materia)
+    );
+    if (regs.length === 0) continue;
+    const pct = Math.round(
+      regs.reduce((s, r) => s + PESO_ASISTENCIA[r.estado], 0) / regs.length * 100
+    );
+    if (pct < UMBRAL_REGULARIDAD) {
+      resultado.push({ alumno: a, pct, total: regs.length });
+    }
+  }
+
+  return resultado.sort((x, y) => x.pct! - y.pct!);
+}

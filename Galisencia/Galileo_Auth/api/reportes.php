@@ -13,9 +13,14 @@ $alumnosSql = "
     FROM alumnos a
     LEFT JOIN cursos c ON a.curso_id = c.id_cursos
 ";
-[$scopeSql, $scopeParams] = api_alumnos_scope_sql($pdo, "a");
-if ($scopeSql !== null) {
-    $alumnosSql .= " WHERE $scopeSql";
+if (!empty($_GET["curso"])) {
+    $alumnosSql .= " WHERE CONCAT(c.anio, ' ', c.division) = ?";
+    $scopeParams = [trim($_GET["curso"])];
+} else {
+    [$scopeSql, $scopeParams] = api_alumnos_scope_sql($pdo, "a");
+    if ($scopeSql !== null) {
+        $alumnosSql .= " WHERE $scopeSql";
+    }
 }
 $alumnosStmt = $pdo->prepare($alumnosSql);
 $alumnosStmt->execute($scopeParams);
@@ -25,8 +30,14 @@ $alumnoIds = array_map("intval", array_column($alumnos, "id"));
 $asigs = [];
 if ($alumnoIds) {
     $placeholders = implode(",", array_fill(0, count($alumnoIds), "?"));
-    $asigsStmt = $pdo->prepare("SELECT alumno_id, estado FROM asistencias WHERE alumno_id IN ($placeholders)");
-    $asigsStmt->execute($alumnoIds);
+    $sqlAsigs = "SELECT alumno_id, materia, estado FROM asistencias WHERE alumno_id IN ($placeholders)";
+    $paramsAsigs = $alumnoIds;
+    if (!empty($_GET["materia"])) {
+        $sqlAsigs .= " AND materia = ?";
+        $paramsAsigs[] = trim($_GET["materia"]);
+    }
+    $asigsStmt = $pdo->prepare($sqlAsigs);
+    $asigsStmt->execute($paramsAsigs);
     $asigs = $asigsStmt->fetchAll();
 }
 

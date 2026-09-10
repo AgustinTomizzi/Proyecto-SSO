@@ -22,7 +22,7 @@ import {
   type EstadisticaAlumno,
   type ResumenInstitucional,
 } from "./mock";
-import { apiGet, apiSend } from "./apiClient";
+import { apiGet, apiSend, esErrorDeRed } from "./apiClient";
 import { useAuth } from "../auth/AuthContext";
 
 const STORAGE_KEY = "galisencia.data";
@@ -34,11 +34,15 @@ interface Persistido {
 }
 
 function normalizarRegistros(registros: RegistroAsistencia[]): RegistroAsistencia[] {
-  return registros.map((r) => ({
-    ...r,
-    id: String(r.id),
-    alumnoId: String(r.alumnoId),
-  }));
+  return registros.map((r) => {
+    const anio = r.anio != null ? Number(r.anio) : Number(String(r.fecha).slice(0, 4));
+    return {
+      ...r,
+      id: String(r.id),
+      alumnoId: String(r.alumnoId),
+      anio: Number.isFinite(anio) ? anio : undefined,
+    };
+  });
 }
 
 function cargarInicial(): Persistido {
@@ -72,8 +76,12 @@ export interface StoreState {
     estado: EstadoAsistencia
   ) => void;
   agregarAlumno: (datos: Omit<Alumno, "id"> & { id?: string }) => void;
-  editarAlumno: (id: string, datos: Partial<Alumno>) => void;
-  borrarAlumno: (id: string) => void;
+  editarAlumno: (
+    id: string,
+    datos: Partial<Alumno>,
+    contrasena?: string
+  ) => Promise<void>;
+  borrarAlumno: (id: string, contrasena?: string) => Promise<void>;
   resetDemo: () => void;
 }
 
@@ -206,8 +214,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       };
       setAlumnos((prev) => [...prev, nuevo]);
       apiSend("/alumnos.php", "POST", {
-        nombre: datos.nombre,
+        nombre: datos.nombreSolo || datos.nombre,
         apellido: datos.apellido,
+        dni: datos.dni,
         curso: datos.curso,
         email: datos.email,
       }).catch(() => {});
@@ -215,21 +224,45 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const editarAlumno = useCallback((id: string, datos: Partial<Alumno>) => {
-    setAlumnos((prev) => prev.map((a) => (a.id === id ? { ...a, ...datos } : a)));
-    apiSend("/alumnos.php", "PUT", {
-      id,
-      nombre: datos.nombre,
-      apellido: datos.apellido,
-      curso: datos.curso,
-      email: datos.email,
-    }).catch(() => {});
-  }, []);
+  const editarAlumno = useCallback(
+    async (id: string, datos: Partial<Alumno>, contrasena?: string) => {
+      const previos = alumnos;
+      setAlumnos((prev) => prev.map((a) => (a.id === id ? { ...a, ...datos } : a)));
+      try {
+        await apiSend("/alumnos.php", "PUT", {
+          id,
+          nombre: datos.nombreSolo || datos.nombre,
+          apellido: datos.apellido,
+          dni: datos.dni,
+          curso: datos.curso,
+          email: datos.email,
+          contrasena,
+        });
+      } catch (err) {
+        if (esErrorDeRed(err)) return; // demo sin backend: queda el cambio local
+        setAlumnos(previos);
+        throw err;
+      }
+    },
+    [alumnos]
+  );
 
-  const borrarAlumno = useCallback((id: string) => {
-    setAlumnos((prev) => prev.filter((a) => a.id !== id));
-    apiSend(`/alumnos.php?id=${encodeURIComponent(id)}`, "DELETE").catch(() => {});
-  }, []);
+  const borrarAlumno = useCallback(
+    async (id: string, contrasena?: string) => {
+      const previos = alumnos;
+      setAlumnos((prev) => prev.filter((a) => a.id !== id));
+      try {
+        await apiSend(`/alumnos.php?id=${encodeURIComponent(id)}`, "DELETE",
+          contrasena ? { contrasena } : undefined
+        );
+      } catch (err) {
+        if (esErrorDeRed(err)) return; // demo sin backend: queda el cambio local
+        setAlumnos(previos);
+        throw err;
+      }
+    },
+    [alumnos]
+  );
 
   const resetDemo = useCallback(() => {
     const sembrados = buildAlumnos();

@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { Rol, Usuario } from "../data/types";
+import type { Usuario } from "../data/types";
 import { login as loginService, logout as logoutService } from "./auth.service";
 
 interface AuthState {
   usuario: Usuario | null;
   loading: boolean;
-  login: (email: string, password: string, rol: Rol) => Promise<void>;
+  login: (email: string, password: string) => Promise<Usuario>;
   logout: () => Promise<void>;
 }
 
@@ -30,15 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  async function login(email: string, password: string, rol: Rol) {
+  async function login(email: string, password: string): Promise<Usuario> {
     setLoading(true);
     try {
-      const result = await loginService(email, password, rol);
+      const result = await loginService(email, password);
       setUsuario(result.usuario);
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({ usuario: result.usuario })
       );
+      return result.usuario;
     } finally {
       setLoading(false);
     }

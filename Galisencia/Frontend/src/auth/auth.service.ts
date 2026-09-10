@@ -10,15 +10,24 @@ interface LoginResult {
   modo: "backend" | "mock";
 }
 
+/** Deriva el rol de demo a partir del email (sólo si el backend está apagado). */
+function rolDesdeEmail(email: string): Rol {
+  const e = email.toLowerCase();
+  if (e.includes("admin")) return "admin";
+  if (e.includes("directivo")) return "directivo";
+  if (e.includes("preceptor") || e.includes("docente") || e.includes("prof")) return "preceptor";
+  return "alumno";
+}
+
 /**
- * Intenta autenticar contra el backend real (api/login.php).
+ * Autentica contra el backend real (api/login.php) y devuelve el usuario con su
+ * rol real (el rol lo decide el backend, NO el formulario).
  * Si el backend no responde (server apagado, fuera de línea, CORS),
  * cae a un login MOCK para que la demo del frontend nunca se rompa.
  */
 export async function login(
   email: string,
-  password: string,
-  rol: Rol
+  password: string
 ): Promise<LoginResult> {
   // 1) Intento real contra el backend (con timeout para no quedar colgado)
   let backendDisponible = false;
@@ -48,6 +57,7 @@ export async function login(
 
   // 2) Fallback MOCK (demo)
   await new Promise((r) => setTimeout(r, 450));
+  const rol = rolDesdeEmail(email);
   const nombrePorRol: Record<Rol, string> = {
     alumno: "Sofía Gutiérrez",
     preceptor: "Prof. Ramírez",
@@ -65,7 +75,7 @@ export async function login(
 
   const usuario: Usuario = {
     id: alumnoDemo ? alumnoDemo.id : `mock-${rol}`,
-    nombre: alumnoDemo ? nombrePorRol[rol] : nombrePorRol[rol],
+    nombre: nombrePorRol[rol],
     email: alumnoDemo ? alumnoDemo.email : email || `demo@galileo.edu.ar`,
     rol,
     curso: alumnoDemo ? alumnoDemo.curso : rol === "alumno" ? "1.º A" : undefined,

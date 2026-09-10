@@ -82,3 +82,23 @@ function api_requerir_alumno_en_alcance($pdo, $alumnoId)
 
     return $alumno;
 }
+
+/**
+ * Operacion sensible: pide que el usuario reingrese su contrasena.
+ * Se usa para que el preceptor confirme acciones delicadas (editar / dar de baja).
+ */
+function api_requerir_contrasena($pdo, $contrasena)
+{
+    $usuarioActual = $_SESSION["id_usuario"] ?? null;
+    if (!$usuarioActual) {
+        api_json(["ok" => false, "error" => "no autenticado"], 401);
+    }
+
+    $stmt = $pdo->prepare("SELECT contrasena FROM usuarios WHERE id_usuario = ? LIMIT 1");
+    $stmt->execute([$usuarioActual]);
+    $hash = $stmt->fetchColumn();
+
+    if (!is_string($hash) || $hash === "" || empty($contrasena) || !password_verify($contrasena, $hash)) {
+        api_json(["ok" => false, "error" => "contraseña incorrecta: volvé a ingresar tu contraseña para confirmar"], 403);
+    }
+}

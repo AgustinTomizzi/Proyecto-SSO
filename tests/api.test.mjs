@@ -65,7 +65,7 @@ async function main() {
   console.log(`Probando API en ${API}`);
 
   const anonymous = new PhpSession();
-  for (const endpoint of ["alumnos", "cursos", "asistencias", "notas", "reportes", "usuarios", "auditoria"]) {
+  for (const endpoint of ["alumnos", "cursos", "asistencias", "notas", "reportes", "usuarios", "auditoria", "recursos", "reservas"]) {
     const result = await anonymous.request(`/${endpoint}.php`);
     expectStatus(result, 401, `${endpoint} sin sesion`);
   }
@@ -172,10 +172,138 @@ async function main() {
     }
   }
 
+  // ---- Galiservas: acceso por rol y reservas con stock ----
+  const fechaReserva = new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+
+  expectStatus(await alumno.request("/recursos.php"), 403, "alumno lista recursos");
+  expectStatus(await directivo.request("/recursos.php"), 403, "directivo lista recursos");
+  expectStatus(await alumno.request("/reservas.php"), 403, "alumno consulta reservas");
+
+  const recursos = await preceptor.request("/recursos.php");
+  expectStatus(recursos, 200, "preceptor lista recursos");
+  const aula208 = recursos.body.recursos.find((r) => r.nombre === "Aula 208");
+  assert.ok(aula208, "No se encontro el Aula 208");
+  assert.equal(aula208.tipo, "aula");
+  assert.ok(aula208.stock >= 25, "El stock del Aula 208 debe ser al menos 25");
+  assert.ok(
+    recursos.body.recursos.some((r) => r.tipo === "pañol" && r.categoria === "Recursos audiovisuales"),
+    "Debe existir stock del pañol audiovisual"
+  );
+
+  const disponibilidad = await preceptor.request(`/reservas.php?recursoId=${aula208.id}&fecha=${fechaReserva}`);
+  expectStatus(disponibilidad, 200, "disponibilidad de una aula");
+  assert.equal(disponibilidad.body.disponibilidad.length, 6);
+  assert.ok(disponibilidad.body.disponibilidad.every((franja) => franja.disponible === aula208.stock));
+  assert.equal(disponibilidad.body.recurso.nombre, "Aula 208");
+
+  const franja = disponibilidad.body.disponibilidad[0].horario;
+  expectStatus(
+    await alumno.json("/reservas.php", "POST", {
+      recursoId: aula208.id, fecha: fechaReserva, horario: franja, cantidad: 1,
+    }),
+    403,
+    "alumno crea reserva"
+  );
+
+  const reservaOk = await preceptor.json("/reservas.php", "POST", {
+    recursoId: aula208.id, fecha: fechaReserva, horario: franja, cantidad: 5,
+  });
+  expectStatus(reservaOk, 200, "preceptor reserva 5 computadoras");
+
+  expectStatus(
+    await preceptor.json("/reservas.php", "POST", {
+      recursoId: aula208.id, fecha: fechaReserva, horario: franja, cantidad: 30,
+    }),
+    409,
+    "reserva que supera el stock disponible (5 ya reservadas)"
+  );
+  expectStatus(
+    await preceptor.json("/reservas.php", "POST", {
+      recursoId: aula208.id, fecha: fechaReserva, horario: franja, cantidad: 0,
+    }),
+    400,
+    "reserva con cantidad cero"
+  );
+  expectStatus(
+    await preceptor.json("/reservas.php", "POST", {
+      recursoId: aula208.id, fecha: fechaReserva, horario: "99:99 - 100:00", cantidad: 1,
+    }),
+    400,
+    "reserva con horario invalido"
+  );
+
+  const listadoReservas = await preceptor.request("/reservas.php");
+  expectStatus(listadoReservas, 200, "listado de reservas");
+  assert.ok(
+    listadoReservas.body.reservas.some((r) => r.recurso === "Aula 208" && r.cantidad === 5),
+    "No se encontro la reserva recien creada en el listado"
+  );
+
+  const auditoriaReservas = await admin.request("/auditoria.php?accion=reservas.crear&limit=10");
+  expectStatus(auditoriaReservas, 200, "auditoria de reservas");
+  assert.ok(
+    auditoriaReservas.body.registros.some((registro) => registro.accion === "reservas.crear"),
+    "No se registró la creación de la reserva en la auditoría"
+  );
+
+  // ---- Filtros por año y materia en asistencias / reportes ----
+  const asistenciasAnio = await preceptor.request("/asistencias.php?anio=2026");
+  expectStatus(asistenciasAnio, 200, "asistencias filtradas por año");
+  assert.ok(asistenciasAnio.body.registros.length > 0);
+  assert.ok(asistenciasAnio.body.registros.every((r) => Number(r.anio) === 2026));
+
+  const reporteMateria = await preceptor.request("/reportes.php?materia=Matematica");
+  expectStatus(reporteMateria, 200, "reporte filtrado por materia");
+  assert.equal(reporteMateria.body.resumen.totalAlumnos, 3);
+
+  // ---- Re-autenticación del preceptor en acciones sensibles (alumnos) ----
+  expectStatus(
+    await preceptor.json("/alumnos.php", "PUT", {
+      id: 1, nombre: "Sofia", apellido: "Gutierrez", curso: "1 A", email: "alumno@galileo.edu.ar",
+    }),
+    403,
+    "preceptor edita alumno sin reingresar contraseña"
+  );
+  expectStatus(
+    await preceptor.json("/alumnos.php", "PUT", {
+      id: 1, nombre: "Sofia", apellido: "Gutierrez", curso: "1 A", email: "alumno@galileo.edu.ar",
+      contrasena: "incorrecta",
+    }),
+    403,
+    "preceptor edita alumno con contraseña incorrecta"
+  );
+  expectStatus(
+    await preceptor.request("/alumnos.php?id=1", { method: "DELETE" }),
+    403,
+    "preceptor da de baja sin reingresar contraseña"
+  );
+
+  const alumnoTmp = await preceptor.json("/alumnos.php", "POST", {
+    nombre: "Temporal", apellido: "Reauth", curso: "1 A", email: "tmp.reauth@example.invalid", dni: "99999999",
+  });
+  expectStatus(alumnoTmp, 200, "preceptor crea alumno temporal");
+  const idTmp = Number(alumnoTmp.body.alumno.id);
+
+  expectStatus(
+    await preceptor.json("/alumnos.php", "PUT", {
+      id: idTmp, nombre: "Temporal", apellido: "Reauth2", curso: "1 A",
+      email: "tmp.reauth@example.invalid", contrasena: "demo1234",
+    }),
+    200,
+    "preceptor edita con contraseña correcta"
+  );
+
+  const bajaTmp = await preceptor.request(`/alumnos.php?id=${idTmp}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contrasena: "demo1234" }),
+  });
+  expectStatus(bajaTmp, 200, "preceptor da de baja con contraseña correcta");
+
   expectStatus(await admin.request("/logout.php", { method: "POST" }), 200, "logout del admin");
   expectStatus(await admin.request("/usuarios.php"), 401, "sesion destruida tras logout");
 
-  console.log("OK: autenticacion, RBAC, alcance por curso y auditoria verificados.");
+  console.log("OK: autenticacion, RBAC, alcance por curso, auditoria, reservas y re-autenticacion verificados.");
 }
 
 main().catch((error) => {

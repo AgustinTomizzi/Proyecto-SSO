@@ -1,4 +1,4 @@
-  :root{
+:root{
     --navy: #0d3b54;
     --navy-deep: #082a3d;
     --line: #5fa8cc;
@@ -78,12 +78,14 @@
 
   header p{
     margin-top: 14px;
-    max-width: 520px;
+    max-width: 560px;
     color: var(--paper);
     opacity: .8;
     font-size: 15px;
     line-height: 1.55;
   }
+
+  .header-actions{ display:flex; align-items:center; gap:12px; margin-top:16px; flex-wrap:wrap; }
 
   main{
     max-width: 1040px;
@@ -111,51 +113,107 @@
     margin-bottom: 20px;
   }
 
-    .floorplan-wrap{
+  .hint{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 12px;
+  }
+
+  /* ---------- CHIP DE SESION ---------- */
+  #session-chip{
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    border: 1px solid var(--line-soft);
+    background: rgba(95,168,204,.10);
+    color: var(--paper);
+  }
+  #session-chip.chip-ok{ background: rgba(75,155,110,.10); color: #7fd0a0; }
+
+  .chip-btn{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor:pointer;
+    border: 1px solid var(--line-soft);
+    background: var(--paper-white);
+    color: var(--ink);
+    text-decoration:none;
+    transition: background .15s ease;
+  }
+  .chip-btn:hover{ background: var(--paper); }
+  button.chip-btn{ font: inherit; font-family:'JetBrains Mono', monospace; }
+
+  /* ---------- ACCESO DENEGADO ---------- */
+  .denied-card{
+    max-width: 520px;
+    margin: 72px auto;
     background: var(--navy-deep);
     border: 1px solid var(--line-soft);
     border-radius: var(--radius);
-    padding: 20px;
-    position: relative;
+    padding: 40px;
+    text-align: center;
   }
+  .denied-icon{ font-size: 44px; margin-bottom: 8px; }
+  .denied-card h2{ font-family:'Space Grotesk', sans-serif; font-size: 22px; margin-bottom: 10px; }
+  .denied-card p{ font-size: 14px; color: var(--paper); opacity: .85; line-height: 1.6; margin-bottom: 18px; }
+  .denied-card .chip-btn{ display:inline-block; }
 
-  .floorplan-legend{
+  /* ---------- AULAS ---------- */
+  .room-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .room-card{
+    background: var(--navy-deep);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    padding: 18px;
+    text-align:left;
+    cursor:pointer;
+    font: inherit;
+    color: var(--paper-white);
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .room-card:hover{ border-color: var(--line); transform: translateY(-2px); }
+  .room-card.on{ border-color: var(--accent); background: rgba(232,135,30,.14); }
+  .room-card__nombre{ font-family:'Space Grotesk', sans-serif; font-size: 17px; font-weight: 600; display:block; }
+  .room-card__cap{ font-family:'JetBrains Mono', monospace; font-size: 12px; color: var(--line); display:block; margin-top: 6px; }
+
+  /* ---------- PAÑOL ---------- */
+  .cat-pills{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 14px; }
+  .cat-pills button{
+    font-family:'JetBrains Mono', monospace; font-size: 12px; cursor:pointer;
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--line-soft); background: transparent; color: var(--paper);
+  }
+  .cat-pills button:hover{ border-color: var(--line); }
+  .cat-pills button.on{ background: var(--accent); border-color: var(--accent); color: white; }
+
+  .panel-list{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .panel-item{
+    background: var(--navy-deep);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    text-align:left;
+    cursor:pointer;
+    font: inherit;
+    color: var(--paper-white);
     display:flex;
-    gap: 22px;
-    flex-wrap: wrap;
-    margin-top: 16px;
-    font-family:'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--paper);
-    opacity: .75;
+    align-items:center;
+    gap: 10px;
+    transition: border-color .15s ease;
   }
-  .floorplan-legend span{ display:flex; align-items:center; gap:7px; }
-  .swatch{ width:11px; height:11px; border-radius:2px; display:inline-block; }
+  .panel-item:hover{ border-color: var(--line); }
+  .panel-item.on{ border-color: var(--accent); background: rgba(232,135,30,.14); }
+  .panel-item__nombre{ font-weight:600; font-size: 14px; }
+  .panel-item__cat{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--line); }
+  .panel-item__stock{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--ok); margin-left:auto; }
 
-  .room{ cursor:pointer; transition: filter .15s ease; }
-  .room:hover .room-fill{ fill: var(--line-soft); }
-  .room.selected .room-fill{ fill: rgba(232,135,30,.28); stroke: var(--accent); }
-  .room-fill{ fill: transparent; stroke: var(--line); stroke-width: 1.4; }
-  .room-label{
-    font-family:'JetBrains Mono', monospace;
-    fill: var(--paper-white);
-    font-size: 13px;
-    pointer-events:none;
-  }
-  .room-cap{
-    font-family:'JetBrains Mono', monospace;
-    fill: var(--line);
-    font-size: 10px;
-    pointer-events:none;
-  }
-
-  #selected-room-tag{
-    margin-top: 14px;
-    font-family:'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--accent);
-  }
-.booking-grid{
+  /* ---------- CALENDARIO ---------- */
+  .booking-grid{
     display:grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
@@ -171,6 +229,13 @@
     padding: 22px;
   }
 
+  .selected-info{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+
   .cal-header{
     display:flex;
     align-items:center;
@@ -183,10 +248,7 @@
     font-size: 17px;
     text-transform: capitalize;
   }
-  .cal-nav{
-    display:flex;
-    gap:6px;
-  }
+  .cal-nav{ display:flex; gap:6px; }
   .cal-nav button{
     width: 28px; height: 28px;
     border: 1px solid var(--ink-soft);
@@ -229,6 +291,7 @@
   .cal-day.today{ box-shadow: inset 0 0 0 1px var(--ink-soft); }
   .cal-day.selected{ background: var(--accent); color: white; font-weight: 600; }
 
+  /* ---------- FRANJAS ---------- */
   .slot-list{ display:flex; flex-direction:column; gap:8px; }
   .slot{
     display:flex;
@@ -257,11 +320,48 @@
   .slot.selected .time{ color: white; }
   .slot.selected .tag{ background: var(--accent); color: white; }
 
-  .hint{
+  /* ---------- CANTIDAD ---------- */
+  .quantity-row{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed #d9d2c1;
+  }
+  .quantity-row label{ font-family:'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); }
+  .quantity-input{
+    width: 76px;
     font-family:'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    color: var(--ink-soft);
+    font-size: 15px;
+    padding: 8px 10px;
+    border: 1px solid #d9d2c1;
+    border-radius: 3px;
+    background: var(--paper-white);
+    color: var(--ink);
+  }
+  .quantity-input:focus{ outline: none; border-color: var(--accent); }
+  .quantity-max{ font-family:'JetBrains Mono', monospace; font-size: 11.5px; color: var(--ok); }
+
+  .reserve-error{
     margin-top: 12px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--danger);
+    background: rgba(192,69,58,.10);
+    border: 1px solid rgba(192,69,58,.25);
+    padding: 10px 12px;
+    border-radius: 3px;
+  }
+
+  /* ---------- MIS RESERVAS ---------- */
+  .my-reservas-list{ display:flex; flex-direction:column; gap:8px; }
+  .my-reserva{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    border: 1px solid #d9d2c1;
+    border-radius: 3px;
+    padding: 10px 12px;
   }
 
   /* ---------- CONFIRMACION ---------- */
@@ -329,16 +429,3 @@
     opacity: .6;
     border-top: 1px dashed var(--line-soft);
   }
-
-  /* ---------- CHIP DE SESION SSO ---------- */
-  #session-chip{
-    display: inline-block;
-    margin-top: 14px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    border: 1px solid var(--line-soft);
-  }
-  #session-chip.chip-ok{ background: rgba(46,125,82,.10); color: #2E7D52; }
-  #session-chip.chip-warn{ background: rgba(176,125,42,.10); color: #B07D2A; }

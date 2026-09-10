@@ -17,6 +17,7 @@ export interface RegistroAsistencia {
   materia: string;
   fecha: string; // YYYY-MM-DD
   estado: EstadoAsistencia;
+  anio?: number;
 }
 
 export interface Alumno {
@@ -24,7 +25,13 @@ export interface Alumno {
   nombre: string;
   curso: string;
   email: string;
+  nombreSolo?: string;
   apellido?: string;
+  dni?: string;
+  anio?: string;
+  division?: string;
+  cursoId?: string;
+  estado?: number;
 }
 
 export interface Curso {

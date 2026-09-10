@@ -94,3 +94,21 @@
   border: 1px solid var(--border); background: var(--surface); color: var(--brand);
 }
 .realtime-indicador button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---- Resumen por materia (alumno) ---- */
+.materia-resumen { margin-bottom: 18px; }
+.materia-resumen h3 { font-size: 15px; margin-bottom: 10px; }
+.materia-resumen__grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px;
+}
+.materia-resumen__card {
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  background: var(--surface); padding: 12px 14px;
+}
+.materia-resumen__nombre { font-size: 13px; font-weight: 700; }
+.materia-resumen__pct { font-size: 26px; font-weight: 800; margin: 4px 0 6px; font-variant-numeric: tabular-nums; }
+.materia-resumen__totales { font-size: 12px; color: var(--text-soft); }
+.materia-resumen__riesgo {
+  margin-top: 8px; font-size: 12px; font-weight: 700; color: #B23B2B;
+  background: #F6E6E1; border-radius: var(--r-full); padding: 3px 10px; display: inline-block;
+}

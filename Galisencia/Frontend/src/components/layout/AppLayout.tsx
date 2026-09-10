@@ -102,17 +102,21 @@ export default function AppLayout() {
             </NavLink>
           ))}
 
-          <div className="app__nav-section">Sistemas</div>
-          <a
-            className="app__nav-link"
-            href="/galiservas/"
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => setDrawer(false)}
-          >
-            <img className="app__nav-icon app__nav-logo" src="/galiservas/galiservas.png" alt="" />
-            Galiservas
-          </a>
+{usuario.rol !== "alumno" && usuario.rol !== "directivo" && (
+            <div className="app__nav-section">Sistemas</div>
+          )}
+          {usuario.rol !== "alumno" && usuario.rol !== "directivo" && (
+            <a
+              className="app__nav-link"
+              href="/galiservas/"
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setDrawer(false)}
+            >
+              <img className="app__nav-icon app__nav-logo" src="/galiservas/galiservas.png" alt="" />
+              Galiservas
+            </a>
+          )}
         </nav>
 
         <div className="app__user">

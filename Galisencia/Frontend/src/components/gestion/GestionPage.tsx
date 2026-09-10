@@ -4,6 +4,7 @@ import { apiGet, apiSend } from "../../data/apiClient";
 import EmptyState from "../ui/EmptyState";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import { useToast } from "../ui/Toast";
+import { validarAlumno } from "../../utils/validate";
 import type { Alumno, Curso } from "../../data/types";
 
 interface Preceptor {
@@ -89,14 +90,24 @@ export default function GestionPage() {
   };
 
   const guardar = () => {
-    if (!form.nombre || !form.curso) return;
-    const datos = {
+    const errores = validarAlumno({
       nombre: form.nombre,
       apellido: form.apellido,
       curso: form.curso,
+      email: form.email,
+    });
+    if (errores.length > 0) {
+      push(errores[0], "error");
+      return;
+    }
+    const datos = {
+      nombre: form.nombre as string,
+      apellido: form.apellido,
+      dni: form.dni,
+      curso: form.curso as string,
       email:
         form.email ||
-        `${form.nombre.toLowerCase().replace(/[^a-z]/g, ".")}@galileo.edu.ar`,
+        `${form.nombre!.toLowerCase().replace(/[^a-z]/g, ".")}@galileo.edu.ar`,
     };
     if (editId) {
       editarAlumno(editId, datos);
@@ -200,6 +211,15 @@ export default function GestionPage() {
               value={form.apellido ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, apellido: e.target.value }))}
               placeholder="Ej. Pérez"
+            />
+          </div>
+          <div className="field" style={{ margin: 0 }}>
+            <label>DNI</label>
+            <input
+              className="input"
+              value={form.dni ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, dni: e.target.value }))}
+              placeholder="opcional"
             />
           </div>
           <div className="field" style={{ margin: 0 }}>
