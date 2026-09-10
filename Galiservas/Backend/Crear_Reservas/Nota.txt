@@ -1,0 +1,18 @@
+Hacer que el formulario sea algo asi:
+<form action="crear_reserva.php" method="POST">
+
+    <input type="hidden" name="usuario_id" value="1">
+
+    <select name="recurso_id">
+        <option value="1">Laboratorio 1</option>
+    </select>
+
+    <input type="date" name="fecha">
+
+    <input type="datetime-local" name="horario">
+
+    <button type="submit">
+        Reservar
+    </button>
+
+</form>
