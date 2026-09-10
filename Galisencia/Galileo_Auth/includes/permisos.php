@@ -41,7 +41,7 @@ function tienePermiso($usuarioId, $permiso)
  */
 function requerirPermiso($permiso)
 {
-    require_once __DIR__ . "/Galileo_Auth/auth.php";
+    require_once __DIR__ . "/auth.php";
 
     requerirLogin();
 
@@ -54,7 +54,7 @@ function requerirPermiso($permiso)
         die("
             <h1>403 - Acceso denegado</h1>
             <p>No tenés permiso para acceder a esta sección.</p>
-            <a href='/galileo-auth/dashboard.php'>
+            <a href='/'>
                 Volver al inicio
             </a>
         ");

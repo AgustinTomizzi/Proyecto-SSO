@@ -32,7 +32,8 @@ export interface Curso {
   anio: string; // "1.º"
   division: string; // "A"
   turno: "Mañana" | "Tarde";
-  preceptor: string;
+  preceptor: string | null;
+  preceptorId?: string | null;
 }
 
 export const MATERIAS = [

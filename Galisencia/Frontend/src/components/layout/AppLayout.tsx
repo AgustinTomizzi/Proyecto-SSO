@@ -69,8 +69,8 @@ export default function AppLayout() {
 
   const items = NAV[usuario.rol];
 
-  function onLogout() {
-    logout();
+  async function onLogout() {
+    await logout();
     navigate("/login");
   }
 
@@ -82,7 +82,7 @@ export default function AppLayout() {
       />
       <aside className={`app__sidebar ${drawer ? "open" : ""}`}>
         <div className="app__brand">
-          <div className="app__brand-logo">G</div>
+          <img className="app__brand-logo" src="/galisencia.png" alt="Galisencia" />
           <div>
             <div className="app__brand-name">Galisencia</div>
             <div className="app__brand-sub">Asistencia Escolar</div>
@@ -110,7 +110,7 @@ export default function AppLayout() {
             rel="noreferrer"
             onClick={() => setDrawer(false)}
           >
-            <span className="app__nav-icon">🏢</span>
+            <img className="app__nav-icon app__nav-logo" src="/galiservas/galiservas.png" alt="" />
             Galiservas
           </a>
         </nav>

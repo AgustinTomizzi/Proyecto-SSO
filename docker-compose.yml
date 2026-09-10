@@ -2,7 +2,6 @@ services:
   # Base de datos MySQL (única, compartida: ProyectoEstela)
   mysql:
     image: mysql:8.0
-    container_name: galisencia-mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: ProyectoEstela
@@ -24,7 +23,6 @@ services:
     build:
       context: ./Galisencia/Galileo_Auth
       dockerfile: Dockerfile
-    container_name: galisencia-backend
     environment:
       - DB_HOST=mysql
       - DB_NAME=ProyectoEstela
@@ -48,9 +46,8 @@ services:
     build:
       context: ./Galisencia/Frontend
       dockerfile: Dockerfile
-    container_name: galisencia-frontend
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       backend:
         condition: service_healthy

@@ -3,20 +3,6 @@
 require_once __DIR__ . "/_common.php";
 api_login_requerido();
 $method = $_SERVER["REQUEST_METHOD"];
-$usuarioId = $_SESSION["id_usuario"] ?? null;
-$rolSesion = $_SESSION["rol"] ?? "";
-
-function esPreceptor($rolSesion)
-{
-    return strcasecmp($rolSesion, "Preceptor") === 0;
-}
-
-function cursosDelPreceptor($pdo, $usuarioId)
-{
-    $s = $pdo->prepare("SELECT id_cursos FROM cursos WHERE preceptor_id = ?");
-    $s->execute([$usuarioId]);
-    return array_map("intval", $s->fetchAll(PDO::FETCH_COLUMN));
-}
 
 function resolverCursoId($pdo, $cursoTexto)
 {
@@ -43,8 +29,8 @@ if ($method === "GET") {
         LEFT JOIN cursos c ON a.curso_id = c.id_cursos
     ";
     $params = [];
-    if (esPreceptor($rolSesion)) {
-        $misCursos = cursosDelPreceptor($pdo, $usuarioId);
+    if (api_es_preceptor()) {
+        $misCursos = api_cursos_del_preceptor($pdo);
         if (empty($misCursos)) {
             api_json(["ok" => true, "alumnos" => []]);
         }
@@ -72,8 +58,8 @@ if ($method === "POST") {
 
     $curso_id = resolverCursoId($pdo, $curso);
 
-    if (esPreceptor($rolSesion)) {
-        $misCursos = cursosDelPreceptor($pdo, $usuarioId);
+    if (api_es_preceptor()) {
+        $misCursos = api_cursos_del_preceptor($pdo);
         if ($curso_id === null || !in_array($curso_id, $misCursos, true)) {
             api_json(["ok" => false, "error" => "no podes agregar alumnos a un curso que no tenes asignado"], 403);
         }
@@ -109,8 +95,8 @@ if ($method === "PUT") {
 
     $curso_id = resolverCursoId($pdo, $curso);
 
-    if (esPreceptor($rolSesion)) {
-        $misCursos = cursosDelPreceptor($pdo, $usuarioId);
+    if (api_es_preceptor()) {
+        $misCursos = api_cursos_del_preceptor($pdo);
         if (!in_array($cursoIdActual, $misCursos, true)) {
             api_json(["ok" => false, "error" => "no podes modificar alumnos de un curso que no tenes asignado"], 403);
         }
@@ -141,8 +127,8 @@ if ($method === "DELETE") {
     }
     $cursoIdActual = (int) $actual->fetchColumn();
 
-    if (esPreceptor($rolSesion)) {
-        $misCursos = cursosDelPreceptor($pdo, $usuarioId);
+    if (api_es_preceptor()) {
+        $misCursos = api_cursos_del_preceptor($pdo);
         if (!in_array($cursoIdActual, $misCursos, true)) {
             api_json(["ok" => false, "error" => "no podes quitar alumnos de un curso que no tenes asignado"], 403);
         }

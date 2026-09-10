@@ -48,7 +48,7 @@ export default function LoginPage() {
   return (
     <div className="login">
       <aside className="login__brand">
-        <div className="login__logo">G</div>
+        <img className="login__logo" src="/galisencia.png" alt="Galisencia" />
         <h1 className="login__title">Galisencia</h1>
         <p className="login__tag">Sistema de Asistencia Escolar</p>
         <ul className="login__features">

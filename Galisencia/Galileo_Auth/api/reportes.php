@@ -7,14 +7,28 @@ if ($_SERVER["REQUEST_METHOD"] !== "GET") {
 }
 api_requerir_permiso("reportes.ver");
 
-$alumnos = $pdo->query("
+$alumnosSql = "
     SELECT a.id_alumno AS id, CONCAT(a.nombre, ' ', a.apellido) AS nombre,
            CONCAT(c.anio, ' ', c.division) AS curso, a.email
     FROM alumnos a
     LEFT JOIN cursos c ON a.curso_id = c.id_cursos
-")->fetchAll();
+";
+[$scopeSql, $scopeParams] = api_alumnos_scope_sql($pdo, "a");
+if ($scopeSql !== null) {
+    $alumnosSql .= " WHERE $scopeSql";
+}
+$alumnosStmt = $pdo->prepare($alumnosSql);
+$alumnosStmt->execute($scopeParams);
+$alumnos = $alumnosStmt->fetchAll();
 
-$asigs = $pdo->query("SELECT alumno_id, estado FROM asistencias")->fetchAll();
+$alumnoIds = array_map("intval", array_column($alumnos, "id"));
+$asigs = [];
+if ($alumnoIds) {
+    $placeholders = implode(",", array_fill(0, count($alumnoIds), "?"));
+    $asigsStmt = $pdo->prepare("SELECT alumno_id, estado FROM asistencias WHERE alumno_id IN ($placeholders)");
+    $asigsStmt->execute($alumnoIds);
+    $asigs = $asigsStmt->fetchAll();
+}
 
 $por = [];
 foreach ($asigs as $r) {

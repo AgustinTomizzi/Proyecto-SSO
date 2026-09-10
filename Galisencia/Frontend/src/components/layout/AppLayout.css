@@ -31,11 +31,9 @@
 }
 .app__brand-logo {
   width: 42px; height: 42px;
-  display: grid; place-items: center;
-  font-weight: 800; font-size: 22px;
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.3);
-  border-radius: 12px;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, .2));
   transition: transform .2s ease, box-shadow .2s ease;
 }
 .app__brand-logo:hover {
@@ -82,6 +80,12 @@
   color: var(--brand);
 }
 .app__nav-icon { font-size: 17px; transition: color .15s; }
+.app__nav-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex: none;
+}
 
 .app__user {
   display: flex;

@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Rol, Usuario } from "../data/types";
-import { login as loginService } from "./auth.service";
+import { login as loginService, logout as logoutService } from "./auth.service";
 
 interface AuthState {
   usuario: Usuario | null;
   loading: boolean;
   login: (email: string, password: string, rol: Rol) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -44,9 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  function logout() {
+  async function logout() {
     setUsuario(null);
     localStorage.removeItem(STORAGE_KEY);
+    await logoutService();
   }
 
   return (

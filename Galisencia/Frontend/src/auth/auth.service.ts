@@ -72,3 +72,14 @@ export async function login(
   };
   return { usuario, modo: "mock" };
 }
+
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/logout.php`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // El estado local se limpia aunque el backend no esté disponible.
+  }
+}

@@ -45,7 +45,7 @@ WHERE r.nombre = 'Alumno' AND p.nombre IN ('asistencia.ver','notas.ver');
 
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Preceptor' AND p.nombre IN ('asistencia.ver','asistencia.registrar','asistencia.editar','alumnos.ver','cursos.ver','alumnos.crear','alumnos.dar_baja');
+WHERE r.nombre = 'Preceptor' AND p.nombre IN ('asistencia.ver','asistencia.registrar','asistencia.editar','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','reportes.ver');
 
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
@@ -56,7 +56,8 @@ SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
 WHERE r.nombre = 'Administrador Academico' AND p.nombre IN
   ('asistencia.ver','asistencia.registrar','asistencia.editar',
    'alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja',
-   'cursos.ver','cursos.asignar','notas.ver','notas.crear','reportes.ver');
+   'cursos.ver','cursos.asignar','notas.ver','notas.crear','reportes.ver',
+   'usuarios.ver','usuarios.editar_rol','auditoria.ver');
 
 -- FIX: El rol "Administrador" (id 6) debe tener TODOS los permisos
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)

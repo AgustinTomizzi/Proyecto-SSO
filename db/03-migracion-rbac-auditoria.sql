@@ -60,7 +60,14 @@ WHERE r.nombre = 'Administrador';
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso
 FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Preceptor' AND p.nombre IN ('alumnos.crear', 'alumnos.dar_baja');
+WHERE r.nombre = 'Preceptor' AND p.nombre IN ('alumnos.crear', 'alumnos.editar', 'alumnos.dar_baja', 'reportes.ver');
+
+-- El frontend usa "Administrador Academico" como rol admin de la demo.
+INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
+SELECT r.id_rol, p.id_permiso
+FROM roles r CROSS JOIN permisos p
+WHERE r.nombre = 'Administrador Academico'
+  AND p.nombre IN ('cursos.asignar', 'usuarios.ver', 'usuarios.editar_rol', 'auditoria.ver');
 
 -- ---------------------------------------------------------------------
 -- 5) Tabla de auditoría

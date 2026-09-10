@@ -1,22 +1,49 @@
-# Galisencia
+# Proyecto SSO
 
-Sistema de gestión de asistencia escolar: permite a alumnos, preceptores, directivos y administradores académicos registrar, consultar y hacer seguimiento de la asistencia de forma centralizada.
+Monorepo de los sistemas escolares **Galisencia** (asistencia y gestión académica) y **Galiservas** (reserva de aulas), con una sesión compartida.
 
-Forma parte de **Proyecto-SSO**: un único inicio de sesión (SSO) da acceso tanto a Galisencia como a Galiservas.
+## Arquitectura activa
 
-## Estructura del repo
-
-Este es un monorepo con dos carpetas principales:
-
+```text
+db/                              # Esquema, seed y migraciones MySQL
+Galisencia/
+├── Frontend/                    # React + TypeScript + Vite
+│   └── public/galiservas/       # Prototipo integrado de Galiservas
+└── Galileo_Auth/                # Backend PHP activo
+    ├── api/                     # Endpoints JSON
+    ├── config/                  # Conexión PDO
+    └── includes/                # Auth, RBAC, scope y auditoría
+docker-compose.yml               # MySQL + backend + frontend/nginx
+tests/                           # Pruebas de integración de la API
 ```
-galisencia/
-├── Frontend/    # React + TypeScript + Vite
-└── Backend/     # PHP (login SSO + conexión a la BD del colegio)
+
+El frontend se sirve en `http://localhost:3000`. Nginx reenvía `/api/*` al backend PHP dentro de la red Docker.
+
+## Inicio rápido
+
+```bash
+docker compose up --build -d
 ```
 
-## Cómo levantar el proyecto
+Usuarios demo (contraseña `demo1234`):
 
-### Frontend
+| Rol | Email |
+|---|---|
+| Administrador | `admin@galileo.edu.ar` |
+| Preceptor | `preceptor@galileo.edu.ar` |
+| Directivo | `directivo@galileo.edu.ar` |
+| Alumno | `alumno@galileo.edu.ar` |
+
+Para reinicializar completamente la base de desarrollo:
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+`down -v` elimina todos los datos del volumen MySQL. No usarlo sobre datos que deban conservarse.
+
+## Desarrollo frontend
 
 ```bash
 cd Galisencia/Frontend
@@ -24,52 +51,40 @@ npm install
 npm run dev
 ```
 
-El frontend funciona con **datos de prueba (mock)** por defecto, así la demo nunca se rompe. Si el backend está desplegado, copiá `.env.example` a `.env` y seteá `VITE_API_URL` a la URL real del backend.
+En desarrollo, `VITE_API_URL` permite cambiar la URL del backend. Sin backend disponible, el login puede usar datos mock para la demo.
 
-### Backend
+## Roles y alcance
+
+- **Alumno**: consulta únicamente su asistencia y sus notas.
+- **Preceptor**: gestiona alumnos y asistencias solamente de sus cursos asignados.
+- **Directivo**: consulta estadísticas institucionales completas.
+- **Administrador**: gestiona alumnos, cursos, usuarios, roles y auditoría.
+
+El control se aplica en la API mediante RBAC y reglas de alcance; no depende de ocultar botones en el frontend.
+
+## Estado de módulos
+
+| Módulo | Estado |
+|---|---|
+| Login y sesión SSO | Hecho |
+| Gestión de alumnos y asistencias | Hecho |
+| Alcance por curso del preceptor | Hecho |
+| Reportes institucionales y por preceptor | Hecho |
+| Gestión de usuarios y roles | Hecho |
+| Asignación curso-preceptor | Hecho |
+| Auditoría | Hecho |
+| Prototipo Galiservas integrado | Hecho |
+
+## Pruebas
+
+Con el stack Docker activo y una base exclusiva de prueba:
 
 ```bash
-cd Galisencia/Backend
-# El login SSO expone api/login.php (JSON) y usa config/conexion.php
+node tests/api.test.mjs
 ```
 
-La conexión apunta a la BD remota del colegio (`ProyectoEstela`). Para usarla:
-1. Ejecutá `sql/ProyectoEstela_usuarios.sql` en phpMyAdmin (`server.galileo.edu.ar:81`).
-2. Ajustá usuario/clave/host en `login-php/config/conexion.php` si cambian.
-
-## Roles del sistema
-
-- **Alumno**: consulta su porcentaje y su historial de asistencia.
-- **Preceptor**: registra presentes/ausentes de sus cursos asignados.
-- **Directivo**: ve estadísticas institucionales y alumnos en riesgo.
-- **Administrador Académico**: gestiona cambios de curso, altas y bajas de alumnos.
-
-## Estado de los módulos
-
-| Módulo | Descripción | Estado |
-|---|---|---|
-| Login SSO | Inicio de sesión único (compartido con Galiservas) | ✅ Hecho |
-| 1 | Consulta de asistencia del alumno | ✅ Hecho |
-| 2 | Gestión de asistencias (preceptor) | ✅ Hecho |
-| 3 | Seguimiento institucional (directivo) | ✅ Hecho |
-| 4 | Gestión académica de alumnos | ✅ Hecho |
-| 7 | Reportes y estadísticas | ✅ Hecho |
-| 5 | Gestión de usuarios y roles | 🔧 Backend (expuesto 28/ago) |
-| 6 | Historial y auditoría | ⬜ Pendiente |
+Ver [tests/README.md](./tests/README.md) para detalles.
 
 ## Cómo contribuir
 
-Antes de tocar código, leé [CONTRIBUTING.md](./CONTRIBUTING.md) — tiene la convención de ramas y el flujo de Pull Requests que vamos a usar en el equipo.
-
-## Estado conocido (integración backend Docker)
-
-La app quedó integrada con un backend PHP puro + MySQL única (`ProyectoEstela`), levantada con
-`docker compose up --build` (ver `db/`, `Galisencia/Galileo_Auth/`, `docker-compose.yml`).
-
-- Usuarios demo (password `demo1234`): `admin@galileo.edu.ar`, `preceptor@galileo.edu.ar`,
-  `directivo@galileo.edu.ar`, `alumno@galileo.edu.ar`.
-- El login emite una sola cookie de sesión; el `StoreContext` carga los datos del backend
-  (role-aware: el alumno ve solo sus asistencias).
-- **Pendiente de verificar en navegador**: las vistas de admin/alumno muestran el badge
-  "Backend" pero no renderizan aún los datos del backend (posible desajuste de forma de datos
-  entre la API y los componentes). Se continúa en `feat/galisencia-backend`.
+Antes de modificar código, leer [CONTRIBUTING.md](./CONTRIBUTING.md).

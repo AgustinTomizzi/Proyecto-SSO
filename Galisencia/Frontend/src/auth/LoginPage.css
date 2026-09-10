@@ -59,13 +59,10 @@
   100% { transform: translateX(100%) rotate(15deg); }
 }
 .login__logo {
-  width: 58px; height: 58px;
-  display: grid; place-items: center;
-  font-weight: 800; font-size: 28px;
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.35);
-  border-radius: 16px;
-  backdrop-filter: blur(4px);
+  width: 96px; height: 96px;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .22));
   margin-bottom: 22px;
   animation: fd-fade-up 0.6s ease both;
 }

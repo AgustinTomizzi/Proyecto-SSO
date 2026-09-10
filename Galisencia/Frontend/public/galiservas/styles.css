@@ -39,6 +39,16 @@
     border-bottom: 1px dashed var(--line-soft);
   }
 
+  .brand-logo{
+    display:block;
+    width:min(220px, 62vw);
+    height:auto;
+    max-height:180px;
+    object-fit:contain;
+    margin-bottom:18px;
+    filter:drop-shadow(0 12px 24px rgba(0,0,0,.24));
+  }
+
   .eyebrow{
     font-family:'JetBrains Mono', monospace;
     font-size: 12px;

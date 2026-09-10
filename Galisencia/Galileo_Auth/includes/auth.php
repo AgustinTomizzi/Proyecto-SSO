@@ -21,7 +21,7 @@ function requerirLogin()
 {
     if (!estaLogueado()) {
 
-        header("Location: /Galileo_Auth/login.php");
+        header("Location: /");
         exit;
     }
 }
