@@ -1,157 +1,67 @@
 # Instrucciones Docker - Proyecto SSO
 
-## Estructura Actual
+El stack levanta los cuatro servicios definidos en `docker-compose.yml`, todos en la red `galisencia-network`:
 
-El proyecto está configurado con Docker para desplegar el frontend (React + Vite) en producción, con la estructura preparada para integrar el backend (PHP + MySQL) en el futuro.
+| Servicio | Build | Puertos | Rol |
+|---|---|---|---|
+| `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` (01-schema → 02-seed → 03) |
+| `backend` | `Galisencia/Galileo_Auth` | `8080:80` | API JSON PHP + páginas PHP + sesión compartida |
+| `frontend` | `Galisencia/Frontend` | `3000:80` | React de Galisencia servido por nginx (proxy `/api` → `backend`) |
+| `galiservas` | `Galiservas/Frontend` | `5174:80` | React de Galiservas servido por nginx (proxy `/api` → `backend`) |
 
-## Archivos Creados
+## Uso
 
-### Frontend
-- `Galisencia/Frontend/Dockerfile` - Imagen Docker para el frontend
-- `Galisencia/Frontend/.dockerignore` - Archivos a excluir de la imagen Docker
-
-### Backend (preparado para futuro)
-- `Galisencia/Backend/Dockerfile` - Imagen Docker para el backend PHP
-- `Galisencia/Backend/.dockerignore` - Archivos a excluir de la imagen Docker
-
-### Orquestación
-- `docker-compose.yml` - Configuración de servicios (frontend activo, backend comentado)
-
-## Uso Actual (Solo Frontend)
-
-### Construir y ejecutar el frontend
+### Construir y ejecutar todo el stack
 ```bash
-docker-compose up --build -d frontend
+docker compose up --build -d
 ```
 
-### Ver el frontend
-Abre tu navegador en: `http://localhost:3000`
-
-### Detener el frontend
+### Verificar servicios
 ```bash
-docker-compose down
+docker compose ps
 ```
 
-### Ver logs del frontend
+### Ver logs
 ```bash
-docker-compose logs frontend
+docker compose logs -f backend
 ```
 
-## Preparación para Backend (Futuro)
-
-Cuando estés listo para integrar el backend PHP:
-
-### 1. Actualizar configuración de conexión
-Edita `Galisencia/Backend/login-php/config/conexion.php` para usar variables de entorno:
-
-```php
-$host = getenv('DB_HOST') ?: 'localhost';
-$db   = getenv('DB_NAME') ?: 'login_app';
-$user = getenv('DB_USER') ?: 'root';
-$pass = getenv('DB_PASSWORD') ?: '';
-```
-
-### 2. Activar servicios en docker-compose.yml
-Descomenta los servicios `backend` y `mysql` en el archivo `docker-compose.yml`:
-
-```yaml
-# Descomenta estas líneas
-backend:
-  # ... configuración existente ...
-
-mysql:
-  # ... configuración existente ...
-```
-
-### 3. Configurar credenciales de base de datos
-Modifica las variables de entorno en `docker-compose.yml`:
-
-```yaml
-mysql:
-  environment:
-    MYSQL_ROOT_PASSWORD: tu_contraseña_segura
-    MYSQL_DATABASE: login_app
-```
-
-```yaml
-backend:
-  environment:
-    - DB_HOST=mysql
-    - DB_NAME=login_app
-    - DB_USER=root
-    - DB_PASSWORD=tu_contraseña_segura
-```
-
-### 4. Ejecutar con backend activado
+### Detener
 ```bash
-docker-compose up --build -d
+docker compose down
 ```
 
-Esto iniciará:
-- Frontend en `http://localhost:3000`
-- Backend en `http://localhost:8000`
-- MySQL en puerto interno (no expuesto)
-
-### 5. Verificar conexión
-El backend se conectará automáticamente a MySQL usando las variables de entorno configuradas.
-
-## Comandos Útiles
-
-### Reconstruir imagen
+### Reiniciar la base (borra datos del volumen y reaplica esquema + seed)
 ```bash
-docker-compose build frontend
-# o para todos los servicios:
-docker-compose build
+docker compose down -v
+docker compose up --build -d
 ```
 
-### Ver contenedores en ejecución
-```bash
-docker-compose ps
-```
+> No ejecutar `docker compose down -v` sobre una base que contenga datos que deban conservarse.
 
-### Acceder a un contenedor
-```bash
-docker-compose exec frontend sh
-docker-compose exec backend bash
-```
+## URLs
 
-### Limpiar todo (detener y eliminar contenedores, redes, volúmenes)
-```bash
-docker-compose down -v
-```
+- Galisencia: <http://localhost:3000>
+- Galiservas: <http://localhost:5174>
+- Backend/API PHP: <http://localhost:8080>
 
-## Solución de Problemas
+El enlace lateral "Galiservas" dentro de Galisencia usa `/galiservas/`. En dev con Vite puntual, se sobreescribe con `VITE_GALISERVAS_URL` (ver `Galisencia/Frontend/.env.example`).
 
-### El frontend no carga
-1. Verifica que el puerto 3000 no esté en uso
-2. Revisa los logs: `docker-compose logs frontend`
-3. Asegúrate de que la construcción fue exitosa: `docker-compose build frontend`
+## Variables de build de Galiservas
 
-### Error de conexión a base de datos (cuando el backend esté activo)
-1. Verifica que el contenedor MySQL esté corriendo: `docker-compose ps mysql`
-2. Revisa los logs de MySQL: `docker-compose logs mysql`
-3. Confirma que las credenciales en `docker-compose.yml` sean correctas
+Se inyectan como `args` en el service `galiservas` del compose:
 
-### Cambios en el código no se reflejan
-1. Reconstruye la imagen: `docker-compose build`
-2. Reinicia los contenedores: `docker-compose up -d`
+- `VITE_API_URL=/api` → la SPA llama a `/api/...` y nginx lo proxya a `backend:80`.
+- `VITE_GALISENCIA_URL=http://localhost:3000` → botón "Volver a Galisencia".
 
-## Estructura de Puertos
+## Solución de problemas
 
-- **Frontend**: 3000 (externo) → 80 (interno)
-- **Backend**: 8000 (externo) → 80 (interno) - [cuando se active]
-- **MySQL**: No expuesto externamente (solo comunicación interna) - [cuando se active]
+- **La UI abre pero no persiste nada:** puede estar usando el fallback mock de Galisencia. Verificar en la red o recargar después de escribir, y comprobar `docker compose ps` (los tres services deben estar `running`).
+- **Cambios en el código no se reflejan:** reconstruir con `docker compose build` y reiniciar con `docker compose up -d`.
+- **Base corrupta o con datos inválidos:** usar `down -v` para reaplicar el seed (destructivo).
 
-## Próximos Pasos Recomendados
+## Notas de seguridad
 
-1. **Desarrollo actual**: Usa el frontend Docker para pruebas de UI
-2. **Integración backend**: Cuando el backend esté listo, sigue los pasos de "Preparación para Backend"
-3. **Producción**: Considera usar variables de entorno externas (`.env` file) para credenciales sensibles
-4. **Dominio personalizado**: Configura nginx con SSL para producción
-
-## Notas de Seguridad
-
-- Las contraseuestas en `docker-compose.yml` son solo para desarrollo
-- Para producción, usa secretos de Docker o variables de entorno externas
-- No expongas el puerto de MySQL directamente en producción
-- Considera implementar HTTPS/TLS para el frontend
+- Las credenciales de `docker-compose.yml` son solo para desarrollo.
+- No exponer el puerto de MySQL externamente en producción.
+- Considerar HTTPS/TLS para producción.

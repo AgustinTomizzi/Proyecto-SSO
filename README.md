@@ -18,7 +18,7 @@ docs/                     arquitectura funcional y guía de exposición
 USB-Setup/                ejecución portátil Windows/XAMPP
 ```
 
-La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. Los SQL dentro de carpetas `Backend` son prototipos históricos y no deben sustituir `db/01-schema.sql`.
+La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esquema y el seed viven en `db/` (`01-schema.sql` → `02-seed.sql` → `03-migracion-rbac-auditoria.sql`) y son la única fuente de verdad.
 
 ## Cuentas demo
 
@@ -62,7 +62,7 @@ Pasos completos y problemas de puertos: [USB-Setup/INSTRUCCIONES.md](USB-Setup/I
 
 ## Docker
 
-La configuración vigente de `docker-compose.yml` levanta MySQL `ProyectoEstela`, backend PHP Galisencia y frontend Galisencia en <http://localhost:3000>:
+La configuración vigente de `docker-compose.yml` levanta MySQL `ProyectoEstela`, el backend PHP (Galileo_Auth), Galisencia en <http://localhost:3000> y Galiservas en <http://localhost:5174>:
 
 ```bash
 docker compose up --build
@@ -72,7 +72,7 @@ docker compose up --build
 docker compose down
 ```
 
-El volumen conserva datos; `docker compose down -v` los elimina. Docker no levanta el frontend Galiservas. `DOCKER_INSTRUCTIONS.md` contiene información histórica que puede no coincidir con el compose actual; para la presentación usar este README y revisar directamente `docker-compose.yml`.
+El volumen conserva datos; `docker compose down -v` los elimina. El enlace lateral "Galiservas" dentro de Galisencia usa `/galiservas/` (leaf servido por el service `galiservas`). Detalles en [DOCKER_INSTRUCTIONS.md](DOCKER_INSTRUCTIONS.md).
 
 ## Desarrollo local
 
@@ -105,6 +105,6 @@ Valores PHP por defecto compatibles con XAMPP: `DB_HOST=localhost`, `DB_NAME=Pro
 
 - El ciclo lectivo de asistencia se obtiene del año de la fecha; aún no se modelan períodos trimestrales independientes.
 - La relación entre alumno y usuario continúa resolviéndose por email institucional, no mediante FK.
-- Docker levanta Galisencia y la API, pero Galiservas se ejecuta de forma independiente en `:5174`.
+- En Docker el enlace lateral apunta a `/galiservas/` (service `galiservas` en `:5174`); en el kit USB/XAMPP apunta a `:5174` vía `VITE_GALISERVAS_URL`.
 
 Para convenciones de colaboración, consultar [CONTRIBUTING.md](CONTRIBUTING.md).

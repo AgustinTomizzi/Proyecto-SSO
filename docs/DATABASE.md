@@ -8,9 +8,7 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 2. `db/02-seed.sql`: permisos, relaciones y datos de demostración.
 3. `db/03-migracion-rbac-auditoria.sql`: migración incremental para instalaciones anteriores. En una instalación nueva es redundante, pero es segura y el kit USB también la ejecuta.
 
-Los SQL de `Galisencia/Backend/` y `Galiservas/Backend/` son prototipos históricos, no la fuente de verdad. En particular, `galiservas1.sql` declara varias claves foráneas en sentido inverso. No debe importarse sobre `ProyectoEstela`.
-
-**Estado real:** el esquema canónico implementa identidad, RBAC, Galisencia, Galiservas y auditoría. Galiservas usa los nombres físicos ingleses `resources` y `reservations`; los prototipos históricos `recursos`/`reservas` no son canónicos.
+**Estado real:** el esquema canónico implementa identidad, RBAC, Galisencia, Galiservas y auditoría. Galiservas usa los nombres físicos ingleses `resources` y `reservations`; los prototipos históricos (`recursos`/`reservas`, carpetas `Backend/` eliminadas en la limpieza) no eran canónicos.
 
 ## Diagrama ER
 
