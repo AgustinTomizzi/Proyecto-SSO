@@ -11,7 +11,7 @@ const emptyForm: ReservationInput = { resourceId: '', date: today, start: '08:00
 
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 const messageOf = (error: unknown) => error instanceof Error ? error.message : 'Ocurrió un error inesperado.'
-const GALISENCIA_URL = import.meta.env.VITE_GALISENCIA_URL || 'http://localhost:5173'
+const GALISENCIA_URL = import.meta.env.VITE_GALISENCIA_URL || 'http://localhost:3000'
 const canAccessGaliservas = (session: Session) => session.permissions.some((permission) => normalize(permission) === 'galiservas.acceder')
   && session.systems.some((system) => normalize(system) === 'galiservas')
 const canAdmin = (session: Session) => {
@@ -211,7 +211,10 @@ function Reports({ report }: { report: ReservationReport | null }) {
 
 function formatDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
-  return new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${value}T12:00:00`))
+  const date = new Date(`${value}T12:00:00`)
+  const noYear = { weekday: 'long' as const, day: 'numeric' as const, month: 'long' as const }
+  const opts = date.getFullYear() === new Date().getFullYear() ? noYear : { ...noYear, year: 'numeric' as const }
+  return new Intl.DateTimeFormat('es-AR', opts).format(date)
 }
 
 function App() {

@@ -60,6 +60,24 @@ services:
       - galisencia-network
     restart: unless-stopped
 
+  # Frontend Galiservas (React, build estático servido por nginx) en el puerto 5174
+  galiservas:
+    build:
+      context: ./Galiservas/Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_GALISENCIA_URL: http://localhost:3000
+    container_name: galiservas-frontend
+    ports:
+      - "5174:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - galisencia-network
+    restart: unless-stopped
+
 networks:
   galisencia-network:
     driver: bridge
