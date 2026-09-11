@@ -2,9 +2,7 @@
 
 require_once __DIR__ . "/_common.php";
 
-if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    api_json(["ok" => false, "error" => "método no permitido"], 405);
-}
+api_metodo(["POST"]);
 
 $data = api_body();
 $email = trim((string) ($data["email"] ?? ""));
@@ -62,6 +60,7 @@ $usuario = [
     "nombre" => $u["nombre"],
     "email" => $u["email"],
     "rol" => $rol,
+    "rol_backend" => $u["rol"],
 ];
 
 if ($rol === "alumno") {
@@ -80,4 +79,9 @@ if ($rol === "alumno") {
     }
 }
 
-api_json(["ok" => true, "usuario" => $usuario]);
+api_json([
+    "ok" => true,
+    "usuario" => $usuario,
+    "permisos" => api_permisos_usuario((int) $u["id_usuario"]),
+    "sistemas" => api_sistemas_usuario((int) $u["id_usuario"]),
+]);

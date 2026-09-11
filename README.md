@@ -1,108 +1,110 @@
-# Proyecto SSO
+# Proyecto SSO: Galisencia + Galiservas
 
-Monorepo de los sistemas escolares **Galisencia** (asistencia y gestión académica) y **Galiservas** (reserva de aulas), con una sesión compartida.
+Monorepo escolar con identidad y permisos compartidos para dos sistemas:
 
-## Arquitectura activa
+- **Galisencia:** gestión de alumnos, cursos, asistencia, notas, reportes y administración académica. Tiene frontend React y API PHP/MySQL en integración.
+- **Galiservas:** reserva automática de aulas y equipos del Pañol con disponibilidad por fecha/horario, categorías y reportes de uso.
+
+No confundir una demo visual o un contrato documentado con funcionalidad persistente ya verificada.
+
+## Arquitectura
 
 ```text
-db/                              # Esquema, seed y migraciones MySQL
-Galisencia/
-├── Frontend/                    # React + TypeScript + Vite
-│   └── public/galiservas/       # Galiservas: reserva de aulas con stock
-└── Galileo_Auth/                # Backend PHP activo
-    ├── api/                     # Endpoints JSON (incluye recursos y reservas)
-    ├── config/                  # Conexión PDO
-    └── includes/                # Auth, RBAC, scope, re-auth y auditoría
-docker-compose.yml               # MySQL + backend + frontend/nginx
-tests/                           # Pruebas de integración de la API
+Galisencia/Frontend       React 19 + TypeScript + Vite
+Galiservas/Frontend       React 19 + TypeScript + Vite
+Galisencia/Galileo_Auth   PHP + PDO + sesión + API JSON
+db/                       MySQL ProyectoEstela (esquema y demo)
+docs/                     arquitectura funcional y guía de exposición
+USB-Setup/                ejecución portátil Windows/XAMPP
 ```
 
-El frontend se sirve en `http://localhost:3000` (o el puerto definido en `FRONTEND_PORT`). Nginx reenvía `/api/*` al backend PHP dentro de la red Docker. Galiservas se sirve en `/galiservas/` como estático integrado y usa la misma sesión SSO.
+La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. Los SQL dentro de carpetas `Backend` son prototipos históricos y no deben sustituir `db/01-schema.sql`.
 
-## Inicio rápido
+## Cuentas demo
 
-```bash
-docker compose up --build -d
-```
+Contraseña común: `demo1234`.
 
-Usuarios demo (contraseña `demo1234`):
-
-| Rol | Email |
+| Email | Rol real del seed |
 |---|---|
-| Administrador | `admin@galileo.edu.ar` |
-| Preceptor | `preceptor@galileo.edu.ar` |
-| Directivo | `directivo@galileo.edu.ar` |
-| Alumno | `alumno@galileo.edu.ar` |
+| `alumno@galileo.edu.ar` | Alumno |
+| `preceptor@galileo.edu.ar` | Preceptor |
+| `directivo@galileo.edu.ar` | Directivo |
+| `academica@galileo.edu.ar` | Administrador Academico |
+| `docente@galileo.edu.ar` | Docente |
+| `admin@galileo.edu.ar` | Administrador |
 
-El login es único (email + contraseña); el rol y el acceso a cada sistema los resuelve el backend.
+`admin@...` es el superrol `Administrador`. Galiservas admite únicamente `Preceptor`, `Docente` y `Administrador`; Alumno, Directivo y Administrador Académico no ven el enlace ni pueden entrar por URL directa.
 
-Para reinicializar completamente la base de desarrollo (re-ejecuta esquema, seed y migraciones 01-04):
+El catálogo demo de Galiservas incluye las aulas 208/209/210 y, en el Pañol, 30 notebooks, teclados, mouse, CPUs, proyectores, cámaras, micrófonos, parlantes y cables. Las reservas se confirman automáticamente si la suma de unidades solapadas no supera el stock.
 
-```bash
-docker compose down -v
-docker compose up --build -d
+## Inicio rápido USB/XAMPP (recomendado para aula)
+
+El paquete se prepara, no se descarga automáticamente. Layout soportado:
+
+```text
+X:\nodejs\
+X:\xampp\htdocs\Proyecto-SSO\
 ```
 
-`down -v` elimina todos los datos del volumen MySQL. No usarlo sobre datos que deban conservarse.
+1. En casa y con Internet: `USB-Setup\PREPARAR_USB.bat`.
+2. Para iniciar sin borrar datos: `USB-Setup\INICIAR_DEMO.bat`.
+3. Para diagnosticar: `USB-Setup\VERIFICAR.bat`.
+4. Solo para restaurar el seed, con confirmación destructiva: `USB-Setup\REINICIAR_BASE_DEMO.bat`.
 
-## Desarrollo frontend
+URLs del kit:
+
+- Galisencia: <http://localhost:5173>
+- Galiservas independiente: <http://localhost:5174>
+- Galileo Auth/PHP: <http://localhost/Proyecto-SSO/Galisencia/Galileo_Auth>
+- API: <http://localhost/Proyecto-SSO/Galisencia/Galileo_Auth/api>
+
+Pasos completos y problemas de puertos: [USB-Setup/INSTRUCCIONES.md](USB-Setup/INSTRUCCIONES.md).
+
+## Docker
+
+La configuración vigente de `docker-compose.yml` levanta MySQL `ProyectoEstela`, backend PHP Galisencia y frontend Galisencia en <http://localhost:3000>:
+
+```bash
+docker compose up --build
+```
+
+```bash
+docker compose down
+```
+
+El volumen conserva datos; `docker compose down -v` los elimina. Docker no levanta el frontend Galiservas. `DOCKER_INSTRUCTIONS.md` contiene información histórica que puede no coincidir con el compose actual; para la presentación usar este README y revisar directamente `docker-compose.yml`.
+
+## Desarrollo local
 
 ```bash
 cd Galisencia/Frontend
-npm install
+npm ci
 npm run dev
 ```
 
-En desarrollo, `VITE_API_URL` permite cambiar la URL del backend. Sin backend disponible, el login puede usar datos mock para la demo.
-
-## Galiservas
-
-- Acceso con rol Preceptor, Docente o Administrador (Alumno y Directivo ven un aviso de "Sin acceso").
-- Aulas **208, 209 y 210** (30/28/25 computadoras) y pañol (notebooks, teclados, mouse, CPUs, proyectores, cámaras, micrófonos, parlantes).
-- Franjas horarias fijas (08-10, 10-12, 13-15, 15-17, 17-19, 19-21). La disponibilidad por franja se calcula contra las reservas existentes (`recurso + fecha + horario`) y no se permite reservar más del stock disponible.
-- Las reservas se auditan (`reservas.crear`) y quedan registradas con su autor.
-
-## Roles y alcance
-
-- **Alumno**: consulta únicamente su asistencia y sus notas.
-- **Preceptor**: gestiona alumnos y asistencias solamente de sus cursos asignados. Editar o dar de baja un alumno exige reingresar la contraseña.
-- **Directivo**: consulta estadísticas institucionales completas.
-- **Administrador**: gestiona alumnos, cursos, usuarios, roles y auditoría.
-
-El control se aplica en la API mediante RBAC y reglas de alcance; no depende de ocultar botones en el frontend.
-
-## Historial y filtros
-
-- Asistencia consultable por año (incluye "Todos los años"), con resumen por materia y alumnos en riesgo (menos del 75%).
-- El panel de Directivo admite filtrar "Libres / en riesgo" por curso y materia.
-
-## Estado de módulos
-
-| Módulo | Estado |
-|---|---|
-| Login y sesión SSO | Hecho |
-| Gestión de alumnos y asistencias | Hecho |
-| Alcance por curso del preceptor | Hecho |
-| Re-autenticación del preceptor (baja / cambio de curso) | Hecho |
-| Reportes institucionales y por preceptor | Hecho |
-| Filtros por año y materia en asistencias y reportes | Hecho |
-| Gestión de usuarios y roles | Hecho |
-| Asignación curso-preceptor | Hecho |
-| Auditoría | Hecho |
-| Galiservas: reserva de aulas y pañol con stock | Hecho |
-
-## Pruebas
-
-Con el stack Docker activo y una base exclusiva de prueba:
-
 ```bash
-docker compose down -v            # base fresca (aplica migraciones 01-04)
-docker compose up --build -d
-$env:API_URL = "http://localhost:3000/api"; node tests/api.test.mjs
+cd Galiservas/Frontend
+npm install
+npm run dev -- --port 5174
 ```
 
-Ver [tests/README.md](./tests/README.md) para detalles.
+Galisencia usa `/api` por defecto y dispone de fallback mock cuando el backend no responde. Que la UI abra no demuestra persistencia: comprobar el modo y recargar después de escribir.
 
-## Cómo contribuir
+Valores PHP por defecto compatibles con XAMPP: `DB_HOST=localhost`, `DB_NAME=ProyectoEstela`, `DB_USER=root`, `DB_PASSWORD` vacío. Docker los reemplaza con variables de entorno.
 
-Antes de modificar código, leer [CONTRIBUTING.md](./CONTRIBUTING.md).
+## Documentación
+
+- [Base de datos y ER](docs/DATABASE.md)
+- [API implementada y límites actuales](docs/API.md)
+- [Mapa de navegación y guion de 8 minutos](docs/NAVEGACION.md)
+- [Matriz exacta de roles y permisos](docs/ROLES_Y_PERMISOS.md)
+- [Guía oral y preguntas](docs/PRESENTACION.md)
+- [Kit USB paso a paso](USB-Setup/INSTRUCCIONES.md)
+
+## Límites conocidos relevantes
+
+- El ciclo lectivo de asistencia se obtiene del año de la fecha; aún no se modelan períodos trimestrales independientes.
+- La relación entre alumno y usuario continúa resolviéndose por email institucional, no mediante FK.
+- Docker levanta Galisencia y la API, pero Galiservas se ejecuta de forma independiente en `:5174`.
+
+Para convenciones de colaboración, consultar [CONTRIBUTING.md](CONTRIBUTING.md).

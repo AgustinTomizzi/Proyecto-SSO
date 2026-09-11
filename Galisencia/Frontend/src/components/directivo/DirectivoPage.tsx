@@ -1,30 +1,12 @@
-import { useMemo, useState } from "react";
-import { colorPorPct, alumnosEnRiesgoFiltro } from "../../data/mock";
-import { UMBRAL_REGULARIDAD, PESO_ASISTENCIA, MATERIAS } from "../../data/types";
+import { useMemo } from "react";
+import { colorPorPct } from "../../data/mock";
+import { UMBRAL_REGULARIDAD, PESO_ASISTENCIA } from "../../data/types";
 import { useStore } from "../../data/StoreContext";
 import { useCountUp } from "../../hooks/useCountUp";
 import { Bars, Donut, Trend } from "../../components/ui/Chart";
 
 export default function DirectivoPage() {
-  const { resumen, registros, cursos, alumnos } = useStore();
-  const [cursoFiltro, setCursoFiltro] = useState<string>("");
-  const [materiaFiltro, setMateriaFiltro] = useState<string>("");
-
-  const cursosDisponibles = useMemo(() => {
-    const set = new Set<string>();
-    resumen.porCurso.forEach((c) => set.add(c.curso));
-    cursos.forEach((c) => set.add(`${c.anio} ${c.division}`));
-    return [...set].sort();
-  }, [resumen.porCurso, cursos]);
-
-  const enRiesgoFiltrados = useMemo(
-    () =>
-      alumnosEnRiesgoFiltro(alumnos, registros, {
-        curso: cursoFiltro || undefined,
-        materia: materiaFiltro || undefined,
-      }),
-    [alumnos, registros, cursoFiltro, materiaFiltro]
-  );
+  const { resumen, registros } = useStore();
 
   const conteo = useMemo(() => {
     const c = { presente: 0, tarde: 0, ausente: 0 };
@@ -114,46 +96,12 @@ export default function DirectivoPage() {
 
       <div className="grid grid-2" style={{ marginTop: 18 }}>
         <div className="card card-pad-lg">
-          <h3 style={{ marginBottom: 14 }}>Libres / en riesgo</h3>
-          <div className="row row-wrap" style={{ gap: 10, marginBottom: 12 }}>
-            <select
-              className="select"
-              value={cursoFiltro}
-              onChange={(e) => setCursoFiltro(e.target.value)}
-              aria-label="Filtrar por curso"
-            >
-              <option value="">Todos los cursos</option>
-              {cursosDisponibles.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <select
-              className="select"
-              value={materiaFiltro}
-              onChange={(e) => setMateriaFiltro(e.target.value)}
-              aria-label="Filtrar por materia"
-            >
-              <option value="">Todas las materias</option>
-              {MATERIAS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-            <span className="badge badge-danger">
-              {materiaFiltro
-                ? `Filtrando por ${materiaFiltro}`
-                : "Bajo el " + UMBRAL_REGULARIDAD + "%"}
-            </span>
-          </div>
-
+          <h3 style={{ marginBottom: 14 }}>Alumnos en riesgo</h3>
           <div className="stack" style={{ gap: 10 }}>
-            {enRiesgoFiltrados.length === 0 && (
-              <p className="muted">
-                {cursoFiltro || materiaFiltro
-                  ? "Ningún alumno en riesgo con este filtro. 🎉"
-                  : "No hay alumnos en riesgo. 🎉"}
-              </p>
+            {resumen.alumnosEnRiesgo.length === 0 && (
+              <p className="muted">No hay alumnos en riesgo. 🎉</p>
             )}
-            {enRiesgoFiltrados.slice(0, 15).map(({ alumno, pct, total }) => (
+            {resumen.alumnosEnRiesgo.map(({ alumno, general }) => (
               <div
                 key={alumno.id}
                 className="row spread"
@@ -165,13 +113,10 @@ export default function DirectivoPage() {
               >
                 <div>
                   <div style={{ fontWeight: 600 }}>{alumno.nombre}</div>
-                  <div className="muted text-sm">
-                    {alumno.curso}
-                    {materiaFiltro ? ` · ${materiaFiltro} · ${total} clases` : ""}
-                  </div>
+                  <div className="muted text-sm">{alumno.curso}</div>
                 </div>
                 <span className="badge badge-danger" style={{ fontSize: 13 }}>
-                  {pct}%
+                  {general}%
                 </span>
               </div>
             ))}

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Usuario } from "../data/types";
-import { login as loginService, logout as logoutService } from "./auth.service";
+import { closeSession, login as loginService, restoreSession } from "./auth.service";
 
 interface AuthState {
   usuario: Usuario | null;
@@ -11,44 +11,41 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
-const STORAGE_KEY = "galisencia.session";
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Restaurar sesión persistida
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        setUsuario(data.usuario);
-      }
-    } catch {
-      /* noop */
-    }
+    let active = true;
+    restoreSession()
+      .then((sessionUser) => {
+        if (active) setUsuario(sessionUser);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  async function login(email: string, password: string): Promise<Usuario> {
+  async function login(email: string, password: string) {
     setLoading(true);
     try {
-      const result = await loginService(email, password);
-      setUsuario(result.usuario);
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ usuario: result.usuario })
-      );
-      return result.usuario;
+      const authenticatedUser = await loginService(email, password);
+      setUsuario(authenticatedUser);
+      return authenticatedUser;
     } finally {
       setLoading(false);
     }
   }
 
   async function logout() {
-    setUsuario(null);
-    localStorage.removeItem(STORAGE_KEY);
-    await logoutService();
+    try {
+      await closeSession();
+    } finally {
+      setUsuario(null);
+    }
   }
 
   return (

@@ -9,28 +9,22 @@
 .estado-btn.presente.on { background: var(--success-bg); color: var(--success-ink); border-color: transparent; }
 .estado-btn.tarde.on    { background: var(--warning-bg); color: var(--warning-ink); border-color: transparent; }
 .estado-btn.ausente.on  { background: var(--danger-bg);  color: var(--danger-ink);  border-color: transparent; }
-
-/* Menú de acciones (⋮) por alumno */
-.acciones { position: relative; display: inline-flex; }
-.acciones__btn {
-  font: inherit; font-size: 18px; line-height: 1; cursor: pointer;
-  width: 34px; height: 34px; border-radius: var(--r-sm);
-  border: 1px solid var(--border); background: var(--surface); color: var(--text-soft);
+.alumno-menu-cell { position: relative; width: 44px; }
+.alumno-menu-trigger { font-size: 20px; line-height: 1; }
+.alumno-menu {
+  position: absolute; right: 12px; top: 42px; z-index: 10; min-width: 145px;
+  padding: 5px; border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); box-shadow: var(--shadow-lg);
 }
-.acciones__btn:hover { border-color: var(--border-strong); background: var(--surface-2); }
-.acciones__menu {
-  position: absolute; right: 0; top: 40px; z-index: 20;
-  display: flex; flex-direction: column; min-width: 190px;
-  border: 1px solid var(--border); border-radius: var(--r-md);
-  background: var(--surface); box-shadow: var(--shadow-lg, 0 10px 30px rgba(0,0,0,.18));
-  padding: 6px;
-}
-.acciones__menu button {
-  font: inherit; text-align: left; cursor: pointer;
-  padding: 9px 10px; border: 0; border-radius: var(--r-sm);
-  background: transparent; color: var(--text-strong);
-}
-.acciones__menu button:hover { background: var(--surface-2, var(--hl)); }
-.acciones__menu--danger { color: var(--danger) !important; }
-
-.text-center { text-align: center; }
+.alumno-menu button { display: block; width: 100%; padding: 8px 10px; border: 0; border-radius: 5px; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.alumno-menu button:hover { background: var(--surface-2); }
+.alumno-menu button.danger { color: var(--danger); }
+.historial-modal { max-width: 900px; max-height: calc(100vh - 40px); overflow-y: auto; }
+.historial-modal__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.historial-contenido { display: grid; gap: 24px; margin-top: 22px; }
+.historial-contenido h4 { margin: 0 0 12px; font-size: 15px; }
+.historial-ciclo + .historial-ciclo { margin-top: 18px; }
+.historial-ciclo h5 { margin: 0 0 8px; color: var(--text-soft); font-size: 13px; }
+.historial-estado { padding: 28px 0 8px; text-align: center; color: var(--text-soft); }
+.historial-estado .asistencia-dashboard__error { text-align: left; }
+@media (max-width: 760px) { .estado-group { min-width: 250px; } }

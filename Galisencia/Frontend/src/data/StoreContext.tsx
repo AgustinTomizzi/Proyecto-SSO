@@ -22,7 +22,7 @@ import {
   type EstadisticaAlumno,
   type ResumenInstitucional,
 } from "./mock";
-import { apiGet, apiSend, esErrorDeRed } from "./apiClient";
+import { apiGet, apiSend } from "./apiClient";
 import { useAuth } from "../auth/AuthContext";
 
 const STORAGE_KEY = "galisencia.data";
@@ -34,15 +34,27 @@ interface Persistido {
 }
 
 function normalizarRegistros(registros: RegistroAsistencia[]): RegistroAsistencia[] {
-  return registros.map((r) => {
-    const anio = r.anio != null ? Number(r.anio) : Number(String(r.fecha).slice(0, 4));
-    return {
-      ...r,
-      id: String(r.id),
-      alumnoId: String(r.alumnoId),
-      anio: Number.isFinite(anio) ? anio : undefined,
-    };
-  });
+  return registros.map((r) => ({
+    ...r,
+    id: String(r.id),
+    alumnoId: String(r.alumnoId),
+  }));
+}
+
+function normalizarAlumno(a: Partial<Alumno> & { id: string | number }): Alumno {
+  const partes = String(a.nombre ?? "").trim().split(/\s+/).filter(Boolean);
+  const apellido = a.apellido ?? (partes.length > 1 ? partes.pop() ?? "" : "");
+  const curso = String(a.curso ?? "");
+  return {
+    id: String(a.id),
+    nombre: a.apellido ? String(a.nombre ?? "") : partes.join(" "),
+    apellido: String(apellido),
+    dni: String(a.dni ?? ""),
+    curso,
+    cursoId: String(a.cursoId ?? ""),
+    division: String(a.division ?? curso.trim().split(/\s+/).at(-1) ?? ""),
+    email: String(a.email ?? ""),
+  };
 }
 
 function cargarInicial(): Persistido {
@@ -51,7 +63,11 @@ function cargarInicial(): Persistido {
     if (raw) {
       const d = JSON.parse(raw) as Partial<Persistido>;
       if (d.alumnos?.length && d.registros?.length && d.cursos?.length) {
-        return { alumnos: d.alumnos, cursos: d.cursos, registros: d.registros };
+        return {
+          alumnos: d.alumnos.map((a) => normalizarAlumno(a)),
+          cursos: d.cursos,
+          registros: normalizarRegistros(d.registros),
+        };
       }
     }
   } catch {
@@ -74,14 +90,13 @@ export interface StoreState {
     fecha: string,
     materia: string,
     estado: EstadoAsistencia
-  ) => void;
-  agregarAlumno: (datos: Omit<Alumno, "id"> & { id?: string }) => void;
+  ) => Promise<void>;
+  agregarAlumno: (datos: Omit<Alumno, "id"> & { id?: string }) => Promise<void>;
   editarAlumno: (
     id: string,
-    datos: Partial<Alumno>,
-    contrasena?: string
+    datos: Partial<Alumno> & { currentPassword?: string }
   ) => Promise<void>;
-  borrarAlumno: (id: string, contrasena?: string) => Promise<void>;
+  borrarAlumno: (id: string, currentPassword?: string) => Promise<void>;
   resetDemo: () => void;
 }
 
@@ -116,7 +131,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const miAlumno: Alumno = {
             id: usuario.id,
             nombre: usuario.nombre,
+            apellido: "",
+            dni: "",
             curso: usuario.curso ?? "",
+            cursoId: "",
+            division: usuario.curso?.trim().split(/\s+/).at(-1) ?? "",
             email: usuario.email,
           };
           setAlumnos([miAlumno]);
@@ -129,7 +148,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             apiGet<{ ok: true; registros: RegistroAsistencia[] }>("/asistencias.php"),
           ]);
           if (cancelled) return;
-          setAlumnos(al.alumnos.map((a) => ({ ...a, id: String(a.id) })));
+          setAlumnos(al.alumnos.map(normalizarAlumno));
           setCursos(cu.cursos.map((c) => ({ ...c, id: String(c.id) })));
           setRegistros(normalizarRegistros(as.registros));
         }
@@ -144,7 +163,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [usuario?.id]);
+  }, [usuario]);
 
   useEffect(() => {
     try {
@@ -173,23 +192,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const marcarAsistencia = useCallback(
-    (alumnoId: string, fecha: string, materia: string, estado: EstadoAsistencia) => {
+    async (alumnoId: string, fecha: string, materia: string, estado: EstadoAsistencia) => {
+      const data = await apiSend<{ ok: true; registro: RegistroAsistencia }>(
+        "/asistencias.php",
+        "POST",
+        { alumnoId, fecha, materia, estado }
+      );
+      const registro = normalizarRegistros([data.registro])[0];
       setRegistros((prev) => {
         const idx = prev.findIndex(
           (r) => r.alumnoId === alumnoId && r.fecha === fecha && r.materia === materia
         );
         if (idx >= 0) {
           const copia = [...prev];
-          copia[idx] = { ...copia[idx], estado };
+          copia[idx] = registro;
           return copia;
         }
         return [
           ...prev,
-          { id: `${alumnoId}-${materia}-${fecha}`, alumnoId, materia, fecha, estado },
+          registro,
         ];
       });
-      // Best-effort: persiste en el backend si está disponible.
-      apiSend("/asistencias.php", "POST", { alumnoId, fecha, materia, estado }).catch(() => {});
     },
     []
   );
@@ -203,66 +226,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const agregarAlumno = useCallback(
-    (datos: Omit<Alumno, "id"> & { id?: string }) => {
-      const nuevo: Alumno = {
-        id: datos.id ?? `nuevo-${Date.now()}`,
-        nombre: datos.nombre,
-        curso: datos.curso,
-        email:
-          datos.email ||
-          `${datos.nombre.toLowerCase().replace(/[^a-z]/g, ".")}@galileo.edu.ar`,
-      };
-      setAlumnos((prev) => [...prev, nuevo]);
-      apiSend("/alumnos.php", "POST", {
-        nombre: datos.nombreSolo || datos.nombre,
-        apellido: datos.apellido,
-        dni: datos.dni,
-        curso: datos.curso,
-        email: datos.email,
-      }).catch(() => {});
+    async (datos: Omit<Alumno, "id"> & { id?: string }) => {
+      const data = await apiSend<{ ok: true; alumno: Alumno }>("/alumnos.php", "POST", datos);
+      setAlumnos((prev) => [...prev, normalizarAlumno({ ...datos, ...data.alumno })]);
     },
     []
   );
 
-  const editarAlumno = useCallback(
-    async (id: string, datos: Partial<Alumno>, contrasena?: string) => {
-      const previos = alumnos;
-      setAlumnos((prev) => prev.map((a) => (a.id === id ? { ...a, ...datos } : a)));
-      try {
-        await apiSend("/alumnos.php", "PUT", {
-          id,
-          nombre: datos.nombreSolo || datos.nombre,
-          apellido: datos.apellido,
-          dni: datos.dni,
-          curso: datos.curso,
-          email: datos.email,
-          contrasena,
-        });
-      } catch (err) {
-        if (esErrorDeRed(err)) return; // demo sin backend: queda el cambio local
-        setAlumnos(previos);
-        throw err;
-      }
-    },
-    [alumnos]
-  );
+  const editarAlumno = useCallback(async (
+    id: string,
+    datos: Partial<Alumno> & { currentPassword?: string }
+  ) => {
+    const actual = alumnos.find((a) => a.id === id);
+    if (!actual) throw new Error("Alumno no encontrado");
+    const actualizado = { ...actual, ...datos, id };
+    await apiSend("/alumnos.php", "PUT", actualizado);
+    setAlumnos((prev) => prev.map((a) => (a.id === id ? normalizarAlumno(actualizado) : a)));
+  }, [alumnos]);
 
-  const borrarAlumno = useCallback(
-    async (id: string, contrasena?: string) => {
-      const previos = alumnos;
-      setAlumnos((prev) => prev.filter((a) => a.id !== id));
-      try {
-        await apiSend(`/alumnos.php?id=${encodeURIComponent(id)}`, "DELETE",
-          contrasena ? { contrasena } : undefined
-        );
-      } catch (err) {
-        if (esErrorDeRed(err)) return; // demo sin backend: queda el cambio local
-        setAlumnos(previos);
-        throw err;
-      }
-    },
-    [alumnos]
-  );
+  const borrarAlumno = useCallback(async (id: string, currentPassword?: string) => {
+    await apiSend(`/alumnos.php?id=${encodeURIComponent(id)}`, "DELETE", currentPassword ? { currentPassword } : undefined);
+    setAlumnos((prev) => prev.filter((a) => a.id !== id));
+  }, []);
 
   const resetDemo = useCallback(() => {
     const sembrados = buildAlumnos();

@@ -5,6 +5,9 @@ export interface Usuario {
   nombre: string;
   email: string;
   rol: Rol;
+  rolBackend: string;
+  permisos: string[];
+  sistemas: string[];
   curso?: string; // sólo alumnos
   avatar?: string;
 }
@@ -17,21 +20,17 @@ export interface RegistroAsistencia {
   materia: string;
   fecha: string; // YYYY-MM-DD
   estado: EstadoAsistencia;
-  anio?: number;
 }
 
 export interface Alumno {
   id: string;
   nombre: string;
+  apellido: string;
+  dni: string;
   curso: string;
+  cursoId: string;
+  division: string;
   email: string;
-  nombreSolo?: string;
-  apellido?: string;
-  dni?: string;
-  anio?: string;
-  division?: string;
-  cursoId?: string;
-  estado?: number;
 }
 
 export interface Curso {
@@ -39,8 +38,7 @@ export interface Curso {
   anio: string; // "1.º"
   division: string; // "A"
   turno: "Mañana" | "Tarde";
-  preceptor: string | null;
-  preceptorId?: string | null;
+  preceptor: string;
 }
 
 export const MATERIAS = [

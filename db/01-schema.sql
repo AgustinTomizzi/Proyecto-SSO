@@ -80,6 +80,23 @@ CREATE TABLE alumnos (
   CONSTRAINT fk_alumno_curso FOREIGN KEY (curso_id) REFERENCES cursos (id_cursos) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE alumno_movimientos (
+  id_movimiento BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  alumno_id INT UNSIGNED NOT NULL,
+  tipo ENUM('cambio_curso','baja') NOT NULL,
+  curso_origen_id INT UNSIGNED DEFAULT NULL,
+  curso_destino_id INT UNSIGNED DEFAULT NULL,
+  ciclo_lectivo YEAR NOT NULL,
+  realizado_por INT UNSIGNED NOT NULL,
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_movimiento),
+  KEY idx_movimiento_alumno_ciclo (alumno_id, ciclo_lectivo, fecha),
+  CONSTRAINT fk_movimiento_alumno FOREIGN KEY (alumno_id) REFERENCES alumnos (id_alumno) ON DELETE RESTRICT,
+  CONSTRAINT fk_movimiento_origen FOREIGN KEY (curso_origen_id) REFERENCES cursos (id_cursos) ON DELETE SET NULL,
+  CONSTRAINT fk_movimiento_destino FOREIGN KEY (curso_destino_id) REFERENCES cursos (id_cursos) ON DELETE SET NULL,
+  CONSTRAINT fk_movimiento_actor FOREIGN KEY (realizado_por) REFERENCES usuarios (id_usuario) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE materias (
   id_materia INT UNSIGNED NOT NULL AUTO_INCREMENT,
   nombre VARCHAR(255) NOT NULL UNIQUE,
@@ -129,4 +146,45 @@ CREATE TABLE auditoria (
   KEY idx_auditoria_fecha (fecha),
   KEY idx_auditoria_usuario (usuario_id),
   CONSTRAINT fk_auditoria_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Dominio Galiservas. Cada recurso representa un inventario reservable en
+-- una ubicacion; capacity permite reservar unidades sin modelar cada equipo.
+CREATE TABLE resources (
+  id_resource INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(150) NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  category ENUM('hardware_pc','audiovisual') NOT NULL,
+  location VARCHAR(150) NOT NULL,
+  description VARCHAR(500) DEFAULT NULL,
+  capacity INT UNSIGNED NOT NULL DEFAULT 1,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  available TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_resource),
+  UNIQUE KEY uq_resource_name_location (name, location),
+  KEY idx_resources_available (active, available),
+  CONSTRAINT chk_resource_capacity CHECK (capacity > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE reservations (
+  id_reservation BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id INT UNSIGNED NOT NULL,
+  resource_id INT UNSIGNED NOT NULL,
+  reservation_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  quantity INT UNSIGNED NOT NULL DEFAULT 1,
+  reason VARCHAR(500) NOT NULL,
+  status ENUM('pendiente','confirmada','rechazada','cancelada','completada') NOT NULL DEFAULT 'confirmada',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_reservation),
+  KEY idx_reservation_resource_slot (resource_id, reservation_date, start_time, end_time, status),
+  KEY idx_reservation_user (user_id, reservation_date),
+  CONSTRAINT fk_reservation_user FOREIGN KEY (user_id) REFERENCES usuarios (id_usuario) ON DELETE RESTRICT,
+  CONSTRAINT fk_reservation_resource FOREIGN KEY (resource_id) REFERENCES resources (id_resource) ON DELETE RESTRICT,
+  CONSTRAINT chk_reservation_quantity CHECK (quantity > 0),
+  CONSTRAINT chk_reservation_time CHECK (start_time < end_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -3,9 +3,7 @@
 require_once __DIR__ . "/_common.php";
 api_login_requerido();
 
-if ($_SERVER["REQUEST_METHOD"] !== "GET") {
-    api_json(["ok" => false, "error" => "metodo no permitido"], 405);
-}
+api_metodo(["GET"]);
 
 api_requerir_permiso("auditoria.ver");
 
