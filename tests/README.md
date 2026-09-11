@@ -2,7 +2,7 @@
 
 Estas pruebas validan autenticación, RBAC, alcance por curso, auditoría, reservas de Galiservas (con stock) y re-autenticación del preceptor contra el stack Docker real.
 
-Usar una base exclusiva de prueba: `down -v` vuelve a aplicar el esquema, el seed y las migraciones 01-04. El script restaura la asignación de curso que modifica, pero la auditoría es append-only.
+Usar una base exclusiva de prueba: `down -v` vuelve a aplicar el esquema, el seed y las migraciones 01-03. El script restaura la asignación de curso que modifica, pero la auditoría es append-only.
 
 ```powershell
 docker compose down -v
