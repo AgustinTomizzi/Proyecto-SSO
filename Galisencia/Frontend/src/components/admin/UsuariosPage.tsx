@@ -126,7 +126,7 @@ export default function UsuariosPage() {
                 </tr>
               </thead>
               <tbody>
-                {usuarios.map((u) => (
+                {[...usuarios].sort((a, b) => Number(a.id) - Number(b.id)).map((u) => (
                   <tr key={u.id}>
                     <td>{u.id}</td>
                     <td>

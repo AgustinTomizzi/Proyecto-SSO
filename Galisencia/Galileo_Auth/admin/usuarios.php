@@ -2,14 +2,14 @@
 
 session_start();
 
-require_once "Galileo_Auth/config/database.php";
+require_once __DIR__ . "/../config/database.php";
 
 
 // Comprobar que haya iniciado sesión
 
-if (!isset($_SESSION["usuario_id"])) {
+if (!isset($_SESSION["id_usuario"])) {
 
-    header("Location: Galileo_Auth/login.php");
+    header("Location: ../login.php");
     exit;
 
 }
@@ -67,13 +67,13 @@ $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <h1>Gestión de usuarios</h1>
 
-    <a href="Galileo_Auth/dashboard.php">
+    <a href="../dashboard.php">
         Volver al dashboard
     </a>
 
     <br><br>
 
-    <a href="Galileo_Auth/usuario_crear.php">
+    <a href="../crear_usuario.php">
         + Crear usuario
     </a>
 
@@ -93,8 +93,6 @@ $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <th>Email</th>
 
             <th>Rol</th>
-
-            <th>Acciones</th>
 
         </tr>
 
@@ -121,16 +119,6 @@ $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <td>
                     <?= htmlspecialchars($usuario["rol"]) ?>
-                </td>
-
-                <td>
-
-                    <a
-                        href="usuario_editar.php?id=<?= $usuario["id_usuario"] ?>"
-                    >
-                        Editar
-                    </a>
-
                 </td>
 
             </tr>

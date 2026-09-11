@@ -2,12 +2,12 @@
 
 session_start();
 
-require_once "Galileo_Auth/config/database.php";
+require_once __DIR__ . "/../config/database.php";
 
 
-if (!isset($_SESSION["usuario_id"])) {
+if (!isset($_SESSION["id_usuario"])) {
 
-    header("Location: Galileo_Auth/login.php");
+    header("Location: ../login.php");
     exit;
 
 }

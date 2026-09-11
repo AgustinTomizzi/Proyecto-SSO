@@ -89,6 +89,8 @@ export default function AppLayout() {
 
   if (!usuario) return null;
 
+  const NAV_GALISERVAS = (import.meta as any).env?.VITE_GALISERVAS_URL ?? "http://localhost:5174";
+
   const items = NAV[usuario.rol];
   const puedeAbrirGaliservas = usuario.permisos.includes("galiservas.acceder") && usuario.sistemas.includes("Galiservas");
 
@@ -129,7 +131,7 @@ export default function AppLayout() {
             <div className="app__nav-section">Sistemas</div>
             <a
               className="app__nav-link"
-              href={(import.meta as any).env?.VITE_GALISERVAS_URL ?? "http://localhost:5174"}
+              href={NAV_GALISERVAS}
               target="_blank"
               rel="noreferrer"
               onClick={() => setDrawer(false)}
