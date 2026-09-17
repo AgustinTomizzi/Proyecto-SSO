@@ -1,4 +1,4 @@
-import type { Reservation, ReservationInput, ReservationReport, Resource, Session, User } from './types'
+import type { Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session, User } from './types'
 
 const configuredUrl = import.meta.env.VITE_API_URL?.trim()
 export const API_URL = (configuredUrl || 'http://localhost:8080/api').replace(/\/+$/, '')
@@ -196,6 +196,27 @@ function reservationBody(input: ReservationInput) {
 
 export async function createReservation(input: ReservationInput) {
   return request('reservas.php', { method: 'POST', body: JSON.stringify(reservationBody(input)) })
+}
+
+function resourceBody(input: ResourceInput) {
+  return {
+    name: input.name,
+    type: input.type,
+    category: input.category,
+    location: input.location,
+    description: input.description,
+    capacity: input.capacity,
+    active: input.active,
+    available: input.available,
+  }
+}
+
+export async function createResource(input: ResourceInput) {
+  return request('recursos.php', { method: 'POST', body: JSON.stringify(resourceBody(input)) })
+}
+
+export async function updateResource(id: string, input: ResourceInput) {
+  return request('recursos.php', { method: 'PUT', body: JSON.stringify({ id, ...resourceBody(input) }) })
 }
 
 export async function updateReservation(id: string, input: ReservationInput) {

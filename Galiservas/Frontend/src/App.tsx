@@ -1,9 +1,9 @@
 import { useEffect, useEffectEvent, useState, type FormEvent, type ReactNode } from 'react'
 import {
-  ApiError, cancelReservation, createReservation, getReservationReport, getReservations, getResources, login,
-  logout, restoreSession, setReservationStatus, updateReservation,
+  ApiError, cancelReservation, createReservation, createResource, getReservationReport, getReservations, getResources, login,
+  logout, restoreSession, setReservationStatus, updateReservation, updateResource,
 } from './api'
-import type { Page, Reservation, ReservationInput, ReservationReport, Resource, Session } from './types'
+import type { Page, Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session } from './types'
 import './App.css'
 
 const today = new Date().toISOString().slice(0, 10)
@@ -22,7 +22,7 @@ const canAdmin = (session: Session) => {
 }
 const canChange = (reservation: Reservation) => !['cancelada', 'rechazada', 'finalizada'].includes(normalize(reservation.status))
 
-type IconName = 'grid' | 'calendar' | 'user' | 'plus' | 'logout' | 'monitor' | 'box' | 'clock' | 'menu' | 'close' | 'laptop' | 'camera' | 'mic' | 'speaker' | 'cable'
+type IconName = 'grid' | 'calendar' | 'user' | 'plus' | 'logout' | 'monitor' | 'box' | 'clock' | 'menu' | 'close' | 'laptop' | 'camera' | 'mic' | 'speaker' | 'cable' | 'chevron' | 'layers'
 
 function Icon({ name }: { name: IconName }) {
   const paths: Record<string, ReactNode> = {
@@ -38,6 +38,8 @@ function Icon({ name }: { name: IconName }) {
     speaker: <><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="15" r="4"/><circle cx="12" cy="7" r="1.5"/></>,
     cable: <><path d="M7 4v5a5 5 0 0 0 10 0V6M5 2h4v3H5zM15 3h4v3h-4zM12 14v7"/><circle cx="12" cy="21" r="1"/></>,
     clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>, menu: <path d="M4 7h16M4 12h16M4 17h16"/>, close: <path d="M6 6l12 12M18 6L6 18"/>,
+    chevron: <path d="M6 9l6 6 6-6"/>,
+    layers: <><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></>,
   }
   return <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
 }
@@ -92,19 +94,29 @@ function Login({ onSuccess }: { onSuccess: (session: Session) => void }) {
 function ReservationForm({ resources, initial, preferredResourceId, busy, onSubmit, onClose }: {
   resources: Resource[], initial?: Reservation, preferredResourceId?: string, busy: boolean, onSubmit: (input: ReservationInput) => void, onClose?: () => void
 }) {
-  const [form, setForm] = useState<ReservationInput>(initial ? {
-    resourceId: initial.resourceId, date: initial.date, start: initial.start, end: initial.end,
-    quantity: initial.quantity, reason: initial.reason,
-  } : { ...emptyForm, resourceId: preferredResourceId || resources[0]?.id || '' })
+  const [form, setForm] = useState<ReservationInput>(() => {
+    if (initial) return { resourceId: initial.resourceId, date: initial.date, start: initial.start, end: initial.end, quantity: initial.quantity, reason: initial.reason }
+    const initialResourceId = preferredResourceId || resources[0]?.id || ''
+    const initialResource = resources.find((resource) => resource.id === initialResourceId)
+    return { ...emptyForm, resourceId: initialResourceId, quantity: initialResource?.type === 'desktop_pc' ? initialResource.capacity : emptyForm.quantity }
+  })
   const [error, setError] = useState('')
   const selected = resources.find((resource) => resource.id === form.resourceId)
+  const isRoom = selected?.type === 'desktop_pc'
   const [slotAvailable, setSlotAvailable] = useState<number | null>(selected?.available ?? null)
   const checkingAvailability = slotAvailable === null && Boolean(form.resourceId && form.date && form.start && form.end && form.start < form.end)
   const change = (key: keyof ReservationInput, value: string | number) => {
     if (['resourceId', 'date', 'start', 'end'].includes(key)) {
       setSlotAvailable(null)
     }
-    setForm((current) => ({ ...current, [key]: value }))
+    setForm((current) => {
+      const next = { ...current, [key]: value }
+      if (key === 'resourceId') {
+        const nextResource = resources.find((resource) => resource.id === value)
+        if (nextResource?.type === 'desktop_pc') next.quantity = nextResource.capacity
+      }
+      return next
+    })
   }
   useEffect(() => {
     if (!form.resourceId || !form.date || !form.start || !form.end || form.start >= form.end) {
@@ -131,9 +143,14 @@ function ReservationForm({ resources, initial, preferredResourceId, busy, onSubm
     if (form.date < today) return setError('La fecha no puede ser anterior a hoy.')
     if (form.start >= form.end) return setError('La hora de fin debe ser posterior al inicio.')
     const maximum = slotAvailable ?? selected.capacity
-    if (form.quantity < 1 || form.quantity > maximum) return setError(`La cantidad debe estar entre 1 y ${maximum} para esa franja.`)
+    const quantity = isRoom ? selected.capacity : form.quantity
+    if (isRoom) {
+      if (maximum < selected.capacity) return setError('Esta aula ya tiene equipos reservados en ese horario. Elegí otro horario o aula.')
+    } else if (quantity < 1 || quantity > maximum) {
+      return setError(`La cantidad debe estar entre 1 y ${maximum} para esa franja.`)
+    }
     if (form.reason.trim().length < 5) return setError('Explicá el motivo de la reserva (mínimo 5 caracteres).')
-    setError(''); onSubmit({ ...form, reason: form.reason.trim() })
+    setError(''); onSubmit({ ...form, quantity, reason: form.reason.trim() })
   }
   return <form className="reservation-form" onSubmit={submit} noValidate>
     {error && <div className="alert error" role="alert">{error}</div>}
@@ -141,13 +158,140 @@ function ReservationForm({ resources, initial, preferredResourceId, busy, onSubm
       <label className="span-2">Recurso<select value={form.resourceId} onChange={(e) => change('resourceId', e.target.value)} disabled={busy}>
         <option value="">Seleccionar recurso</option>{resources.filter((item) => item.active).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.capacity} equipos</option>)}
       </select></label>
-      <label>Fecha<input type="date" min={today} value={form.date} onChange={(e) => change('date', e.target.value)} disabled={busy}/></label>
-      <label>Cantidad<input type="number" min="1" max={slotAvailable ?? selected?.capacity ?? 1} value={form.quantity} onChange={(e) => change('quantity', Number(e.target.value))} disabled={busy || checkingAvailability}/><small>{checkingAvailability ? 'Consultando disponibilidad...' : `Disponibles en esa franja: ${slotAvailable ?? selected?.capacity ?? 0}`}</small></label>
+      <label className={isRoom ? 'span-2' : undefined}>Fecha<input type="date" min={today} value={form.date} onChange={(e) => change('date', e.target.value)} disabled={busy}/>{isRoom && <small>{checkingAvailability ? 'Consultando disponibilidad...' : (slotAvailable ?? selected?.capacity ?? 0) >= (selected?.capacity ?? 0) ? `Aula completa disponible (${selected?.capacity} equipos)` : `Solo disponible parcialmente para ese horario`}</small>}</label>
+      {!isRoom && <label>Cantidad<input type="number" min="1" max={slotAvailable ?? selected?.capacity ?? 1} value={form.quantity} onChange={(e) => change('quantity', Number(e.target.value))} disabled={busy || checkingAvailability}/><small>{checkingAvailability ? 'Consultando disponibilidad...' : `Disponibles en esa franja: ${slotAvailable ?? selected?.capacity ?? 0}`}</small></label>}
       <label>Hora de inicio<input type="time" value={form.start} onChange={(e) => change('start', e.target.value)} disabled={busy}/></label>
       <label>Hora de fin<input type="time" value={form.end} onChange={(e) => change('end', e.target.value)} disabled={busy}/></label>
       <label className="span-2">Motivo<textarea rows={4} maxLength={300} value={form.reason} onChange={(e) => change('reason', e.target.value)} placeholder="Ej.: Práctica de programación de 4° año" disabled={busy}/><small>{form.reason.length}/300</small></label>
     </div>
     <div className="form-actions">{onClose && <button type="button" className="button ghost" onClick={onClose}>Cancelar</button>}<button className="button primary" disabled={busy}>{busy ? 'Guardando...' : initial ? 'Guardar cambios' : 'Confirmar reserva'}</button></div>
+  </form>
+}
+
+type CartItem = { resourceId: string, resourceName: string, quantity: number, capacity: number, available: number, isRoom: boolean }
+
+function NewReservationForm({ resources, preferredResourceId, busy, onSubmit }: {
+  resources: Resource[], preferredResourceId?: string, busy: boolean,
+  onSubmit: (shared: { date: string, start: string, end: string, reason: string }, items: { resourceId: string, quantity: number }[]) => Promise<{ failures: { resourceId: string, message: string }[] }>,
+}) {
+  const activeResources = resources.filter((item) => item.active)
+  const [shared, setShared] = useState({ date: today, start: '08:00', end: '09:00', reason: '' })
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [pendingResourceId, setPendingResourceId] = useState(preferredResourceId || activeResources[0]?.id || '')
+  const [pendingQuantity, setPendingQuantity] = useState(1)
+  const [slotAvailable, setSlotAvailable] = useState<number | null>(null)
+  const [addError, setAddError] = useState('')
+  const [formError, setFormError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const availableOptions = activeResources.filter((item) => !cart.some((entry) => entry.resourceId === item.id))
+  const pendingResource = activeResources.find((item) => item.id === pendingResourceId)
+  const isRoom = pendingResource?.type === 'desktop_pc'
+  const checkingAvailability = slotAvailable === null && Boolean(pendingResourceId && shared.date && shared.start && shared.end && shared.start < shared.end)
+
+  useEffect(() => {
+    if (!pendingResourceId || !shared.date || !shared.start || !shared.end || shared.start >= shared.end) return
+    let active = true
+    const timer = window.setTimeout(() => {
+      void getResources({ date: shared.date, start: shared.start, end: shared.end }).then((items) => {
+        if (!active) return
+        const resource = items.find((item) => item.id === pendingResourceId)
+        setSlotAvailable(resource ? resource.available : 0)
+      }).catch((reason) => { if (active) setAddError(messageOf(reason)) })
+    }, 250)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [pendingResourceId, shared.date, shared.start, shared.end])
+
+  const changeShared = (key: keyof typeof shared, value: string) => {
+    const hadItems = cart.length > 0
+    setShared((current) => ({ ...current, [key]: value }))
+    if (key === 'reason') return
+    setSlotAvailable(null)
+    setAddError('')
+    setCart([])
+    setFormError(hadItems ? 'Cambiaste la fecha u horario: volvé a agregar los recursos para este nuevo horario.' : '')
+  }
+
+  const changePendingResource = (id: string) => {
+    setPendingResourceId(id)
+    setSlotAvailable(null)
+    setAddError('')
+    const resource = activeResources.find((item) => item.id === id)
+    setPendingQuantity(resource?.type === 'desktop_pc' ? resource.capacity : 1)
+  }
+
+  const addToCart = () => {
+    if (!pendingResource) return setAddError('Seleccioná un recurso.')
+    const maximum = slotAvailable ?? pendingResource.capacity
+    const quantity = isRoom ? pendingResource.capacity : pendingQuantity
+    if (isRoom) {
+      if (maximum < pendingResource.capacity) return setAddError('Esta aula ya tiene equipos reservados en ese horario. Elegí otro horario.')
+    } else if (quantity < 1 || quantity > maximum) {
+      return setAddError(`La cantidad debe estar entre 1 y ${maximum} para esa franja.`)
+    }
+    const nextCart = [...cart, { resourceId: pendingResource.id, resourceName: pendingResource.name, quantity, capacity: pendingResource.capacity, available: maximum, isRoom }]
+    setCart(nextCart)
+    setAddError('')
+    const nextOptions = activeResources.filter((item) => !nextCart.some((entry) => entry.resourceId === item.id))
+    changePendingResource(nextOptions[0]?.id || '')
+  }
+
+  const removeFromCart = (resourceId: string) => setCart((current) => current.filter((item) => item.resourceId !== resourceId))
+  const updateCartQuantity = (resourceId: string, quantity: number) => setCart((current) => current.map((item) => item.resourceId === resourceId ? { ...item, quantity: Math.min(Math.max(quantity, 1), item.available) } : item))
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    setFormError('')
+    if (!shared.date || !shared.start || !shared.end) return setFormError('Completá la fecha y el horario de la reserva.')
+    if (shared.date < today) return setFormError('La fecha no puede ser anterior a hoy.')
+    if (shared.start >= shared.end) return setFormError('La hora de fin debe ser posterior al inicio.')
+    if (shared.reason.trim().length < 5) return setFormError('Explicá el motivo de la reserva (mínimo 5 caracteres).')
+    if (cart.length === 0) return setFormError('Agregá al menos un recurso a la reserva.')
+    setSubmitting(true)
+    const result = await onSubmit({ ...shared, reason: shared.reason.trim() }, cart.map((item) => ({ resourceId: item.resourceId, quantity: item.quantity })))
+    setSubmitting(false)
+    if (result.failures.length > 0) {
+      setFormError(result.failures.map((failure) => `${cart.find((item) => item.resourceId === failure.resourceId)?.resourceName || failure.resourceId}: ${failure.message}`).join(' · '))
+      setCart((current) => current.filter((item) => result.failures.some((failure) => failure.resourceId === item.resourceId)))
+    }
+  }
+
+  const disabled = submitting || busy
+
+  return <form className="reservation-form cart-form" onSubmit={(e) => void submit(e)} noValidate>
+    {formError && <div className="alert error" role="alert">{formError}</div>}
+    <div className="field-grid">
+      <label>Fecha<input type="date" min={today} value={shared.date} onChange={(e) => changeShared('date', e.target.value)} disabled={disabled}/></label>
+      <label>Hora de inicio<input type="time" value={shared.start} onChange={(e) => changeShared('start', e.target.value)} disabled={disabled}/></label>
+      <label>Hora de fin<input type="time" value={shared.end} onChange={(e) => changeShared('end', e.target.value)} disabled={disabled}/></label>
+      <label className="span-2">Motivo<textarea rows={3} maxLength={300} value={shared.reason} onChange={(e) => changeShared('reason', e.target.value)} placeholder="Ej.: Práctica de programación de 4° año" disabled={disabled}/><small>{shared.reason.length}/300</small></label>
+    </div>
+
+    <div className="cart-add-card">
+      <p className="eyebrow">SUMÁ RECURSOS A ESTA RESERVA</p>
+      <div className="cart-add-row">
+        <label>Recurso<select value={pendingResourceId} onChange={(e) => changePendingResource(e.target.value)} disabled={disabled || availableOptions.length === 0}>
+          {availableOptions.length === 0 && <option value="">No quedan más recursos para agregar</option>}
+          {availableOptions.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.capacity} equipos</option>)}
+        </select></label>
+        {pendingResourceId && !isRoom && <label className="cart-qty">Cantidad<input type="number" min="1" max={slotAvailable ?? pendingResource?.capacity ?? 1} value={pendingQuantity} onChange={(e) => setPendingQuantity(Number(e.target.value))} disabled={disabled || checkingAvailability}/></label>}
+        <button type="button" className="button ghost" onClick={addToCart} disabled={disabled || !pendingResourceId || checkingAvailability}><Icon name="plus"/> Agregar</button>
+      </div>
+      {pendingResourceId && <p className="hint">{checkingAvailability ? 'Consultando disponibilidad...' : isRoom ? ((slotAvailable ?? pendingResource?.capacity ?? 0) >= (pendingResource?.capacity ?? 0) ? `Aula completa disponible (${pendingResource?.capacity} equipos)` : 'Esta aula ya tiene equipos reservados en ese horario.') : `Disponibles en esa franja: ${slotAvailable ?? pendingResource?.capacity ?? 0}`}</p>}
+      {addError && <div className="alert error compact" role="alert">{addError}</div>}
+    </div>
+
+    <div className="cart-list">
+      {cart.length === 0 ? <p className="cart-empty">Todavía no agregaste ningún recurso a esta reserva.</p> : cart.map((item) => <div className="cart-row" key={item.resourceId}>
+        <span className="cart-row-name">{item.resourceName}</span>
+        {item.isRoom ? <span className="cart-row-qty">Aula completa · {item.capacity} equipos</span> : <input type="number" min="1" max={item.available} value={item.quantity} onChange={(e) => updateCartQuantity(item.resourceId, Number(e.target.value))} disabled={disabled}/>}
+        <button type="button" className="icon-button" onClick={() => removeFromCart(item.resourceId)} aria-label={`Quitar ${item.resourceName}`} disabled={disabled}><Icon name="close"/></button>
+      </div>)}
+    </div>
+
+    <div className="form-actions">
+      <button className="button primary" disabled={disabled}>{disabled ? 'Guardando...' : `Confirmar reserva${cart.length ? ` (${cart.length})` : ''}`}</button>
+    </div>
   </form>
 }
 
@@ -176,27 +320,217 @@ function ResourceCard({ resource, onReserve }: { resource: Resource, onReserve: 
   </article>
 }
 
+type ReservationGroup = { key: string, start: string, end: string, reason: string, userName: string, items: Reservation[] }
+
+function groupReservations(list: Reservation[]): ReservationGroup[] {
+  const map = new Map<string, ReservationGroup>()
+  list.forEach((item) => {
+    const key = [item.start, item.end, item.userId || item.userName, item.reason].join('|')
+    const existing = map.get(key)
+    if (existing) existing.items.push(item)
+    else map.set(key, { key, start: item.start, end: item.end, reason: item.reason, userName: item.userName, items: [item] })
+  })
+  return [...map.values()]
+}
+
 function ReservationsList({ reservations, admin, userId, busyId, onEdit, onCancel, onStatus }: {
   reservations: Reservation[], admin: boolean, userId: string, busyId: string, onEdit: (r: Reservation) => void,
   onCancel: (r: Reservation) => void, onStatus: (r: Reservation, status: string) => void,
 }) {
+  const [openDates, setOpenDates] = useState<Record<string, boolean>>({})
   const groups = reservations.reduce<Record<string, Reservation[]>>((all, item) => ((all[item.date || 'Sin fecha'] ??= []).push(item), all), {})
   if (!reservations.length) return <div className="empty"><div className="empty-icon"><Icon name="calendar"/></div><h3>No hay reservas para mostrar</h3><p>Las reservas nuevas aparecerán organizadas por día.</p></div>
-  return <div className="day-groups">{Object.entries(groups).sort(([a], [b]) => a.localeCompare(b)).map(([date, items]) => <section className="day-group" key={date}>
-    <header><time dateTime={date}>{formatDate(date)}</time><span>{items.length} {items.length === 1 ? 'reserva' : 'reservas'}</span></header>
-    <div className="reservation-list">{items.sort((a, b) => a.start.localeCompare(b.start)).map((item) => {
-      const own = !item.userId || item.userId === userId
-      return <article className="reservation-row" key={item.id}>
-        <div className="time-block"><b>{item.start}</b><span>{item.end}</span></div>
-        <div className="reservation-info"><div><h3>{item.resourceName || `Recurso #${item.resourceId}`}</h3><span className={`badge status-${normalize(item.status)}`}>{item.status}</span></div><p>{item.reason || 'Sin motivo especificado'}</p><small>{item.quantity} {item.quantity === 1 ? 'equipo' : 'equipos'}{admin && item.userName ? ` · ${item.userName}` : ''}</small></div>
-        {(admin || own) && canChange(item) && <div className="row-actions">
-          {own && <button className="button mini ghost" onClick={() => onEdit(item)} disabled={busyId === item.id}>Editar</button>}
-          {admin && normalize(item.status) !== 'finalizada' && <button className="button mini ghost" onClick={() => onStatus(item, 'finalizada')} disabled={busyId === item.id}>Finalizar</button>}
-          {(own || admin) && <button className="button mini danger" onClick={() => onCancel(item)} disabled={busyId === item.id}>Cancelar</button>}
+  const sortedDates = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
+  return <div className="day-groups">{sortedDates.map(([date, items], index) => {
+    const isOpen = openDates[date] ?? index === 0
+    const groupedItems = groupReservations(items).sort((a, b) => a.start.localeCompare(b.start))
+    return <section className={`day-group ${isOpen ? 'open' : ''}`} key={date}>
+      <button type="button" className="day-group-header" onClick={() => setOpenDates((current) => ({ ...current, [date]: !isOpen }))} aria-expanded={isOpen}>
+        <time dateTime={date}>{formatDate(date)}</time>
+        <span>{items.length} {items.length === 1 ? 'reserva' : 'reservas'}</span>
+        <Icon name="chevron"/>
+      </button>
+      {isOpen && <div className="reservation-list">{groupedItems.map((group) => {
+        const own = group.items.every((item) => !item.userId || item.userId === userId)
+        const single = group.items.length === 1 ? group.items[0] : null
+        return <article className="reservation-row" key={group.key}>
+          <div className="time-block"><b>{group.start}</b><span>{group.end}</span></div>
+          <div className="reservation-info">
+            <div>
+              <h3>{single ? (single.resourceName || `Recurso #${single.resourceId}`) : `${group.items.length} recursos reservados`}</h3>
+              {single && <span className={`badge status-${normalize(single.status)}`}>{single.status}</span>}
+            </div>
+            <p>{group.reason || 'Sin motivo especificado'}</p>
+            {!single && <div className="grouped-items">{group.items.map((item) => <div className="grouped-item" key={item.id}>
+              <span className="grouped-item-name">{item.resourceName || `Recurso #${item.resourceId}`}</span>
+              <span className="grouped-item-qty">{item.quantity} {item.quantity === 1 ? 'equipo' : 'equipos'}</span>
+              <span className={`badge status-${normalize(item.status)}`}>{item.status}</span>
+              {(admin || (!item.userId || item.userId === userId)) && canChange(item) && <div className="row-actions mini">
+                {(!item.userId || item.userId === userId) && <button className="button mini ghost" onClick={() => onEdit(item)} disabled={busyId === item.id}>Editar</button>}
+                {admin && normalize(item.status) !== 'finalizada' && <button className="button mini ghost" onClick={() => onStatus(item, 'finalizada')} disabled={busyId === item.id}>Finalizar</button>}
+                <button className="button mini danger" onClick={() => onCancel(item)} disabled={busyId === item.id}>Cancelar</button>
+              </div>}
+            </div>)}</div>}
+            <small>{single ? `${single.quantity} ${single.quantity === 1 ? 'equipo' : 'equipos'}` : ''}{admin && group.userName ? `${single ? ' · ' : ''}${group.userName}` : ''}</small>
+          </div>
+          {single && (admin || own) && canChange(single) && <div className="row-actions">
+            {own && <button className="button mini ghost" onClick={() => onEdit(single)} disabled={busyId === single.id}>Editar</button>}
+            {admin && normalize(single.status) !== 'finalizada' && <button className="button mini ghost" onClick={() => onStatus(single, 'finalizada')} disabled={busyId === single.id}>Finalizar</button>}
+            {(own || admin) && <button className="button mini danger" onClick={() => onCancel(single)} disabled={busyId === single.id}>Cancelar</button>}
+          </div>}
+        </article>
+      })}</div>}
+    </section>
+  })}</div>
+}
+
+const PISOS = ['Planta Baja', 'Piso 1', 'Piso 2', 'Piso 3']
+const emptyResourceForm = { name: '', category: 'hardware_pc' as Resource['category'], capacity: 1, location: PISOS[0], description: '' }
+
+function guessResourceType(name: string): Resource['type'] {
+  const value = normalize(name)
+  if (/(notebook|portatil|laptop)/.test(value)) return 'notebook'
+  if (/camara/.test(value)) return 'camara'
+  if (/microfono/.test(value)) return 'microfono'
+  if (/(parlante|altavoz)/.test(value)) return 'parlante'
+  if (/cable/.test(value)) return 'cable'
+  if (/teclado/.test(value)) return 'teclado'
+  if (/mouse/.test(value)) return 'mouse'
+  if (/cpu/.test(value)) return 'cpu'
+  if (/proyector/.test(value)) return 'proyector'
+  return 'otro'
+}
+
+function ResourcesAdmin({ resources, reservations, busyId, onCreate, onAddQuantity }: {
+  resources: Resource[], reservations: Reservation[], busyId: string,
+  onCreate: (input: ResourceInput) => Promise<boolean>,
+  onAddQuantity: (resource: Resource, extra: number, busyKey?: string) => Promise<boolean>,
+}) {
+  const busy = busyId === 'resource-form'
+  const [kind, setKind] = useState<'aula' | 'objeto'>('aula')
+  const [form, setForm] = useState(emptyResourceForm)
+  const [error, setError] = useState('')
+  const [matchedResource, setMatchedResource] = useState<Resource | null>(null)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+
+  const change = (key: keyof typeof form, value: string | number) => setForm((current) => ({ ...current, [key]: value }))
+  const changeKind = (next: 'aula' | 'objeto') => {
+    setKind(next)
+    setForm((current) => ({ ...current, name: '', category: next === 'aula' ? 'hardware_pc' : current.category, location: next === 'aula' ? PISOS[0] : 'Pañol' }))
+  }
+  const changeName = (value: string) => { change('name', kind === 'aula' ? value.replace(/\D/g, '') : value); setMatchedResource(null); setShowSuggestions(true) }
+  const pickSuggestion = (resource: Resource) => {
+    setMatchedResource(resource)
+    setShowSuggestions(false)
+    setForm((current) => ({ ...current, name: resource.name, capacity: 1 }))
+  }
+  const clearMatch = () => { setMatchedResource(null); setForm((current) => ({ ...current, name: '' })) }
+
+  const suggestions = form.name.trim().length > 0 && !matchedResource
+    ? resources.filter((item) => normalize(item.name).includes(normalize(form.name.trim()))).slice(0, 6)
+    : []
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (matchedResource) {
+      if (form.capacity < 1 || form.capacity > 10000) return setError('La cantidad a agregar debe ser un número entre 1 y 10000.')
+      setError('')
+      const success = await onAddQuantity(matchedResource, form.capacity, 'resource-form')
+      if (success) { setForm(emptyResourceForm); setMatchedResource(null); setKind('aula') }
+      return
+    }
+    const name = form.name.trim()
+    if (!name) return setError(kind === 'aula' ? 'Ingresá el número del aula (por ej. "205").' : 'Ingresá el nombre del recurso.')
+    if (form.capacity < 1 || form.capacity > 10000) return setError(kind === 'aula' ? 'La cantidad de computadoras debe ser un número entre 1 y 10000.' : 'La cantidad debe ser un número entre 1 y 10000.')
+    setError('')
+    const success = await onCreate({
+      name: kind === 'aula' ? `Aula ${name}` : name, type: kind === 'aula' ? 'desktop_pc' : guessResourceType(name), category: form.category,
+      location: kind === 'aula' ? form.location : 'Pañol', description: form.description.trim(), capacity: form.capacity, active: true, available: true,
+    })
+    if (success) setForm({ ...emptyResourceForm, location: kind === 'aula' ? PISOS[0] : 'Pañol' })
+  }
+
+  return <div className="resources-admin">
+    <section className="form-card">
+      <div className="form-card-head"><div className="step-number">01</div><div><h2>Nuevo recurso</h2><p>Sumá una nueva aula u objeto al catálogo, o cantidad a uno que ya existe.</p></div></div>
+      <form className="reservation-form" onSubmit={(e) => void submit(e)} noValidate>
+        {error && <div className="alert error" role="alert">{error}</div>}
+        {!matchedResource && <div className="kind-toggle" role="group" aria-label="Tipo de recurso">
+          <button type="button" className={kind === 'aula' ? 'active' : ''} onClick={() => changeKind('aula')} disabled={busy}>Aula</button>
+          <button type="button" className={kind === 'objeto' ? 'active' : ''} onClick={() => changeKind('objeto')} disabled={busy}>Objeto del Pañol</button>
         </div>}
-      </article>
-    })}</div>
-  </section>)}</div>
+        <div className="field-grid">
+          <label className="span-2 name-field">{kind === 'aula' ? 'Número de aula' : 'Nombre del recurso'}
+            <input type="text" inputMode={kind === 'aula' ? 'numeric' : 'text'} value={form.name} onChange={(e) => changeName(e.target.value)} onFocus={() => setShowSuggestions(true)} onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)} placeholder={kind === 'aula' ? 'Ej.: 205' : 'Ej.: Proyector portátil'} disabled={busy || Boolean(matchedResource)}/>
+            {showSuggestions && suggestions.length > 0 && <div className="name-suggestions">
+              {suggestions.map((item) => <button type="button" key={item.id} onMouseDown={() => pickSuggestion(item)}>
+                <span>{item.name}</span><small>Ya hay {item.capacity} {item.capacity === 1 ? 'unidad' : 'unidades'} · {item.location}</small>
+              </button>)}
+            </div>}
+          </label>
+          {matchedResource && <div className="span-2 existing-match">
+            <div><b>{matchedResource.name}</b> ya existe en el catálogo — actualmente hay <b>{matchedResource.capacity}</b> {matchedResource.capacity === 1 ? 'unidad' : 'unidades'} ({matchedResource.location}). Le vamos a sumar cantidad en vez de crear un recurso nuevo.</div>
+            <button type="button" className="button mini ghost" onClick={clearMatch} disabled={busy}>Usar otro nombre</button>
+          </div>}
+          {!matchedResource && kind === 'aula' && <label className="span-2">Piso<select value={form.location} onChange={(e) => change('location', e.target.value)} disabled={busy}>
+            {PISOS.map((piso) => <option key={piso} value={piso}>{piso}</option>)}
+          </select></label>}
+          {!matchedResource && kind === 'objeto' && <label>Categoría<select value={form.category} onChange={(e) => change('category', e.target.value as Resource['category'])} disabled={busy}>
+            <option value="hardware_pc">Hardware de PC</option>
+            <option value="audiovisual">Audiovisual</option>
+          </select></label>}
+          <label>{matchedResource ? 'Cantidad a agregar' : kind === 'aula' ? 'Cantidad de computadoras' : 'Cantidad'}<input type="number" min="1" max="10000" value={form.capacity} onChange={(e) => change('capacity', Number(e.target.value))} disabled={busy}/></label>
+          {!matchedResource && <label className="span-2">Descripción (opcional)<textarea rows={2} maxLength={500} value={form.description} onChange={(e) => change('description', e.target.value)} disabled={busy}/></label>}
+        </div>
+        <div className="form-actions"><button className="button primary" disabled={busy}>{busy ? 'Guardando...' : matchedResource ? `Sumar ${form.capacity || 0} ${form.capacity === 1 ? 'unidad' : 'unidades'}` : 'Agregar al catálogo'}</button></div>
+      </form>
+    </section>
+
+    <ResourcesInventoryOverview resources={resources} reservations={reservations}/>
+  </div>
+}
+
+function ResourcesInventoryOverview({ resources, reservations }: { resources: Resource[], reservations: Reservation[] }) {
+  const now = new Date()
+  const nowTime = now.toTimeString().slice(0, 5)
+  const nowLabel = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit' }).format(now)
+  const inUseFor = (resourceId: string) => reservations
+    .filter((item) => item.resourceId === resourceId && item.date === today && item.start <= nowTime && item.end > nowTime && !['cancelada', 'rechazada', 'finalizada'].includes(normalize(item.status)))
+    .reduce((sum, item) => sum + item.quantity, 0)
+
+  return <>
+    <section className="resources-table-card">
+      <div className="section-heading"><div><p className="eyebrow">CATÁLOGO ACTUAL</p><h2>Aulas y objetos en el inventario</h2></div></div>
+      <div className="resources-table">
+        <div className="resources-table-row head"><span>Recurso</span><span>Ubicación</span><span>Categoría</span><span>Cantidad total</span></div>
+        {resources.map((resource) => <div className="resources-table-row" key={resource.id}>
+          <span>{resource.name}</span>
+          <span>{resource.location}</span>
+          <span>{resource.category === 'audiovisual' ? 'Audiovisual' : 'Hardware de PC'}</span>
+          <span>{resource.capacity}</span>
+        </div>)}
+        {resources.length === 0 && <p className="cart-empty">Todavía no hay recursos cargados.</p>}
+      </div>
+    </section>
+
+    <section className="resources-table-card">
+      <div className="section-heading"><div><p className="eyebrow">EN VIVO</p><h2>Uso ahora mismo</h2></div></div>
+      <p className="hint no-top">Hoy {formatDate(today)} · {nowLabel}</p>
+      <div className="resources-table">
+        <div className="resources-table-row head"><span>Recurso</span><span>Cantidad existente</span><span>En uso ahora</span><span>Libres</span></div>
+        {resources.map((resource) => {
+          const used = inUseFor(resource.id)
+          return <div className="resources-table-row" key={resource.id}>
+            <span>{resource.name}</span>
+            <span>{resource.capacity}</span>
+            <span>{used}</span>
+            <span>{Math.max(resource.capacity - used, 0)}</span>
+          </div>
+        })}
+        {resources.length === 0 && <p className="cart-empty">Todavía no hay recursos cargados.</p>}
+      </div>
+    </section>
+  </>
 }
 
 function Reports({ report }: { report: ReservationReport | null }) {
@@ -280,9 +614,30 @@ function App() {
     catch (error) { setToast(`Error: ${messageOf(error)}`); return false }
     finally { setBusyId('') }
   }
-  const submitReservation = async (input: ReservationInput) => {
-    const success = await mutate(() => createReservation(input), 'Reserva creada correctamente.')
-    if (success) navigate('mine')
+  const createResourceItem = (input: ResourceInput) => mutate(() => createResource(input), 'Recurso creado correctamente.', 'resource-form')
+  const addResourceQuantity = (resource: Resource, extra: number, busyKey?: string) => mutate(() => updateResource(resource.id, {
+    name: resource.name, type: resource.type, category: resource.category, location: resource.location,
+    description: resource.description, capacity: resource.capacity + extra, active: resource.active, available: true,
+  }), `Se sumaron ${extra} unidades a "${resource.name}".`, busyKey ?? `resource-qty-${resource.id}`)
+  const submitReservationBatch = async (
+    shared: { date: string, start: string, end: string, reason: string },
+    items: { resourceId: string, quantity: number }[],
+  ) => {
+    setBusyId('form')
+    const failures: { resourceId: string, message: string }[] = []
+    let successCount = 0
+    for (const item of items) {
+      try {
+        await createReservation({ resourceId: item.resourceId, quantity: item.quantity, date: shared.date, start: shared.start, end: shared.end, reason: shared.reason })
+        successCount++
+      } catch (error) { failures.push({ resourceId: item.resourceId, message: messageOf(error) }) }
+    }
+    setBusyId('')
+    if (successCount > 0) await loadData()
+    if (failures.length === 0) { setToast(successCount === 1 ? 'Reserva creada correctamente.' : `${successCount} reservas creadas correctamente.`); navigate('mine') }
+    else if (successCount > 0) setToast(`Se crearon ${successCount} de ${items.length} reservas. Revisá los recursos marcados en rojo.`)
+    else setToast('Error: no se pudo crear ninguna reserva.')
+    return { failures }
   }
   const doLogout = async () => {
     setBusyId('logout')
@@ -298,15 +653,16 @@ function App() {
 
   const nav: { id: Page, label: string, icon: IconName }[] = [
     { id: 'dashboard', label: 'Panel general', icon: 'grid' },
-    { id: 'aulas', label: 'Aulas 208 / 209 / 210', icon: 'monitor' },
+    { id: 'aulas', label: 'Aulas', icon: 'monitor' },
     { id: 'panol', label: 'Pañol', icon: 'box' },
     ...(admin ? [{ id: 'reservations' as Page, label: 'Reservas', icon: 'calendar' as const }] : []),
+    ...(admin ? [{ id: 'resources' as Page, label: 'Recursos', icon: 'layers' as const }] : []),
     ...(admin ? [{ id: 'reports' as Page, label: 'Reportes', icon: 'clock' as const }] : []),
     { id: 'mine', label: 'Mis reservas', icon: 'user' }, { id: 'new', label: 'Nueva reserva', icon: 'plus' },
   ]
   const visibleReservations = page === 'mine' ? reservations.filter((item) => !item.userId || item.userId === session.user.id) : reservations
   const catalogResources = (page === 'aulas' ? resources.filter((item) => item.location !== 'Pañol') : page === 'panol' ? resources.filter((item) => item.location === 'Pañol') : resources)
-    .filter((item) => category === 'all' || item.category === category)
+    .filter((item) => page === 'aulas' || category === 'all' || item.category === category)
 
   return <div className="app-shell">
     <aside className={`sidebar ${menu ? 'open' : ''}`}>
@@ -324,7 +680,7 @@ function App() {
           <section className="summary-grid"><article><span>RECURSOS ACTIVOS</span><b>{resources.filter((r) => r.active).length}</b><small>espacios y equipos</small></article><article><span>CAPACIDAD HABILITADA</span><b>{resources.reduce((sum, r) => sum + r.capacity, 0)}</b><small>unidades reservables</small></article><article><span>RESERVAS REGISTRADAS</span><b>{reservations.length}</b><small>en tu vista actual</small></article></section>
         </>}
         {(page === 'dashboard' || page === 'aulas' || page === 'panol') && <>
-          {page !== 'dashboard' && <section className="page-title"><div><p className="eyebrow">{page === 'aulas' ? 'LABORATORIOS' : 'INVENTARIO MÓVIL'}</p><h1>{page === 'aulas' ? 'Aulas 208, 209 y 210' : 'Pañol'}</h1><p>{page === 'aulas' ? 'Reservá una cantidad de computadoras para una fecha y horario.' : 'Reservá notebooks, hardware y recursos audiovisuales.'}</p></div></section>}
+          {page !== 'dashboard' && <section className="page-title"><div><p className="eyebrow">{page === 'aulas' ? 'LABORATORIOS' : 'INVENTARIO MÓVIL'}</p><h1>{page === 'aulas' ? 'Aulas' : 'Pañol'}</h1><p>{page === 'aulas' ? 'Reservá una cantidad de computadoras para una fecha y horario.' : 'Reservá notebooks, hardware y recursos audiovisuales.'}</p></div></section>}
           <div className="section-heading"><div><p className="eyebrow">CATÁLOGO</p><h2>{page === 'aulas' ? 'Computadoras por aula' : page === 'panol' ? 'Equipos del Pañol' : 'Espacios y equipos'}</h2></div><button className="refresh" onClick={() => void loadData()} disabled={dataLoading}>{dataLoading ? 'Actualizando...' : 'Actualizar'}</button></div>
           {page !== 'aulas' && <div className="category-filters" role="group" aria-label="Filtrar recursos por categoría"><button className={category === 'all' ? 'active' : ''} onClick={() => setCategory('all')}>Todos</button><button className={category === 'hardware_pc' ? 'active' : ''} onClick={() => setCategory('hardware_pc')}>Hardware de PC</button><button className={category === 'audiovisual' ? 'active' : ''} onClick={() => setCategory('audiovisual')}>Audiovisuales</button></div>}
           {dataLoading && !resources.length ? <div className="resource-grid">{[1,2,3,4].map((i) => <div className="resource-card skeleton" key={i}/>)}</div> : catalogResources.length ? <div className="resource-grid">{catalogResources.map((resource) => <ResourceCard key={resource.id} resource={resource} onReserve={() => navigate('new', resource.id)}/>)}</div> : !dataError && <div className="empty"><div className="empty-icon"><Icon name={page === 'panol' ? 'box' : 'monitor'}/></div><h3>No hay recursos en esta categoría</h3><p>Probá con otro filtro o actualizá el catálogo.</p></div>}
@@ -334,7 +690,8 @@ function App() {
           {dataLoading && !reservations.length ? <div className="loading-line"><span className="spinner dark"/>Cargando reservas...</div> : <ReservationsList reservations={visibleReservations} admin={admin} userId={session.user.id} busyId={busyId} onEdit={setEditing} onCancel={(item) => { if (window.confirm('¿Querés cancelar esta reserva?')) void mutate(() => cancelReservation(item.id), 'Reserva cancelada.', item.id) }} onStatus={(item, status) => void mutate(() => setReservationStatus(item.id, status), 'Estado actualizado.', item.id)}/>} 
         </>}
         {page === 'reports' && <><section className="page-title"><div><p className="eyebrow">ANÁLISIS DE USO</p><h1>Reportes de reservas</h1><p>Recursos más utilizados, categorías y horarios de mayor demanda.</p></div></section><Reports report={report}/></>}
-        {page === 'new' && <><section className="page-title"><div><p className="eyebrow">NUEVA SOLICITUD</p><h1>Reservar un recurso</h1><p>Indicá cuándo y qué equipamiento necesitás.</p></div></section><section className="form-card"><div className="form-card-head"><div className="step-number">01</div><div><h2>Datos de la reserva</h2><p>Todos los campos son obligatorios.</p></div></div><ReservationForm resources={resources} preferredResourceId={preferredResourceId} busy={busyId === 'form'} onSubmit={(input) => void submitReservation(input)}/></section></>}
+        {page === 'resources' && <><section className="page-title"><div><p className="eyebrow">ADMINISTRACIÓN</p><h1>Recursos</h1><p>Agregá aulas y objetos nuevos, o sumá cantidad a los que ya existen.</p></div></section><ResourcesAdmin resources={resources} reservations={reservations} busyId={busyId} onCreate={createResourceItem} onAddQuantity={addResourceQuantity}/></>}
+        {page === 'new' && <><section className="page-title"><div><p className="eyebrow">NUEVA SOLICITUD</p><h1>Reservar recursos</h1><p>Indicá cuándo, y sumá todas las aulas y objetos que necesites para esa reserva.</p></div></section><section className="form-card"><div className="form-card-head"><div className="step-number">01</div><div><h2>Datos de la reserva</h2><p>Podés agregar más de un recurso antes de confirmar.</p></div></div><NewReservationForm resources={resources} preferredResourceId={preferredResourceId} busy={busyId === 'form'} onSubmit={submitReservationBatch}/></section></>}
       </div>
     </main>
     {editing && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setEditing(null) }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="edit-title"><div className="modal-head"><div><p className="eyebrow">EDITAR RESERVA</p><h2 id="edit-title">{editing.resourceName}</h2></div><button className="icon-button" onClick={() => setEditing(null)} aria-label="Cerrar"><Icon name="close"/></button></div><ReservationForm resources={resources} initial={editing} busy={busyId === editing.id} onClose={() => setEditing(null)} onSubmit={(input) => void mutate(() => updateReservation(editing.id, input), 'Reserva actualizada.', editing.id)}/></section></div>}

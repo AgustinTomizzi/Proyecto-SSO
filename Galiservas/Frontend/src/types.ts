@@ -1,4 +1,4 @@
-export type Page = 'dashboard' | 'aulas' | 'panol' | 'reservations' | 'reports' | 'mine' | 'new'
+export type Page = 'dashboard' | 'aulas' | 'panol' | 'reservations' | 'resources' | 'reports' | 'mine' | 'new'
 
 export interface User {
   id: string
@@ -53,4 +53,15 @@ export interface ReservationInput {
   end: string
   quantity: number
   reason: string
+}
+
+export interface ResourceInput {
+  name: string
+  type: Resource['type']
+  category: Resource['category']
+  location: string
+  description: string
+  capacity: number
+  active: boolean
+  available: boolean
 }
