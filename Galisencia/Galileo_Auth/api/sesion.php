@@ -12,6 +12,7 @@ if (!$usuario) {
     session_destroy();
     api_json(["ok" => false, "error" => "sesion invalida"], 401);
 }
+$usuario["avatarUrl"] = "https://www.gravatar.com/avatar/" . md5(strtolower(trim($usuario["email"]))) . "?d=identicon&s=160";
 $usuarioIdSesion = usuarioActual();
 if (strcasecmp((string) $usuario["rol"], "Alumno") === 0) {
     $alumnoStmt = $pdo->prepare("SELECT a.id_alumno AS id, CONCAT(c.anio, ' ', c.division) AS curso FROM alumnos a LEFT JOIN cursos c ON c.id_cursos=a.curso_id WHERE a.email=? AND a.estado=1 LIMIT 1");

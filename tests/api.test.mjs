@@ -23,6 +23,9 @@ class PhpSession {
       if (match) this.cookie = match[1] ? `PHPSESSID=${match[1]}` : "";
     }
 
+    if (response.headers.get("content-type")?.startsWith("image/")) {
+      return { status: response.status, body: Buffer.from(await response.arrayBuffer()), headers: response.headers };
+    }
     const text = await response.text();
     let body = null;
     if (text) {
@@ -65,13 +68,14 @@ async function main() {
   console.log(`Probando API en ${API}`);
 
   const anonymous = new PhpSession();
-  for (const endpoint of ["alumnos", "cursos", "asistencias", "notas", "reportes", "usuarios", "auditoria", "recursos", "reservas"]) {
+  for (const endpoint of ["alumnos", "cursos", "asistencias", "notas", "reportes", "usuarios", "auditoria", "recursos", "reservas", "horarios"]) {
     const result = await anonymous.request(`/${endpoint}.php`);
     expectStatus(result, 401, `${endpoint} sin sesion`);
   }
 
-  const [admin, preceptor, directivo, alumno] = await Promise.all([
+  const [admin, academica, preceptor, directivo, alumno] = await Promise.all([
     login("admin@galileo.edu.ar", "admin"),
+    login("academica@galileo.edu.ar", "admin"),
     login("preceptor@galileo.edu.ar", "preceptor"),
     login("directivo@galileo.edu.ar", "directivo"),
     login("alumno@galileo.edu.ar", "alumno"),
@@ -135,6 +139,29 @@ async function main() {
   expectStatus(notasAjenas, 200, "alumno consulta nota ajena (filtrada)");
   assert.equal(notasAjenas.body.notas.length, 0);
   expectStatus(await alumno.request("/auditoria.php"), 403, "alumno consulta auditoria");
+
+  // ---- Horarios por curso: alcance, carga, imagen y eliminacion ----
+  const horarioAlumno = await alumno.request("/horarios.php");
+  expectStatus(horarioAlumno, 200, "alumno consulta horario");
+  assert.deepEqual(horarioAlumno.body.cursos.map((curso) => Number(curso.id)), [1]);
+  expectStatus(await alumno.request("/horarios.php?imagen=1&cursoId=2"), 403, "alumno consulta horario ajeno");
+  expectStatus(await directivo.request("/horarios.php"), 403, "directivo consulta horarios sin permiso");
+  expectStatus(await preceptor.request("/horarios.php"), 403, "preceptor consulta horarios sin permiso");
+
+  const horarioPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
+  const form = new FormData();
+  form.append("cursoId", "10");
+  form.append("imagen", new Blob([horarioPng], { type: "image/png" }), "horario-6a.png");
+  expectStatus(await academica.request("/horarios.php", { method: "POST", body: form }), 201, "administradora academica publica horario");
+
+  const horariosAdmin = await admin.request("/horarios.php?cursoId=10");
+  expectStatus(horariosAdmin, 200, "admin consulta horario publicado");
+  assert.equal(horariosAdmin.body.cursos[0].nombreArchivo, "horario-6a.png");
+  const imagenHorario = await admin.request("/horarios.php?imagen=1&cursoId=10");
+  expectStatus(imagenHorario, 200, "admin obtiene imagen de horario");
+  assert.equal(imagenHorario.headers.get("content-type"), "image/png");
+  assert.ok(Buffer.isBuffer(imagenHorario.body) && imagenHorario.body.length > 0);
+  expectStatus(await admin.json("/horarios.php", "DELETE", { cursoId: 10 }), 200, "admin elimina horario");
 
   const reporteDirectivo = await directivo.request("/reportes.php");
   expectStatus(reporteDirectivo, 200, "reporte del directivo");

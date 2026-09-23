@@ -61,6 +61,7 @@ $usuario = [
     "email" => $u["email"],
     "rol" => $rol,
     "rol_backend" => $u["rol"],
+    "avatarUrl" => "https://www.gravatar.com/avatar/" . md5(strtolower(trim($u["email"]))) . "?d=identicon&s=160",
 ];
 
 if ($rol === "alumno") {

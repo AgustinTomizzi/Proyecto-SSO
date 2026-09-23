@@ -1,4 +1,4 @@
-.estado-group { display: inline-flex; gap: 6px; }
+.estado-group { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .estado-btn {
   font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
   padding: 6px 12px; border-radius: var(--r-sm);
@@ -27,4 +27,8 @@
 .historial-ciclo h5 { margin: 0 0 8px; color: var(--text-soft); font-size: 13px; }
 .historial-estado { padding: 28px 0 8px; text-align: center; color: var(--text-soft); }
 .historial-estado .asistencia-dashboard__error { text-align: left; }
-@media (max-width: 760px) { .estado-group { min-width: 250px; } }
+@media (max-width: 760px) {
+  .estado-group { min-width: 250px; }
+  .historial-modal { width: 100%; max-height: calc(100dvh - 24px); }
+  .alumno-menu { position: fixed; top: auto; right: 14px; bottom: 14px; left: 14px; z-index: 90; }
+}

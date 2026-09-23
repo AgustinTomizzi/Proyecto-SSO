@@ -80,6 +80,21 @@ CREATE TABLE alumnos (
   CONSTRAINT fk_alumno_curso FOREIGN KEY (curso_id) REFERENCES cursos (id_cursos) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE horarios_curso (
+  id_horario INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  curso_id INT UNSIGNED NOT NULL,
+  nombre_archivo VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(50) NOT NULL,
+  tamanio INT UNSIGNED NOT NULL,
+  imagen MEDIUMBLOB NOT NULL,
+  actualizado_por INT UNSIGNED DEFAULT NULL,
+  actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_horario),
+  UNIQUE KEY uq_horario_curso (curso_id),
+  CONSTRAINT fk_horario_curso FOREIGN KEY (curso_id) REFERENCES cursos (id_cursos) ON DELETE CASCADE,
+  CONSTRAINT fk_horario_usuario FOREIGN KEY (actualizado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE alumno_movimientos (
   id_movimiento BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   alumno_id INT UNSIGNED NOT NULL,

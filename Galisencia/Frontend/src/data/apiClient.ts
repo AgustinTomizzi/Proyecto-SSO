@@ -1,5 +1,9 @@
 const BASE = (import.meta as any).env?.VITE_API_URL ?? "/api";
 
+export function apiUrl(path: string): string {
+  return `${BASE}${path}`;
+}
+
 export async function apiGet<T>(path: string, timeoutMs = 5000): Promise<T> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -27,6 +31,18 @@ export async function apiSend<T>(
     headers: body ? { "Content-Type": "application/json" } : undefined,
     credentials: "include",
     body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data) throw new Error(data?.error || `Error HTTP ${res.status}`);
+  if (data.ok === false) throw new Error(data.error || "La operación fue rechazada");
+  return data as T;
+}
+
+export async function apiUpload<T>(path: string, body: FormData): Promise<T> {
+  const res = await fetch(apiUrl(path), {
+    method: "POST",
+    credentials: "include",
+    body,
   });
   const data = await res.json().catch(() => null);
   if (!res.ok || !data) throw new Error(data?.error || `Error HTTP ${res.status}`);

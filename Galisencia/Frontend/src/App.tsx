@@ -12,6 +12,7 @@ import GestionPage from "./components/gestion/GestionPage";
 import ReportesPage from "./components/reportes/ReportesPage";
 import AuditoriaPage from "./components/auditoria/AuditoriaPage";
 import UsuariosPage from "./components/admin/UsuariosPage";
+import HorariosPage from "./components/horarios/HorariosPage";
 
 function RutaProtegida({
   rol,
@@ -26,8 +27,17 @@ function RutaProtegida({
   return <>{children}</>;
 }
 
-export default function App() {
+function RutaConPermiso({ permiso, children }: { permiso: string; children: ReactNode }) {
   const { usuario } = useAuth();
+  if (!usuario) return <Navigate to="/login" replace />;
+  if (!usuario.permisos.includes(permiso)) return <Navigate to={HOME[usuario.rol]} replace />;
+  return <>{children}</>;
+}
+
+export default function App() {
+  const { usuario, loading } = useAuth();
+
+  if (loading) return null;
 
   return (
     <>
@@ -101,6 +111,14 @@ export default function App() {
                 <UsuariosPage />
               </RutaProtegida>
             }
+          />
+          <Route
+            path="/horarios"
+            element={<RutaConPermiso permiso="horarios.ver"><HorariosPage /></RutaConPermiso>}
+          />
+          <Route
+            path="/admin/horarios"
+            element={<RutaConPermiso permiso="horarios.gestionar"><HorariosPage /></RutaConPermiso>}
           />
         </Route>
 

@@ -209,11 +209,12 @@ export default function PreceptorPage() {
           <h1>Registrar asistencia</h1>
           <p className="sub">Gestioná la asistencia de tus cursos.</p>
         </div>
-        <div className="row row-wrap">
-          <span className="badge badge-success"><span className="dot dot-success" /> {conteo.presente} presentes</span>
-          <span className="badge badge-warning">{conteo.tarde} tardes</span>
-          <span className="badge badge-danger">{conteo.ausente} ausentes</span>
-        </div>
+      </div>
+
+      <div className="grid grid-3 attendance-role-kpis" style={{ marginBottom: 18 }}>
+        <div className="stat stat--success"><div className="stat__icon">✓</div><div className="stat__label">Presentes</div><div className="stat__value">{conteo.presente}</div><div className="stat__hint">En el curso seleccionado</div></div>
+        <div className="stat stat--warning"><div className="stat__icon">◷</div><div className="stat__label">Tardanzas</div><div className="stat__value">{conteo.tarde}</div><div className="stat__hint">En la clase actual</div></div>
+        <div className="stat stat--danger"><div className="stat__icon">×</div><div className="stat__label">Ausentes</div><div className="stat__value">{conteo.ausente}</div><div className="stat__hint">Requieren seguimiento</div></div>
       </div>
 
       <div className="grid grid-3" style={{ marginBottom: 18 }}>
