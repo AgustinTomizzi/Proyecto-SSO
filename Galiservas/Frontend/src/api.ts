@@ -1,4 +1,4 @@
-import type { Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session, User } from './types'
+import type { Reservation, ReservationInput, ReservationReport, Incident, Resource, ResourceInput, Session, User } from './types'
 
 const configuredUrl = import.meta.env.VITE_API_URL?.trim()
 export const API_URL = (configuredUrl || 'http://localhost:8080/api').replace(/\/+$/, '')
@@ -147,11 +147,14 @@ export async function getResources(filters: { date?: string, start?: string, end
   return Array.isArray(list) ? list.map(parseResource).filter((item) => item.id && item.name) : []
 }
 
-export async function getReservationReport(): Promise<ReservationReport> {
-  const data = await request('reportes_reservas.php')
+export async function getReservationReport(month: string): Promise<ReservationReport> {
+  const data = await request(`reportes_reservas.php?mes=${encodeURIComponent(month)}`)
   const report = record(data.report)
   const rows = (value: unknown) => Array.isArray(value) ? value.map(record) : []
   return {
+    month: text(report.month),
+    monthly: rows(report.monthly).map((item) => ({ resourceId: text(item.resourceId), resourceName: text(item.resourceName), category: normalize(text(item.category)) === 'audiovisual' ? 'audiovisual' : 'hardware_pc', capacity: number(0, item.capacity), reservations: number(0, item.reservations), requested: number(0, item.requested), processed: number(0, item.processed), delivered: number(0, item.delivered), shortage: number(0, item.shortage) })),
+    shortages: rows(report.shortages).map((item) => ({ reservationId: text(item.reservationId), date: text(item.date).slice(0, 10), resourceName: text(item.resourceName), requested: number(0, item.requested), delivered: number(0, item.delivered), reason: text(item.reason) })),
     byResource: rows(report.byResource).map((item) => ({ resourceId: text(item.resourceId), resourceName: text(item.resourceName), category: normalize(text(item.category)) === 'audiovisual' ? 'audiovisual' : 'hardware_pc', reservations: number(0, item.reservations), units: number(0, item.units) })),
     byCategory: rows(report.byCategory).map((item) => ({ category: normalize(text(item.category)) === 'audiovisual' ? 'audiovisual' : 'hardware_pc', reservations: number(0, item.reservations), units: number(0, item.units) })),
     byHour: rows(report.byHour).map((item) => ({ hour: number(0, item.hour), reservations: number(0, item.reservations), units: number(0, item.units) })),
@@ -174,6 +177,10 @@ function parseReservation(value: unknown): Reservation {
     quantity: number(1, item.cantidad, item.quantity, item.equipos),
     reason: text(item.motivo, item.razon, item.reason),
     status: text(item.estado, item.status) || 'pendiente',
+    deliveredQuantity: item.deliveredQuantity === null || item.deliveredQuantity === undefined ? null : number(0, item.deliveredQuantity),
+    shortageReason: text(item.shortageReason),
+    deliveryObservation: text(item.deliveryObservation),
+    deliveredAt: text(item.deliveredAt),
   }
 }
 
@@ -234,4 +241,25 @@ export async function cancelReservation(id: string) {
     if (!(error instanceof ApiError) || ![404, 405].includes(error.status)) throw error
     return request(`reservas.php?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
   }
+}
+
+export async function recordDelivery(reservationId: string, deliveredQuantity: number, shortageReason: string, observation: string) {
+  return request('retiros.php', { method: 'POST', body: JSON.stringify({ reservationId, deliveredQuantity, shortageReason, observation }) })
+}
+
+export async function getIncidents(): Promise<Incident[]> {
+  const data = await request('incidentes_recursos.php')
+  const list = Array.isArray(data.incidents) ? data.incidents : []
+  return list.map((value: unknown) => {
+    const item = record(value)
+    return { id: text(item.id), resourceId: text(item.resourceId), resourceName: text(item.resourceName), reservationId: text(item.reservationId), equipmentIdentifier: text(item.equipmentIdentifier), description: text(item.description), status: text(item.status) === 'resuelto' ? 'resuelto' as const : 'abierto' as const, resolution: text(item.resolution), reporterName: text(item.reporterName), reportedAt: text(item.reportedAt) }
+  })
+}
+
+export async function createIncident(input: { resourceId: string, reservationId: string, equipmentIdentifier: string, description: string }) {
+  return request('incidentes_recursos.php', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export async function resolveIncident(id: string, resolution: string) {
+  return request('incidentes_recursos.php', { method: 'PUT', body: JSON.stringify({ id, resolution }) })
 }

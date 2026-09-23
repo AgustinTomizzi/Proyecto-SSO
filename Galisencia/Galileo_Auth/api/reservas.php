@@ -49,7 +49,7 @@ function validarDisponibilidad($pdo, $datos, $excluirId = 0)
 
 if ($method === "GET") {
     api_requerir_permiso("reservas.ver");
-    $sql = "SELECT rv.id_reservation AS id, rv.user_id AS userId, COALESCE(a.id_alumno, rv.user_id) AS usuario_id, CONCAT(u.nombre, ' ', u.apellido) AS usuario_nombre, rv.resource_id AS resourceId, rv.resource_id AS recurso_id, r.name AS recurso_nombre, r.type, r.category, r.location, rv.reservation_date AS date, rv.reservation_date AS fecha, rv.start_time AS startTime, rv.start_time AS hora_inicio, rv.end_time AS endTime, rv.end_time AS hora_fin, rv.quantity, rv.quantity AS cantidad, rv.reason, rv.reason AS motivo, CASE rv.status WHEN 'confirmada' THEN 'aprobada' WHEN 'completada' THEN 'finalizada' ELSE rv.status END AS status, rv.created_at AS createdAt, rv.updated_at AS updatedAt FROM reservations rv JOIN usuarios u ON u.id_usuario = rv.user_id LEFT JOIN alumnos a ON a.email = u.email JOIN resources r ON r.id_resource = rv.resource_id";
+    $sql = "SELECT rv.id_reservation AS id, rv.user_id AS userId, COALESCE(a.id_alumno, rv.user_id) AS usuario_id, CONCAT(u.nombre, ' ', u.apellido) AS usuario_nombre, rv.resource_id AS resourceId, rv.resource_id AS recurso_id, r.name AS recurso_nombre, r.type, r.category, r.location, rv.reservation_date AS date, rv.reservation_date AS fecha, rv.start_time AS startTime, rv.start_time AS hora_inicio, rv.end_time AS endTime, rv.end_time AS hora_fin, rv.quantity, rv.quantity AS cantidad, rv.reason, rv.reason AS motivo, CASE rv.status WHEN 'confirmada' THEN 'aprobada' WHEN 'completada' THEN 'finalizada' ELSE rv.status END AS status, rv.created_at AS createdAt, rv.updated_at AS updatedAt, d.delivered_quantity AS deliveredQuantity, d.shortage_reason AS shortageReason, d.observation AS deliveryObservation, d.recorded_at AS deliveredAt FROM reservations rv LEFT JOIN reservation_deliveries d ON d.reservation_id = rv.id_reservation JOIN usuarios u ON u.id_usuario = rv.user_id LEFT JOIN alumnos a ON a.email = u.email JOIN resources r ON r.id_resource = rv.resource_id";
     $params = [];
     if (!$administra) {
         $sql .= " WHERE rv.user_id = ?";
@@ -88,7 +88,8 @@ if ($method === "POST") {
 
 $d = api_body();
 $id = (int) ($d["id"] ?? $_GET["id"] ?? 0);
-$stmt = $pdo->prepare("SELECT * FROM reservations WHERE id_reservation = ?");
+$pdo->beginTransaction();
+$stmt = $pdo->prepare("SELECT * FROM reservations WHERE id_reservation = ? FOR UPDATE");
 $stmt->execute([$id]);
 $actual = $stmt->fetch();
 if (!$actual) {
@@ -100,11 +101,15 @@ if (!$administra && !$propia) {
 }
 
 if ($method === "DELETE") {
+    $check = $pdo->prepare("SELECT 1 FROM reservation_deliveries WHERE reservation_id = ?");
+    $check->execute([$id]);
+    if ($check->fetchColumn()) api_json(["ok" => false, "error" => "Una reserva con retiro registrado no se puede cancelar."], 409);
     api_requerir_permiso("reservas.cancelar");
     if (!$administra && !in_array($actual["status"], ["pendiente", "confirmada"], true)) {
         api_json(["ok" => false, "error" => "la reserva ya no se puede cancelar"], 409);
     }
     $pdo->prepare("UPDATE reservations SET status = 'cancelada' WHERE id_reservation = ?")->execute([$id]);
+    $pdo->commit();
     registrarAuditoria("reservas.cancelar", "reserva", $id, ["antes" => $actual, "despues" => ["status" => "cancelada"]]);
     api_json(["ok" => true]);
 }
@@ -118,12 +123,19 @@ $solicitado = (string) ($d["status"] ?? $d["estado"] ?? $actual["status"]);
 if (!$administra && $solicitado !== $actual["status"] && $solicitado !== "cancelada") {
     api_json(["ok" => false, "error" => "no podes cambiar ese estado"], 403);
 }
+$check = $pdo->prepare("SELECT 1 FROM reservation_deliveries WHERE reservation_id = ?");
+$check->execute([$id]);
+$tieneRetiro = (bool) $check->fetchColumn();
+if ($tieneRetiro && ($datos["resourceId"] !== (int) $actual["resource_id"] || $datos["quantity"] !== (int) $actual["quantity"] || $datos["date"] !== $actual["reservation_date"] || $datos["startTime"] !== substr($actual["start_time"], 0, 5) && $datos["startTime"] !== $actual["start_time"] || $datos["endTime"] !== substr($actual["end_time"], 0, 5) && $datos["endTime"] !== $actual["end_time"])) {
+    api_json(["ok" => false, "error" => "No se puede cambiar una reserva con retiro registrado."], 409);
+}
 $status = $administra ? $solicitado : ($solicitado === "cancelada" ? "cancelada" : (string) $actual["status"]);
 $status = ["aprobada" => "confirmada", "finalizada" => "completada"][$status] ?? $status;
+if ($tieneRetiro && in_array($status, ["cancelada", "rechazada"], true)) api_json(["ok" => false, "error" => "Una reserva con retiro no se puede cancelar ni rechazar."], 409);
+if ($status === "completada" && !$tieneRetiro) api_json(["ok" => false, "error" => "Registrá el retiro antes de finalizar la reserva."], 409);
 if (!in_array($status, ["pendiente", "confirmada", "rechazada", "cancelada", "completada"], true)) {
     api_json(["ok" => false, "error" => "status invalido"], 400);
 }
-$pdo->beginTransaction();
 try {
     if (in_array($status, ["pendiente", "confirmada"], true)) {
         validarDisponibilidad($pdo, $datos, $id);

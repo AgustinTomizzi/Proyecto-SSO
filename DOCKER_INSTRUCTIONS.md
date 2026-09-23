@@ -65,3 +65,20 @@ Se inyectan como `args` en el service `galiservas` del compose:
 - Las credenciales de `docker-compose.yml` son solo para desarrollo.
 - No exponer el puerto de MySQL externamente en producción.
 - Considerar HTTPS/TLS para producción.
+## Actualización de retiros e incidentes
+
+En una instalación nueva, el archivo `db/04-retiros-incidentes.sql` se aplica al crear el volumen de MySQL. Si ya usás Docker con datos, **conservá el volumen** y aplicá la migración una vez:
+
+```bash
+docker compose up --build -d
+docker compose exec -T mysql mysql -u root -prootpassword ProyectoEstela < db/04-retiros-incidentes.sql
+```
+
+Si usás PowerShell en Windows, el mismo paso se hace así (desde la carpeta del proyecto):
+
+```powershell
+docker compose up --build -d
+Get-Content -Raw .\db\04-retiros-incidentes.sql | docker compose exec -T mysql mysql -u root -prootpassword ProyectoEstela
+```
+
+En Galiservas (`http://localhost:5174`), un Administrador registra el retiro desde **Reservas**: cantidad entregada y, si falta alguna, el motivo. En **Reportes** se puede elegir un mes para comparar solicitado, entregado y faltantes registrados. Las reservas sin retiro siguen pendientes de entrega; no se contabilizan como faltantes. Cada usuario puede informar fallas de equipos relacionados con sus propias reservas en **Problemas con PC**; un Administrador puede informar fallas sin reserva y registrar la resolución. El inventario actual es la capacidad del recurso, no un histórico mensual. Las solicitudes rechazadas por falta de capacidad antes de crear la reserva todavía no quedan registradas como demanda.

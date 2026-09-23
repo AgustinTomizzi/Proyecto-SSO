@@ -1,9 +1,9 @@
 import { useEffect, useEffectEvent, useState, type FormEvent, type ReactNode } from 'react'
 import {
-  ApiError, cancelReservation, createReservation, createResource, getReservationReport, getReservations, getResources, login,
+  ApiError, cancelReservation, createIncident, createReservation, createResource, getIncidents, getReservationReport, getReservations, getResources, login, recordDelivery, resolveIncident,
   logout, restoreSession, setReservationStatus, updateReservation, updateResource,
 } from './api'
-import type { Page, Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session } from './types'
+import type { Page, Reservation, ReservationInput, ReservationReport, Incident, Resource, ResourceInput, Session } from './types'
 import './App.css'
 
 const today = new Date().toISOString().slice(0, 10)
@@ -333,9 +333,9 @@ function groupReservations(list: Reservation[]): ReservationGroup[] {
   return [...map.values()]
 }
 
-function ReservationsList({ reservations, admin, userId, busyId, onEdit, onCancel, onStatus }: {
+function ReservationsList({ reservations, admin, userId, busyId, onEdit, onCancel, onStatus, onDelivery }: {
   reservations: Reservation[], admin: boolean, userId: string, busyId: string, onEdit: (r: Reservation) => void,
-  onCancel: (r: Reservation) => void, onStatus: (r: Reservation, status: string) => void,
+  onCancel: (r: Reservation) => void, onStatus: (r: Reservation, status: string) => void, onDelivery: (r: Reservation) => void,
 }) {
   const [openDates, setOpenDates] = useState<Record<string, boolean>>({})
   const groups = reservations.reduce<Record<string, Reservation[]>>((all, item) => ((all[item.date || 'Sin fecha'] ??= []).push(item), all), {})
@@ -363,20 +363,22 @@ function ReservationsList({ reservations, admin, userId, busyId, onEdit, onCance
             <p>{group.reason || 'Sin motivo especificado'}</p>
             {!single && <div className="grouped-items">{group.items.map((item) => <div className="grouped-item" key={item.id}>
               <span className="grouped-item-name">{item.resourceName || `Recurso #${item.resourceId}`}</span>
-              <span className="grouped-item-qty">{item.quantity} {item.quantity === 1 ? 'equipo' : 'equipos'}</span>
+              <span className="grouped-item-qty">{item.quantity} {item.quantity === 1 ? 'equipo' : 'equipos'}{item.deliveredQuantity !== null ? ` · Entregados: ${item.deliveredQuantity}` : ''}</span>
               <span className={`badge status-${normalize(item.status)}`}>{item.status}</span>
               {(admin || (!item.userId || item.userId === userId)) && canChange(item) && <div className="row-actions mini">
-                {(!item.userId || item.userId === userId) && <button className="button mini ghost" onClick={() => onEdit(item)} disabled={busyId === item.id}>Editar</button>}
-                {admin && normalize(item.status) !== 'finalizada' && <button className="button mini ghost" onClick={() => onStatus(item, 'finalizada')} disabled={busyId === item.id}>Finalizar</button>}
-                <button className="button mini danger" onClick={() => onCancel(item)} disabled={busyId === item.id}>Cancelar</button>
+                {item.deliveredQuantity === null && (!item.userId || item.userId === userId) && <button className="button mini ghost" onClick={() => onEdit(item)} disabled={busyId === item.id}>Editar</button>}
+                {admin && item.deliveredQuantity === null && <button className="button mini ghost" onClick={() => onDelivery(item)} disabled={busyId === item.id}>Registrar retiro</button>}
+                {admin && item.deliveredQuantity !== null && normalize(item.status) !== 'finalizada' && <button className="button mini ghost" onClick={() => onStatus(item, 'finalizada')} disabled={busyId === item.id}>Finalizar</button>}
+                {item.deliveredQuantity === null && <button className="button mini danger" onClick={() => onCancel(item)} disabled={busyId === item.id}>Cancelar</button>}
               </div>}
             </div>)}</div>}
-            <small>{single ? `${single.quantity} ${single.quantity === 1 ? 'equipo' : 'equipos'}` : ''}{admin && group.userName ? `${single ? ' · ' : ''}${group.userName}` : ''}</small>
+            <small>{single ? `${single.quantity} ${single.quantity === 1 ? 'equipo' : 'equipos'}` : ''}{single && single.deliveredQuantity !== null ? ` · Entregados: ${single.deliveredQuantity}/${single.quantity}` : ''}{admin && group.userName ? `${single ? ' · ' : ''}${group.userName}` : ''}</small>
           </div>
           {single && (admin || own) && canChange(single) && <div className="row-actions">
-            {own && <button className="button mini ghost" onClick={() => onEdit(single)} disabled={busyId === single.id}>Editar</button>}
-            {admin && normalize(single.status) !== 'finalizada' && <button className="button mini ghost" onClick={() => onStatus(single, 'finalizada')} disabled={busyId === single.id}>Finalizar</button>}
-            {(own || admin) && <button className="button mini danger" onClick={() => onCancel(single)} disabled={busyId === single.id}>Cancelar</button>}
+            {own && single.deliveredQuantity === null && <button className="button mini ghost" onClick={() => onEdit(single)} disabled={busyId === single.id}>Editar</button>}
+            {admin && single.deliveredQuantity === null && <button className="button mini ghost" onClick={() => onDelivery(single)} disabled={busyId === single.id}>Registrar retiro</button>}
+            {admin && single.deliveredQuantity !== null && normalize(single.status) !== 'finalizada' && <button className="button mini ghost" onClick={() => onStatus(single, 'finalizada')} disabled={busyId === single.id}>Finalizar</button>}
+            {(own || admin) && single.deliveredQuantity === null && <button className="button mini danger" onClick={() => onCancel(single)} disabled={busyId === single.id}>Cancelar</button>}
           </div>}
         </article>
       })}</div>}
@@ -533,13 +535,67 @@ function ResourcesInventoryOverview({ resources, reservations }: { resources: Re
   </>
 }
 
-function Reports({ report }: { report: ReservationReport | null }) {
-  if (!report) return <div className="loading-line"><span className="spinner dark"/>Cargando reportes...</div>
+function Reports({ report, month, onMonth }: { report: ReservationReport | null, month: string, onMonth: (month: string) => void }) {
+  if (!report) return <><div className="month-picker"><label>Mes a consultar <input type="month" value={month} onChange={(event) => onMonth(event.target.value)}/></label></div><div className="loading-line"><span className="spinner dark"/>Cargando reportes...</div></>
   const categoryName = (category: Resource['category']) => category === 'audiovisual' ? 'Recursos audiovisuales' : 'Hardware de PC'
-  return <div className="reports-grid">
+  const totals = report.monthly.reduce((all, item) => ({ requested: all.requested + item.requested, processed: all.processed + item.processed, delivered: all.delivered + item.delivered, shortage: all.shortage + item.shortage }), { requested: 0, processed: 0, delivered: 0, shortage: 0 })
+  return <><div className="month-picker"><label>Mes a consultar <input type="month" value={month} onChange={(event) => onMonth(event.target.value)}/></label></div>
+    <section className="monthly-summary"><div><span>SOLICITADOS</span><b>{totals.requested}</b></div><div><span>ENTREGADOS</span><b>{totals.delivered}</b></div><div><span>FALTANTES EN RETIROS</span><b>{totals.shortage}</b></div><p>De {totals.requested} unidades solicitadas, {totals.processed} ya tienen retiro registrado. Las reservas sin retiro aún no cuentan como faltantes.</p></section>
+    <section className="report-card monthly-table"><p className="eyebrow">DEMANDA Y ENTREGA</p><h2>Recursos del mes</h2><div className="table-scroll"><table><thead><tr><th>Recurso</th><th>Inventario actual</th><th>Solicitadas</th><th>Entregadas</th><th>Faltaron</th></tr></thead><tbody>{report.monthly.map((item) => <tr key={item.resourceId}><td>{item.resourceName}</td><td>{item.capacity}</td><td>{item.requested}</td><td>{item.delivered}</td><td>{item.shortage}</td></tr>)}</tbody></table></div></section>
+    <section className="report-card monthly-table"><p className="eyebrow">MOTIVOS REGISTRADOS</p><h2>Por qué faltaron recursos</h2>{report.shortages.length ? report.shortages.map((item) => <div className="report-row" key={item.reservationId}><span>{item.resourceName} · {item.date}</span><b>{item.requested - item.delivered} sin entregar</b><small>Reserva #{item.reservationId} · {item.reason}</small></div>) : <p className="hint">No hay faltantes registrados en este mes.</p>}</section>
+    <div className="reports-grid">
     <section className="report-card"><p className="eyebrow">POR CATEGORÍA</p><h2>Uso del inventario</h2>{report.byCategory.map((item) => <div className="report-row" key={item.category}><span>{categoryName(item.category)}</span><b>{item.units} unidades</b><small>{item.reservations} reservas</small></div>)}</section>
     <section className="report-card"><p className="eyebrow">MÁS UTILIZADOS</p><h2>Recursos</h2>{report.byResource.map((item) => <div className="report-row" key={item.resourceId}><span>{item.resourceName}</span><b>{item.units} unidades</b><small>{item.reservations} reservas</small></div>)}</section>
     <section className="report-card"><p className="eyebrow">HORARIOS</p><h2>Franjas más solicitadas</h2>{report.byHour.map((item) => <div className="report-row" key={item.hour}><span>{String(item.hour).padStart(2, '0')}:00</span><b>{item.reservations} reservas</b><small>{item.units} unidades</small></div>)}</section>
+  </div></>
+}
+
+function DeliveryForm({ reservation, busy, onClose, onSave }: { reservation: Reservation, busy: boolean, onClose: () => void, onSave: (quantity: number, reason: string, observation: string) => void }) {
+  const [quantity, setQuantity] = useState(reservation.quantity)
+  const [reason, setReason] = useState('')
+  const [observation, setObservation] = useState('')
+  return <form className="reservation-form" onSubmit={(event) => { event.preventDefault(); onSave(quantity, reason.trim(), observation.trim()) }}>
+    <p>Solicitaron <b>{reservation.quantity}</b> unidades de <b>{reservation.resourceName}</b>. Registrá lo que se entrega al retirar.</p>
+    <div className="field-grid"><label>Cantidad entregada<input type="number" min="0" max={reservation.quantity} required value={quantity} onChange={(event) => setQuantity(Number(event.target.value))}/></label>
+    {quantity < reservation.quantity && <label className="span-2">¿Por qué no se pudo entregar todo?<textarea required maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Ej.: dos computadoras fuera de servicio"/></label>}
+    <label className="span-2">Observaciones del retiro (opcional)<textarea maxLength={1000} value={observation} onChange={(event) => setObservation(event.target.value)}/></label></div>
+    <div className="form-actions"><button type="button" className="button ghost" onClick={onClose}>Cancelar</button><button className="button primary" disabled={busy || !Number.isInteger(quantity) || quantity < 0 || quantity > reservation.quantity || quantity < reservation.quantity && !reason.trim()}>{busy ? 'Guardando...' : 'Registrar retiro'}</button></div>
+  </form>
+}
+
+function Incidents({ incidents, resources, reservations, admin, busy, onCreate, onResolve }: {
+  incidents: Incident[], resources: Resource[], reservations: Reservation[], admin: boolean, busy: boolean,
+  onCreate: (input: { resourceId: string, reservationId: string, equipmentIdentifier: string, description: string }) => Promise<boolean>,
+  onResolve: (id: string, resolution: string) => Promise<boolean>,
+}) {
+  const [reservationId, setReservationId] = useState('')
+  const [resourceId, setResourceId] = useState('')
+  const [identifier, setIdentifier] = useState('')
+  const [description, setDescription] = useState('')
+  const selected = reservations.find((item) => item.id === reservationId)
+  const chosenResource = selected?.resourceId || resourceId
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (await onCreate({ resourceId: chosenResource, reservationId, equipmentIdentifier: identifier.trim(), description: description.trim() })) {
+      setDescription(''); setIdentifier(''); setReservationId(''); setResourceId('')
+    }
+  }
+  return <div className="incidents-layout">
+    <form className="report-card incident-form" onSubmit={(event) => void submit(event)}><p className="eyebrow">NUEVO REPORTE</p><h2>Informar un problema</h2>
+      <label>Reserva relacionada <select value={reservationId} onChange={(event) => { setReservationId(event.target.value); setResourceId('') }}><option value="">{admin ? 'Sin reserva asociada' : 'Seleccionar reserva'}</option>{reservations.map((item) => <option key={item.id} value={item.id}>#{item.id} · {item.resourceName} · {item.date}</option>)}</select></label>
+      {admin && !reservationId && <label>Recurso <select required value={resourceId} onChange={(event) => setResourceId(event.target.value)}><option value="">Seleccionar recurso</option>{resources.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.location}</option>)}</select></label>}
+      <label>Identificación de la PC (opcional)<input maxLength={100} value={identifier} onChange={(event) => setIdentifier(event.target.value)} placeholder="Ej.: PC 08 o código de inventario"/></label>
+      <label>¿Qué pasó?<textarea required maxLength={1000} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Describí la falla y cuándo la notaste"/></label>
+      <button className="button primary" disabled={busy || !chosenResource || !description.trim()}>Enviar reporte</button>
+    </form>
+    <section className="report-card"><p className="eyebrow">SEGUIMIENTO</p><h2>{admin ? 'Todos los reportes' : 'Mis reportes'}</h2>
+      {!incidents.length && <p className="hint">Todavía no hay problemas informados.</p>}
+      {incidents.map((item) => <article className="incident-item" key={item.id}><div className="incident-head"><b>{item.resourceName}{item.equipmentIdentifier ? ` · ${item.equipmentIdentifier}` : ''}</b><span className={`badge ${item.status === 'resuelto' ? 'status-finalizada' : 'status-rechazada'}`}>{item.status}</span></div>
+        <p>{item.description}</p><small>{item.reportedAt.slice(0, 16).replace('T', ' ')} · {item.reporterName}{item.reservationId ? ` · Reserva #${item.reservationId}` : ''}</small>
+        {item.resolution && <p><b>Resolución:</b> {item.resolution}</p>}
+        {admin && item.status === 'abierto' && <form className="resolve-form" onSubmit={async (event) => { event.preventDefault(); const form = event.currentTarget; const value = (new FormData(form).get('resolution') || '').toString().trim(); if (value && await onResolve(item.id, value)) form.reset() }}><input name="resolution" required maxLength={1000} placeholder="Cómo se resolvió"/><button className="button mini ghost" disabled={busy}>Resolver</button></form>}
+      </article>)}
+    </section>
   </div>
 }
 
@@ -560,6 +616,9 @@ function App() {
   const [resources, setResources] = useState<Resource[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [report, setReport] = useState<ReservationReport | null>(null)
+  const [month, setMonth] = useState(() => new Date().toLocaleDateString('sv-SE').slice(0, 7))
+  const [incidents, setIncidents] = useState<Incident[]>([])
+  const [delivery, setDelivery] = useState<Reservation | null>(null)
   const [category, setCategory] = useState<'all' | Resource['category']>('all')
   const [dataLoading, setDataLoading] = useState(false)
   const [dataError, setDataError] = useState('')
@@ -593,11 +652,11 @@ function App() {
     if (!session) return
     setDataLoading(true); setDataError('')
     try {
-      const [nextResources, nextReservations, nextReport] = await Promise.all([
-        getResources(), getReservations(admin ? undefined : 'mine'), admin ? getReservationReport() : Promise.resolve(null),
+      const [nextResources, nextReservations, nextReport, nextIncidents] = await Promise.all([
+        getResources(), getReservations(admin ? undefined : 'mine'), admin ? getReservationReport(month) : Promise.resolve(null), getIncidents(),
       ])
       setResources(nextResources); setReservations(nextReservations)
-      setReport(nextReport)
+      setReport(nextReport); setIncidents(nextIncidents)
     } catch (error) { setDataError(messageOf(error)) }
     finally { setDataLoading(false) }
   }
@@ -605,7 +664,7 @@ function App() {
   useEffect(() => {
     const timer = window.setTimeout(() => void loadDataOnSessionChange(), 0)
     return () => window.clearTimeout(timer)
-  }, [session?.user.id, admin])
+  }, [session?.user.id, admin, month])
 
   const navigate = (next: Page, resourceId = '') => { setPage(next); setMenu(false); setEditing(null); setPreferredResourceId(next === 'new' ? resourceId : '') }
   const mutate = async (action: () => Promise<unknown>, success: string, id = 'form') => {
@@ -658,6 +717,7 @@ function App() {
     ...(admin ? [{ id: 'reservations' as Page, label: 'Reservas', icon: 'calendar' as const }] : []),
     ...(admin ? [{ id: 'resources' as Page, label: 'Recursos', icon: 'layers' as const }] : []),
     ...(admin ? [{ id: 'reports' as Page, label: 'Reportes', icon: 'clock' as const }] : []),
+    { id: 'incidents', label: 'Problemas con PC', icon: 'monitor' },
     { id: 'mine', label: 'Mis reservas', icon: 'user' }, { id: 'new', label: 'Nueva reserva', icon: 'plus' },
   ]
   const visibleReservations = page === 'mine' ? reservations.filter((item) => !item.userId || item.userId === session.user.id) : reservations
@@ -687,13 +747,15 @@ function App() {
         </>}
         {(page === 'reservations' || page === 'mine') && <>
           <section className="page-title"><div><p className="eyebrow">{page === 'mine' ? 'ACTIVIDAD PERSONAL' : 'ADMINISTRACIÓN'}</p><h1>{page === 'mine' ? 'Mis reservas' : 'Todas las reservas'}</h1><p>{page === 'mine' ? 'Seguí y administrá tus solicitudes.' : 'Supervisá solicitudes y actualizá sus estados.'}</p></div></section>
-          {dataLoading && !reservations.length ? <div className="loading-line"><span className="spinner dark"/>Cargando reservas...</div> : <ReservationsList reservations={visibleReservations} admin={admin} userId={session.user.id} busyId={busyId} onEdit={setEditing} onCancel={(item) => { if (window.confirm('¿Querés cancelar esta reserva?')) void mutate(() => cancelReservation(item.id), 'Reserva cancelada.', item.id) }} onStatus={(item, status) => void mutate(() => setReservationStatus(item.id, status), 'Estado actualizado.', item.id)}/>} 
+          {dataLoading && !reservations.length ? <div className="loading-line"><span className="spinner dark"/>Cargando reservas...</div> : <ReservationsList reservations={visibleReservations} admin={admin} userId={session.user.id} busyId={busyId} onEdit={setEditing} onDelivery={setDelivery} onCancel={(item) => { if (window.confirm('¿Querés cancelar esta reserva?')) void mutate(() => cancelReservation(item.id), 'Reserva cancelada.', item.id) }} onStatus={(item, status) => void mutate(() => setReservationStatus(item.id, status), 'Estado actualizado.', item.id)}/>} 
         </>}
-        {page === 'reports' && <><section className="page-title"><div><p className="eyebrow">ANÁLISIS DE USO</p><h1>Reportes de reservas</h1><p>Recursos más utilizados, categorías y horarios de mayor demanda.</p></div></section><Reports report={report}/></>}
+        {page === 'reports' && <><section className="page-title"><div><p className="eyebrow">ANÁLISIS DE USO</p><h1>Reportes de reservas</h1><p>Recursos más utilizados, categorías y horarios de mayor demanda.</p></div></section><Reports report={report} month={month} onMonth={(value) => { setReport(null); setMonth(value) }}/></>}
+        {page === 'incidents' && <><section className="page-title"><div><p className="eyebrow">MANTENIMIENTO</p><h1>Problemas con equipos</h1><p>Informá fallas de las PC y seguí su resolución.</p></div></section><Incidents incidents={incidents} resources={resources} reservations={visibleReservations} admin={admin} busy={busyId === 'incident'} onCreate={(input) => mutate(() => createIncident(input), 'Problema informado.', 'incident')} onResolve={(id, resolution) => mutate(() => resolveIncident(id, resolution), 'Problema resuelto.', 'incident')}/></>}
         {page === 'resources' && <><section className="page-title"><div><p className="eyebrow">ADMINISTRACIÓN</p><h1>Recursos</h1><p>Agregá aulas y objetos nuevos, o sumá cantidad a los que ya existen.</p></div></section><ResourcesAdmin resources={resources} reservations={reservations} busyId={busyId} onCreate={createResourceItem} onAddQuantity={addResourceQuantity}/></>}
         {page === 'new' && <><section className="page-title"><div><p className="eyebrow">NUEVA SOLICITUD</p><h1>Reservar recursos</h1><p>Indicá cuándo, y sumá todas las aulas y objetos que necesites para esa reserva.</p></div></section><section className="form-card"><div className="form-card-head"><div className="step-number">01</div><div><h2>Datos de la reserva</h2><p>Podés agregar más de un recurso antes de confirmar.</p></div></div><NewReservationForm resources={resources} preferredResourceId={preferredResourceId} busy={busyId === 'form'} onSubmit={submitReservationBatch}/></section></>}
       </div>
     </main>
+    {delivery && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDelivery(null) }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="delivery-title"><div className="modal-head"><div><p className="eyebrow">ANTES DE RETIRAR</p><h2 id="delivery-title">Registrar entrega</h2></div><button className="icon-button" onClick={() => setDelivery(null)} aria-label="Cerrar"><Icon name="close"/></button></div><DeliveryForm reservation={delivery} busy={busyId === delivery.id} onClose={() => setDelivery(null)} onSave={(quantity, reason, observation) => void (async () => { if (await mutate(() => recordDelivery(delivery.id, quantity, reason, observation), 'Retiro registrado.', delivery.id)) setDelivery(null) })()}/></section></div>}
     {editing && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setEditing(null) }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="edit-title"><div className="modal-head"><div><p className="eyebrow">EDITAR RESERVA</p><h2 id="edit-title">{editing.resourceName}</h2></div><button className="icon-button" onClick={() => setEditing(null)} aria-label="Cerrar"><Icon name="close"/></button></div><ReservationForm resources={resources} initial={editing} busy={busyId === editing.id} onClose={() => setEditing(null)} onSubmit={(input) => void mutate(() => updateReservation(editing.id, input), 'Reserva actualizada.', editing.id)}/></section></div>}
     {toast && <div className={`toast ${toast.startsWith('Error') || toast.startsWith('No se') ? 'toast-error' : ''}`} role="status">{toast}</div>}
   </div>

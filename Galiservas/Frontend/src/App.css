@@ -179,3 +179,29 @@ input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shado
 @media (max-width: 420px) {
   .login-panel { padding: 24px 14px; }.login-card { padding: 25px 21px; }.login-card h2 { font-size: 37px; }.content { padding-inline: 16px; }.topbar { padding-inline: 16px; }.page-title h1 { font-size: 36px; }.connection-card { padding: 35px 22px; }
 }
+
+/* Retiros, demanda mensual e incidentes */
+.month-picker { margin-bottom: 18px; max-width: 230px; }
+.month-picker label, .incident-form label { display: block; color: var(--ink); font-size: 12px; font-weight: 700; margin: 0 0 16px; }
+.month-picker input, .incident-form input, .incident-form select, .incident-form textarea, .resolve-form input { display: block; width: 100%; margin-top: 7px; }
+.monthly-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.monthly-summary div { padding: 22px; background: white; border: 1px solid var(--line); border-radius: 7px; }
+.monthly-summary span { display: block; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .07em; }
+.monthly-summary b { display: block; margin-top: 10px; color: var(--blue); font: 700 30px "Barlow Condensed"; }
+.monthly-summary p { grid-column: 1/-1; margin: 0 0 7px; color: var(--muted); font-size: 12px; }
+.monthly-table { margin-bottom: 16px; }
+.table-scroll { overflow-x: auto; }
+.monthly-table table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 12px; text-align: left; }
+.monthly-table th, .monthly-table td { padding: 11px 12px; border-bottom: 1px solid var(--line); }
+.monthly-table th { color: var(--muted); text-transform: uppercase; font-size: 10px; }
+.monthly-table td:first-child { font-weight: 700; }
+.incidents-layout { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.incident-form textarea, .reservation-form textarea { display: block; width: 100%; min-height: 100px; padding: 12px; margin-top: 7px; resize: vertical; border: 1px solid var(--line); border-radius: 5px; font: inherit; }
+.incident-item { padding: 16px 0; border-top: 1px solid var(--line); }
+.incident-head { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.incident-item p { color: var(--ink); line-height: 1.5; font-size: 12px; }
+.incident-item small { color: var(--muted); }
+.resolve-form { display: flex; align-items: end; gap: 9px; margin-top: 10px; }
+.resolve-form input { flex: 1; }
+@media (max-width: 800px) { .incidents-layout { grid-template-columns: 1fr; } }
+@media (max-width: 550px) { .monthly-summary { grid-template-columns: 1fr; } }
