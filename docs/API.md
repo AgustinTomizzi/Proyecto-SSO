@@ -213,7 +213,7 @@ Exige nombre, email válido/único, contraseña de al menos ocho caracteres y ro
 {"id":2,"rolId":3}
 ```
 
-Valida IDs positivos, rol y usuario existentes; actualiza y audita. Impide quitar el rol al último `Administrador` (`409`). No invalida inmediatamente sesiones ya abiertas. `400`, `404` o `200`; métodos restantes `405`.
+Valida IDs positivos, rol y usuario existentes; actualiza y audita. Impide quitar el rol al último `Administrador` (`409`). El cambio aplica desde el siguiente request de las sesiones ya abiertas, porque el rol se relee de la base en cada request. `400`, `404` o `200`; métodos restantes `405`.
 
 También existe el formulario HTML legado `../crear_usuario.php`.
 

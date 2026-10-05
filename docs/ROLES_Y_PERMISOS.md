@@ -92,7 +92,7 @@ No puede violar validaciones: capacidad, solapamientos, FKs y protección del ú
 
 ## Orden obligatorio en cada endpoint
 
-1. Recuperar sesión y responder `401` si falta.
+1. Recuperar sesión y responder `401` si falta. El rol se relee de la base (`api_rol_actual()` en `_common.php`) en cada request; `$_SESSION["rol"]` es solo una copia refrescada, nunca la fuente para decidir alcance.
 2. Consultar permiso y responder `403` si falta.
 3. Aplicar alcance propio, cursos asignados o institucional.
 4. Validar campos, estado y relaciones.

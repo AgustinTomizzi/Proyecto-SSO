@@ -74,7 +74,7 @@ logout.php -> destruye sesión -> login.php
 
 1. El cliente envía email/contraseña a `api/login.php` o al formulario `login.php`.
 2. PHP busca `usuarios`, verifica el hash con `password_verify` y regenera el ID para evitar fijación de sesión.
-3. Guarda `id_usuario`, nombre, apellido, email, rol y `rol_id` en `$_SESSION`.
+3. Guarda `id_usuario`, nombre, apellido, email, rol y `rol_id` en `$_SESSION`. En cada request siguiente `_common.php` relee rol y datos desde `usuarios`/`roles` (`api_rol_actual()`), así un cambio de rol aplica sin volver a iniciar sesión.
 4. PHP entrega `PHPSESSID`; el navegador la conserva para `localhost`.
 5. Cada endpoint llama `api_login_requerido()` y luego consulta el permiso en BD con `api_requerir_permiso()`.
 6. Al cambiar de sistema bajo el mismo host/instancia PHP, la cookie puede identificar la misma sesión; cada sistema debe volver a validar su permiso.

@@ -4,7 +4,7 @@ require_once __DIR__ . "/_common.php";
 api_login_requerido();
 $method = api_metodo(["GET", "POST", "PUT", "DELETE"]);
 $usuarioId = $_SESSION["id_usuario"] ?? null;
-$rolSesion = $_SESSION["rol"] ?? "";
+$rolSesion = api_rol_actual();
 
 function esPreceptor($rolSesion)
 {

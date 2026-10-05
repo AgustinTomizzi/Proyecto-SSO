@@ -172,6 +172,30 @@ async function main() {
   assert.ok(usuarios.body.usuarios.some((usuario) => Number(usuario.id) === 3 && usuario.rol === "Preceptor"));
   assert.ok(Array.isArray(usuarios.body.roles));
 
+  // ---- El rol se lee de la base en cada request (no de la sesion) ----
+  const rolId = (nombre) => Number(usuarios.body.roles.find((rol) => rol.nombre === nombre)?.id);
+  const emailRol = `cambio.rol.${Date.now()}@example.invalid`;
+  const nuevoAdmin = await admin.json("/usuarios.php", "POST", {
+    nombre: "Cambio", apellido: "De Rol", email: emailRol, password: "demo1234", rolId: rolId("Administrador"),
+  });
+  expectStatus(nuevoAdmin, 201, "admin crea usuario Administrador temporal");
+  const sesionCambioRol = await login(emailRol, "admin");
+  const asistenciasComoAdmin = await sesionCambioRol.request("/asistencias.php");
+  expectStatus(asistenciasComoAdmin, 200, "administrador temporal lista asistencias");
+  assert.ok(asistenciasComoAdmin.body.registros.length > 0);
+  expectStatus(
+    await admin.json("/usuarios.php", "PUT", { id: nuevoAdmin.body.usuario.id, rolId: rolId("Alumno") }),
+    200,
+    "admin pasa al administrador temporal a Alumno"
+  );
+  const asistenciasComoAlumno = await sesionCambioRol.request("/asistencias.php");
+  expectStatus(asistenciasComoAlumno, 200, "ex administrador lista asistencias con la misma sesion");
+  assert.equal(asistenciasComoAlumno.body.registros.length, 0, "con rol Alumno solo ve su propia asistencia");
+  expectStatus(await sesionCambioRol.request("/usuarios.php"), 403, "ex administrador lista usuarios");
+  const sesionRefrescada = await sesionCambioRol.request("/sesion.php");
+  expectStatus(sesionRefrescada, 200, "sesion del ex administrador");
+  assert.equal(sesionRefrescada.body.usuario.rol, "Alumno");
+
   // ---- Asignacion de preceptores (cursos.php PUT + auditoria) ----
   const cursosAdmin = await admin.request("/cursos.php");
   expectStatus(cursosAdmin, 200, "admin lista cursos");

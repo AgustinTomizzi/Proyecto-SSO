@@ -14,7 +14,7 @@ if ($method === "GET") {
         LEFT JOIN usuarios u ON u.id_usuario = c.preceptor_id
     ";
     $params = [];
-    if (strcasecmp($_SESSION["rol"] ?? "", "Preceptor") === 0) {
+    if (api_rol_es("Preceptor")) {
         $sql .= " WHERE c.preceptor_id = ?";
         $params[] = usuarioActual();
     }

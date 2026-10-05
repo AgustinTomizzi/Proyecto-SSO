@@ -107,14 +107,48 @@ function api_requerir_sistema($sistema)
     }
 }
 
+/**
+ * Rol vigente del usuario en sesion, leido de la base (usuarios.rol_id ->
+ * roles.nombre) una vez por request. Refresca los datos de la sesion para que
+ * un cambio de rol aplique en el request siguiente; si el usuario ya no
+ * existe, vacia la sesion (los endpoints responden 401).
+ */
+function api_rol_actual()
+{
+    static $cache = [];
+    if (!estaLogueado()) {
+        return "";
+    }
+    $id = (int) usuarioActual();
+    if (array_key_exists($id, $cache)) {
+        return $cache[$id];
+    }
+
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT u.nombre, u.apellido, u.email, u.rol_id, r.nombre AS rol FROM usuarios u LEFT JOIN roles r ON r.id_rol = u.rol_id WHERE u.id_usuario = ? LIMIT 1");
+    $stmt->execute([usuarioActual()]);
+    $u = $stmt->fetch();
+    if (!$u) {
+        session_unset();
+        return $cache[$id] = "";
+    }
+
+    $_SESSION["nombre"] = $u["nombre"];
+    $_SESSION["apellido"] = $u["apellido"];
+    $_SESSION["email"] = $u["email"];
+    $_SESSION["rol_id"] = $u["rol_id"];
+    $_SESSION["rol"] = (string) ($u["rol"] ?? "");
+    return $cache[$id] = $_SESSION["rol"];
+}
+
 function api_es_administrador()
 {
-    return isset($_SESSION["rol"]) && strcasecmp($_SESSION["rol"], "Administrador") === 0;
+    return api_rol_es("Administrador");
 }
 
 function api_rol_es($rol)
 {
-    return isset($_SESSION["rol"]) && strcasecmp($_SESSION["rol"], $rol) === 0;
+    return estaLogueado() && strcasecmp(api_rol_actual(), $rol) === 0;
 }
 
 function api_id_positivo($valor)
@@ -163,3 +197,6 @@ function api_hora_valida($hora)
     }
     return false;
 }
+
+// Refresca rol y datos de la sesion desde la base en cada request autenticado.
+api_rol_actual();
