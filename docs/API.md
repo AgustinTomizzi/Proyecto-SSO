@@ -83,7 +83,7 @@ Errores: `400` datos inválidos, `401` sin sesión o contraseña actual incorrec
 
 ### Logout: **Implementada**
 
-`POST /logout.php` vacía la sesión, vence la cookie con sus parámetros actuales, destruye la sesión y devuelve `{"ok":true}`. Otro método: `405`. También existe `GET ../logout.php` para páginas HTML, que destruye y redirige.
+`POST /logout.php` vacía la sesión, vence la cookie con sus parámetros actuales, destruye la sesión y devuelve `{"ok":true}`. Otro método: `405`.
 
 Galiservas consume el endpoint JSON. Ambos frontends llaman al logout PHP para destruir la sesión compartida.
 
@@ -239,7 +239,7 @@ Exige nombre, email válido/único, contraseña de al menos ocho caracteres y ro
 
 Valida IDs positivos, rol y usuario existentes; actualiza y audita. Impide quitar el rol al último `Administrador` (`409`). El cambio aplica desde el siguiente request de las sesiones ya abiertas, porque el rol se relee de la base en cada request. `400`, `404` o `200`; métodos restantes `405`.
 
-También existe el formulario HTML legado `../crear_usuario.php`.
+Los usuarios se crean solo por esta API (el formulario PHP legado se eliminó).
 
 ## Reportes
 

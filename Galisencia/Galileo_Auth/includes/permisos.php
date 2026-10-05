@@ -34,29 +34,3 @@ function tienePermiso($usuarioId, $permiso)
 
     return $stmt->fetchColumn() > 0;
 }
-
-
-/**
- * Obliga a tener un permiso.
- */
-function requerirPermiso($permiso)
-{
-    require_once __DIR__ . "/auth.php";
-
-    requerirLogin();
-
-    $usuarioId = usuarioActual();
-
-    if (!tienePermiso($usuarioId, $permiso)) {
-
-        http_response_code(403);
-
-        die("
-            <h1>403 - Acceso denegado</h1>
-            <p>No tenés permiso para acceder a esta sección.</p>
-            <a href='/galileo-auth/dashboard.php'>
-                Volver al inicio
-            </a>
-        ");
-    }
-}

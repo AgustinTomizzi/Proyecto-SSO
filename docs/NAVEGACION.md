@@ -24,10 +24,8 @@ flowchart TD
 Estado demostrable hoy:
 
 - **Galisencia React:** rutas y vistas por rol, con API real si Apache está disponible y fallback mock si no responde.
-- **Galileo Auth PHP:** login, menú de sistemas y páginas PHP básicas protegidas por sesión/permisos.
-- **Galiservas PHP:** dashboard legado condicionado por permisos.
+- **Galileo Auth PHP:** solo API JSON (`api/*.php`); las páginas PHP legadas se eliminaron.
 - **Galiservas React independiente:** gestor conectado a sesión, recursos y reservas de la API compartida.
-- **Demo visual alternativa:** `Galisencia/Frontend/public/galiservas/index.html` es estática y no debe confundirse con la app integrada en `:5174`.
 
 ## Galisencia React por rol
 
@@ -54,25 +52,9 @@ El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre
 
 Al cargar, Galiservas llama `GET sesion.php`; si la cookie es válida recupera usuario, permisos y sistemas habilitados. La UI exige `galiservas.acceder`, mientras `reservas.php`, `recursos.php` y reportes vuelven a validar `rol_sistema` y permisos. El logout destruye la sesión y redirige a Galisencia.
 
-## Navegación PHP compartida
-
-Base: `http://localhost/Proyecto-SSO/Galisencia/Galileo_Auth`.
-
-```text
-index.php -> login.php -> dashboard.php
-                         |-> galisencia/dashboard.php
-                         |    |-> asistencia.php
-                         |    `-> alumnos.php
-                         |-> galiservas/dashboard.php (requiere reservas.ver)
-                         |-> admin/usuarios.php (solo rol Administrador)
-                         `-> admin/roles.php (solo rol Administrador)
-
-logout.php -> destruye sesión -> login.php
-```
-
 ## Flujo SSO con cookie
 
-1. El cliente envía email/contraseña a `api/login.php` o al formulario `login.php`.
+1. El cliente envía email/contraseña a `api/login.php`.
 2. PHP busca `usuarios`, verifica el hash con `password_verify` y regenera el ID para evitar fijación de sesión.
 3. Guarda `id_usuario`, nombre, apellido, email, rol y `rol_id` en `$_SESSION`. En cada request siguiente `_common.php` relee rol y datos desde `usuarios`/`roles` (`api_rol_actual()`), así un cambio de rol aplica sin volver a iniciar sesión.
 4. PHP entrega `PHPSESSID`; el navegador la conserva para `localhost`.

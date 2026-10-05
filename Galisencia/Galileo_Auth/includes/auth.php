@@ -43,17 +43,6 @@ function estaLogueado()
 }
 
 
-/**
- * Obliga a iniciar sesión.
- */
-function requerirLogin()
-{
-    if (!estaLogueado()) {
-
-        header("Location: /Galileo_Auth/login.php");
-        exit;
-    }
-}
 
 
 /**

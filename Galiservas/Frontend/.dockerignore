@@ -17,8 +17,6 @@ lerna-debug.log*
 dist
 build
 
-# Prototipo estático (no forma parte de la imagen)
-Prototipo
 
 # Logs
 logs
