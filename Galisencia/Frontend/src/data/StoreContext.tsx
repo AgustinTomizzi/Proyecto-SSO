@@ -24,10 +24,11 @@ import {
 } from "./mock";
 import { apiGet, apiSend } from "./apiClient";
 import { useAuth } from "../auth/AuthContext";
+import { limpiarDatosLocales } from "./localData";
 
-const STORAGE_KEY = "galisencia.data";
+limpiarDatosLocales();
 
-interface Persistido {
+interface DatosDemo {
   alumnos: Alumno[];
   cursos: Curso[];
   registros: RegistroAsistencia[];
@@ -57,22 +58,9 @@ function normalizarAlumno(a: Partial<Alumno> & { id: string | number }): Alumno 
   };
 }
 
-function cargarInicial(): Persistido {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const d = JSON.parse(raw) as Partial<Persistido>;
-      if (d.alumnos?.length && d.registros?.length && d.cursos?.length) {
-        return {
-          alumnos: d.alumnos.map((a) => normalizarAlumno(a)),
-          cursos: d.cursos,
-          registros: normalizarRegistros(d.registros),
-        };
-      }
-    }
-  } catch {
-    /* noop */
-  }
+// Los datos de demostración se generan en memoria y nunca se persisten en el
+// navegador: los datos reales de alumnos no deben quedar en localStorage.
+function datosDemo(): DatosDemo {
   const alumnos = buildAlumnos();
   return { alumnos, cursos: CURSOS, registros: buildRegistros(alumnos) };
 }
@@ -103,7 +91,7 @@ export interface StoreState {
 const StoreContext = createContext<StoreState | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const inicial = useMemo(cargarInicial, []);
+  const inicial = useMemo(datosDemo, []);
   const [alumnos, setAlumnos] = useState<Alumno[]>(inicial.alumnos);
   const [cursos, setCursos] = useState<Curso[]>(inicial.cursos);
   const [registros, setRegistros] = useState<RegistroAsistencia[]>(inicial.registros);
@@ -114,7 +102,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // asistencias; el resto de roles ve el listado completo. Sin sesion usa mock.
   useEffect(() => {
     if (!usuario) {
-      const init = cargarInicial();
+      const init = datosDemo();
       setAlumnos(init.alumnos);
       setCursos(init.cursos);
       setRegistros(init.registros);
@@ -154,7 +142,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         if (cancelled) return;
-        const init = cargarInicial();
+        const init = datosDemo();
         setAlumnos(init.alumnos);
         setCursos(init.cursos);
         setRegistros(init.registros);
@@ -164,14 +152,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [usuario]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ alumnos, cursos, registros }));
-    } catch {
-      /* noop */
-    }
-  }, [alumnos, cursos, registros]);
 
   const getRegistrosDeAlumno = useCallback(
     (alumnoId: string) => registros.filter((r) => r.alumnoId === alumnoId),

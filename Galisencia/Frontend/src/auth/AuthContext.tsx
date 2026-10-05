@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Usuario } from "../data/types";
 import { closeSession, login as loginService, restoreSession } from "./auth.service";
+import { limpiarDatosLocales } from "../data/localData";
 
 interface AuthState {
   usuario: Usuario | null;
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await closeSession();
     } finally {
+      limpiarDatosLocales();
       setUsuario(null);
     }
   }
