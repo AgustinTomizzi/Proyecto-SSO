@@ -38,6 +38,10 @@ services:
       - DB_NAME=ProyectoEstela
       - DB_USER=${DB_APP_USER:-galileo_app}
       - DB_PASSWORD=${DB_APP_PASSWORD:?Definí DB_APP_PASSWORD en .env (ver .env.example)}
+      # dev: CORS para localhost y cookie sin Secure. prod: exige HTTPS.
+      - APP_ENV=${APP_ENV:-dev}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}
+      - SESSION_TIMEOUT_MINUTES=${SESSION_TIMEOUT_MINUTES:-30}
     depends_on:
       mysql:
         condition: service_healthy

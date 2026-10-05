@@ -18,6 +18,8 @@ cp .env.example .env
 ```
 Editar `.env` y poner contraseñas largas en `MYSQL_ROOT_PASSWORD` y `DB_APP_PASSWORD`. Si falta alguna, `docker compose` se niega a arrancar. `.env` está en `.gitignore`.
 
+Otras variables opcionales de `.env`: `APP_ENV` (`dev` por defecto; `prod` marca la cookie como `Secure` y requiere HTTPS), `CORS_ALLOWED_ORIGINS` (orígenes permitidos en producción) y `SESSION_TIMEOUT_MINUTES` (inactividad, 30 por defecto).
+
 ### Construir y ejecutar todo el stack
 ```bash
 docker compose up --build -d
@@ -86,4 +88,4 @@ Se inyectan como `args` en el service `galiservas` del compose:
 - El backend usa un usuario MySQL sin permisos de DDL; root queda solo para administrar.
 - Las cuentas demo (`demo1234`) deben cambiar la contraseña en el primer ingreso.
 - No exponer el puerto de MySQL externamente en producción.
-- Considerar HTTPS/TLS para producción.
+- Considerar HTTPS/TLS para producción; con HTTPS, usar `APP_ENV=prod` y descomentar HSTS en los `nginx.conf`.

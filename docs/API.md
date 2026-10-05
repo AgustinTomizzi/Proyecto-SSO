@@ -18,6 +18,12 @@ PHP crea una sesión de servidor y entrega la cookie estándar `PHPSESSID`. Desp
 
 La cookie representa autenticación compartida en el mismo host, pero SSO completo exige que ambos sistemas consuman la misma sesión PHP y comprueben permisos. El frontend no guarda la sesión ni datos de alumnos en `localStorage`: al cargar consulta `sesion.php`, y el backend autoriza cada operación por su cuenta.
 
+**Cookie y sesión.** `PHPSESSID` es `HttpOnly` y `SameSite=Lax`; lleva `Secure` cuando `APP_ENV` no es `dev` (producción exige HTTPS). `session.use_strict_mode=1`: un ID de sesión que no emitió el servidor se descarta y se entrega uno nuevo. Tras `SESSION_TIMEOUT_MINUTES` (30 por defecto) sin pedidos, la sesión se vacía y la API responde `401`.
+
+**CORS.** Se habilita (con credenciales) para los orígenes listados en `CORS_ALLOWED_ORIGINS`, separados por coma. Solo con `APP_ENV=dev` se acepta además cualquier puerto de `localhost`/`127.0.0.1`. En Docker los frontends llaman a `/api` en su mismo origen, así que no dependen de CORS.
+
+**Cabeceras.** Toda respuesta de la API incluye `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `Referrer-Policy: no-referrer` y `Cache-Control: no-store`; con HTTPS (directo o `X-Forwarded-Proto`) agrega `Strict-Transport-Security`. El nginx de cada frontend envía una CSP propia (`'self'` más Google Fonts), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` y `Permissions-Policy`; su HSTS queda comentado hasta tener HTTPS.
+
 ### Login: **Implementada**
 
 `POST /login.php`

@@ -93,6 +93,35 @@ async function main() {
     expectStatus(result, 401, `${endpoint} sin sesion`);
   }
 
+  // ---- Cabeceras de seguridad, CORS y cookie de sesion ----
+  const respuestaApi = await fetch(`${API}/sesion.php`, { headers: { Origin: "http://evil.example" } });
+  assert.equal(respuestaApi.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(respuestaApi.headers.get("x-frame-options"), "DENY");
+  assert.match(respuestaApi.headers.get("content-security-policy") ?? "", /frame-ancestors 'none'/);
+  assert.equal(respuestaApi.headers.get("access-control-allow-origin"), null, "CORS no habilita origenes ajenos");
+  const respuestaLocal = await fetch(`${API}/sesion.php`, { headers: { Origin: "http://localhost:5173" } });
+  assert.equal(respuestaLocal.headers.get("access-control-allow-origin"), "http://localhost:5173", "CORS habilita localhost en APP_ENV=dev");
+
+  const respuestaSpa = await fetch(new URL("/", API));
+  expectStatus({ status: respuestaSpa.status, body: null }, 200, "index del frontend");
+  assert.match(respuestaSpa.headers.get("content-security-policy") ?? "", /default-src 'self'/, "nginx envia CSP");
+  assert.equal(respuestaSpa.headers.get("x-frame-options"), "DENY");
+  assert.equal(respuestaSpa.headers.get("x-content-type-options"), "nosniff");
+  assert.ok(respuestaSpa.headers.get("referrer-policy"), "nginx envia Referrer-Policy");
+
+  const loginCookie = await fetch(`${API}/login.php`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "academica@galileo.edu.ar", password: "incorrecta-a-proposito" }),
+  });
+  expectStatus({ status: loginCookie.status, body: null }, 401, "login fallido para inspeccionar cookie");
+  const sesionInventada = await fetch(`${API}/sesion.php`, { headers: { Cookie: "PHPSESSID=inventadaporelcliente123" } });
+  const cookieNueva = (sesionInventada.headers.getSetCookie?.() ?? []).find((value) => value.startsWith("PHPSESSID="));
+  assert.ok(cookieNueva, "strict mode: un ID de sesion inventado se reemplaza");
+  assert.ok(!cookieNueva.startsWith("PHPSESSID=inventadaporelcliente123"), "strict mode: no adopta el ID del cliente");
+  assert.match(cookieNueva, /HttpOnly/i);
+  assert.match(cookieNueva, /SameSite=Lax/i);
+
   // ---- Cambio obligatorio de contraseña (cuentas demo; requiere base recién creada) ----
   const docente = new PhpSession();
   const loginDocente = await docente.login("docente@galileo.edu.ar");

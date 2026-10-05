@@ -8,10 +8,25 @@ require_once __DIR__ . "/../includes/permisos.php";
 require_once __DIR__ . "/../includes/auditoria.php";
 
 header("Content-Type: application/json; charset=utf-8");
+
+// Cabeceras de seguridad: la API solo devuelve datos, nunca contenido embebible.
+header("X-Content-Type-Options: nosniff");
+header("X-Frame-Options: DENY");
+header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'");
+header("Referrer-Policy: no-referrer");
+header("Cache-Control: no-store");
+$esHttps = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off")
+    || strtolower((string) ($_SERVER["HTTP_X_FORWARDED_PROTO"] ?? "")) === "https";
+if ($esHttps) {
+    header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
+}
+
+// CORS: en produccion solo los origenes de CORS_ALLOWED_ORIGINS (separados por
+// coma); en APP_ENV=dev tambien cualquier puerto de localhost.
 $origin = $_SERVER["HTTP_ORIGIN"] ?? "";
 $configuredOrigins = array_values(array_filter(array_map("trim", explode(",", getenv("CORS_ALLOWED_ORIGINS") ?: ""))));
 $originHost = $origin !== "" ? parse_url($origin, PHP_URL_HOST) : null;
-$isLocalOrigin = in_array($originHost, ["localhost", "127.0.0.1", "::1"], true);
+$isLocalOrigin = app_es_dev() && in_array($originHost, ["localhost", "127.0.0.1", "[::1]", "::1"], true);
 if ($origin !== "" && (in_array($origin, $configuredOrigins, true) || $isLocalOrigin)) {
     header("Access-Control-Allow-Origin: " . $origin);
     header("Access-Control-Allow-Credentials: true");
