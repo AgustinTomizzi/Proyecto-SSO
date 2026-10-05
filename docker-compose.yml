@@ -6,7 +6,11 @@ services:
   mysql:
     image: mysql:8.0
     container_name: galisencia-mysql
+    # Hora argentina para NOW()/CURDATE(). Offset fijo porque las tablas de
+    # zonas con nombre todavía no existen al arrancar la inicialización.
+    command: ["--default-time-zone=-03:00"]
     environment:
+      TZ: America/Argentina/Buenos_Aires
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Definí MYSQL_ROOT_PASSWORD en .env (ver .env.example)}
       MYSQL_DATABASE: ProyectoEstela
       # Usuario de la aplicación: lo crea db/00-usuario-app.sh en el primer arranque.
@@ -34,6 +38,7 @@ services:
       dockerfile: Dockerfile
     container_name: galisencia-backend
     environment:
+      - TZ=America/Argentina/Buenos_Aires
       - DB_HOST=mysql
       - DB_NAME=ProyectoEstela
       - DB_USER=${DB_APP_USER:-galileo_app}

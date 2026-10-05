@@ -4,6 +4,7 @@ import { useToast } from "../../components/ui/Toast";
 import { MATERIAS } from "../../data/types";
 import type { Alumno, EstadoAsistencia } from "../../data/types";
 import { apiGet } from "../../data/apiClient";
+import { hoyLocal } from "../../data/fecha";
 import "./PreceptorPage.css";
 
 const ESTADOS: { key: EstadoAsistencia; label: string; cls: string }[] = [
@@ -46,9 +47,6 @@ interface HistorialState {
   data?: HistorialResponse;
 }
 
-function hoy(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function mensajeError(error: unknown): string {
   return error instanceof Error ? error.message : "No se pudo completar la operación";
@@ -60,7 +58,7 @@ export default function PreceptorPage() {
   const opcionesCurso = useMemo(() => cursos.map((c) => ({ ...c, label: `${c.anio} ${c.division}` })), [cursos]);
   const [curso, setCurso] = useState("");
   const [materia, setMateria] = useState(MATERIAS[0]);
-  const [fecha, setFecha] = useState(hoy());
+  const [fecha, setFecha] = useState(hoyLocal);
   const [estado, setEstado] = useState<Record<string, EstadoAsistencia>>({});
   const [guardado, setGuardado] = useState(false);
   const [guardando, setGuardando] = useState(false);

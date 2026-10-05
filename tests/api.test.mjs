@@ -429,6 +429,22 @@ async function main() {
   const recursosStend = recursos.body.recursos.some((r) => r.category === "audiovisual" && String(r.location ?? "").toLowerCase() === "pañol");
   assert.ok(recursosStend, "Debe existir stock del pañol audiovisual");
 
+  // ---- Zona horaria: "hoy" es la fecha argentina, no la UTC ----
+  const fechaArgentina = (instante) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" }).format(instante);
+  const hoyArgentina = fechaArgentina(new Date());
+  const ayerArgentina = fechaArgentina(new Date(Date.now() - 24 * 3600 * 1000));
+  const reservaHoy = await preceptor.json("/reservas.php", "POST", {
+    resourceId: aula208.id, date: hoyArgentina, startTime: "23:00", endTime: "23:30", quantity: 1, reason: "test zona horaria",
+  });
+  expectStatus(reservaHoy, 201, `reserva para hoy en Argentina (${hoyArgentina})`);
+  expectStatus(
+    await preceptor.json("/reservas.php", "POST", {
+      resourceId: aula208.id, date: ayerArgentina, startTime: "23:00", endTime: "23:30", quantity: 1, reason: "ayer",
+    }),
+    400,
+    "reserva para ayer"
+  );
+
   // Disponibilidad segun la UI (recursos.php con franja): arranca con el stock completo.
   const antesFranja = await preceptor.request(`/recursos.php?fecha=${fechaReserva}&hora_inicio=08:00&hora_fin=09:00`);
   expectStatus(antesFranja, 200, "disponibilidad por franja inicial");

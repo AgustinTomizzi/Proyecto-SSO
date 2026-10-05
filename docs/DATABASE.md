@@ -11,6 +11,8 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 4. `db/04-horarios.sql`: imágenes de horario por curso y permisos `horarios.*`.
 5. `db/05-seguridad.sql`: tabla `login_intentos` (límite de intentos de autenticación) y columna `usuarios.debe_cambiar_password` (al crearla marca las cuentas demo). Idempotente.
 
+**Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
+
 **Estado real:** el esquema canónico implementa identidad, RBAC, Galisencia, Galiservas y auditoría. Galiservas usa los nombres físicos ingleses `resources` y `reservations`; los prototipos históricos (`recursos`/`reservas`, carpetas `Backend/` eliminadas en la limpieza) no eran canónicos.
 
 ## Diagrama ER

@@ -63,6 +63,10 @@ docker compose up --build -d
 
 El enlace lateral "Galiservas" dentro de Galisencia usa `/galiservas/`. En dev con Vite puntual, se sobreescribe con `VITE_GALISERVAS_URL` (ver `Galisencia/Frontend/.env.example`).
 
+## Zona horaria
+
+Todo el sistema usa `America/Argentina/Buenos_Aires`: PHP (`date.timezone` en `docker/php-seguridad.ini` y `config/database.php`), MySQL (`TZ` y `--default-time-zone=-03:00`, más `SET time_zone` en cada conexión) y los frontends (`hoyLocal()` en `Galisencia/Frontend/src/data/fecha.ts` y `Galiservas/Frontend/src/fecha.ts`). Así "hoy" es la fecha argentina aunque en UTC ya sea el día siguiente (desde las 21:00).
+
 ## Variables de build de Galiservas
 
 Se inyectan como `args` en el service `galiservas` del compose:

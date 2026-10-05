@@ -3,11 +3,11 @@ import {
   ApiError, cancelReservation, createReservation, createResource, getReservationReport, getReservations, getResources, login,
   logout, restoreSession, setReservationStatus, updateReservation, updateResource,
 } from './api'
+import { hoyLocal, horaLocal, ZONA_HORARIA } from './fecha'
 import type { Page, Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session } from './types'
 import './App.css'
 
-const today = new Date().toISOString().slice(0, 10)
-const emptyForm: ReservationInput = { resourceId: '', date: today, start: '08:00', end: '09:00', quantity: 1, reason: '' }
+const emptyForm = (): ReservationInput => ({ resourceId: '', date: hoyLocal(), start: '08:00', end: '09:00', quantity: 1, reason: '' })
 
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 const messageOf = (error: unknown) => error instanceof Error ? error.message : 'Ocurrió un error inesperado.'
@@ -99,7 +99,8 @@ function ReservationForm({ resources, initial, preferredResourceId, busy, onSubm
     if (initial) return { resourceId: initial.resourceId, date: initial.date, start: initial.start, end: initial.end, quantity: initial.quantity, reason: initial.reason }
     const initialResourceId = preferredResourceId || resources[0]?.id || ''
     const initialResource = resources.find((resource) => resource.id === initialResourceId)
-    return { ...emptyForm, resourceId: initialResourceId, quantity: initialResource?.type === 'desktop_pc' ? initialResource.capacity : emptyForm.quantity }
+    const base = emptyForm()
+    return { ...base, resourceId: initialResourceId, quantity: initialResource?.type === 'desktop_pc' ? initialResource.capacity : base.quantity }
   })
   const [error, setError] = useState('')
   const selected = resources.find((resource) => resource.id === form.resourceId)
@@ -141,7 +142,7 @@ function ReservationForm({ resources, initial, preferredResourceId, busy, onSubm
     if (!form.resourceId) return setError('Seleccioná un recurso disponible.')
     if (!selected?.active) return setError('El recurso seleccionado no está disponible.')
     if (!form.date || !form.start || !form.end) return setError('Completá la fecha y el horario de la reserva.')
-    if (form.date < today) return setError('La fecha no puede ser anterior a hoy.')
+    if (form.date < hoyLocal()) return setError('La fecha no puede ser anterior a hoy.')
     if (form.start >= form.end) return setError('La hora de fin debe ser posterior al inicio.')
     const maximum = slotAvailable ?? selected.capacity
     const quantity = isRoom ? selected.capacity : form.quantity
@@ -159,7 +160,7 @@ function ReservationForm({ resources, initial, preferredResourceId, busy, onSubm
       <label className="span-2">Recurso<select value={form.resourceId} onChange={(e) => change('resourceId', e.target.value)} disabled={busy}>
         <option value="">Seleccionar recurso</option>{resources.filter((item) => item.active).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.capacity} equipos</option>)}
       </select></label>
-      <label className={isRoom ? 'span-2' : undefined}>Fecha<input type="date" min={today} value={form.date} onChange={(e) => change('date', e.target.value)} disabled={busy}/>{isRoom && <small>{checkingAvailability ? 'Consultando disponibilidad...' : (slotAvailable ?? selected?.capacity ?? 0) >= (selected?.capacity ?? 0) ? `Aula completa disponible (${selected?.capacity} equipos)` : `Solo disponible parcialmente para ese horario`}</small>}</label>
+      <label className={isRoom ? 'span-2' : undefined}>Fecha<input type="date" min={hoyLocal()} value={form.date} onChange={(e) => change('date', e.target.value)} disabled={busy}/>{isRoom && <small>{checkingAvailability ? 'Consultando disponibilidad...' : (slotAvailable ?? selected?.capacity ?? 0) >= (selected?.capacity ?? 0) ? `Aula completa disponible (${selected?.capacity} equipos)` : `Solo disponible parcialmente para ese horario`}</small>}</label>
       {!isRoom && <label>Cantidad<input type="number" min="1" max={slotAvailable ?? selected?.capacity ?? 1} value={form.quantity} onChange={(e) => change('quantity', Number(e.target.value))} disabled={busy || checkingAvailability}/><small>{checkingAvailability ? 'Consultando disponibilidad...' : `Disponibles en esa franja: ${slotAvailable ?? selected?.capacity ?? 0}`}</small></label>}
       <label>Hora de inicio<input type="time" value={form.start} onChange={(e) => change('start', e.target.value)} disabled={busy}/></label>
       <label>Hora de fin<input type="time" value={form.end} onChange={(e) => change('end', e.target.value)} disabled={busy}/></label>
@@ -176,7 +177,7 @@ function NewReservationForm({ resources, preferredResourceId, busy, onSubmit }: 
   onSubmit: (shared: { date: string, start: string, end: string, reason: string }, items: { resourceId: string, quantity: number }[]) => Promise<{ failures: { resourceId: string, message: string }[] }>,
 }) {
   const activeResources = resources.filter((item) => item.active)
-  const [shared, setShared] = useState({ date: today, start: '08:00', end: '09:00', reason: '' })
+  const [shared, setShared] = useState(() => ({ date: hoyLocal(), start: '08:00', end: '09:00', reason: '' }))
   const [cart, setCart] = useState<CartItem[]>([])
   const [pendingResourceId, setPendingResourceId] = useState(preferredResourceId || activeResources[0]?.id || '')
   const [pendingQuantity, setPendingQuantity] = useState(1)
@@ -244,7 +245,7 @@ function NewReservationForm({ resources, preferredResourceId, busy, onSubmit }: 
     event.preventDefault()
     setFormError('')
     if (!shared.date || !shared.start || !shared.end) return setFormError('Completá la fecha y el horario de la reserva.')
-    if (shared.date < today) return setFormError('La fecha no puede ser anterior a hoy.')
+    if (shared.date < hoyLocal()) return setFormError('La fecha no puede ser anterior a hoy.')
     if (shared.start >= shared.end) return setFormError('La hora de fin debe ser posterior al inicio.')
     if (shared.reason.trim().length < 5) return setFormError('Explicá el motivo de la reserva (mínimo 5 caracteres).')
     if (cart.length === 0) return setFormError('Agregá al menos un recurso a la reserva.')
@@ -262,7 +263,7 @@ function NewReservationForm({ resources, preferredResourceId, busy, onSubmit }: 
   return <form className="reservation-form cart-form" onSubmit={(e) => void submit(e)} noValidate>
     {formError && <div className="alert error" role="alert">{formError}</div>}
     <div className="field-grid">
-      <label>Fecha<input type="date" min={today} value={shared.date} onChange={(e) => changeShared('date', e.target.value)} disabled={disabled}/></label>
+      <label>Fecha<input type="date" min={hoyLocal()} value={shared.date} onChange={(e) => changeShared('date', e.target.value)} disabled={disabled}/></label>
       <label>Hora de inicio<input type="time" value={shared.start} onChange={(e) => changeShared('start', e.target.value)} disabled={disabled}/></label>
       <label>Hora de fin<input type="time" value={shared.end} onChange={(e) => changeShared('end', e.target.value)} disabled={disabled}/></label>
       <label className="span-2">Motivo<textarea rows={3} maxLength={300} value={shared.reason} onChange={(e) => changeShared('reason', e.target.value)} placeholder="Ej.: Práctica de programación de 4° año" disabled={disabled}/><small>{shared.reason.length}/300</small></label>
@@ -493,8 +494,9 @@ function ResourcesAdmin({ resources, reservations, busyId, onCreate, onAddQuanti
 
 function ResourcesInventoryOverview({ resources, reservations }: { resources: Resource[], reservations: Reservation[] }) {
   const now = new Date()
-  const nowTime = now.toTimeString().slice(0, 5)
-  const nowLabel = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit' }).format(now)
+  const today = hoyLocal(now)
+  const nowTime = horaLocal(now)
+  const nowLabel = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: ZONA_HORARIA }).format(now)
   const inUseFor = (resourceId: string) => reservations
     .filter((item) => item.resourceId === resourceId && item.date === today && item.start <= nowTime && item.end > nowTime && !['cancelada', 'rechazada', 'finalizada'].includes(normalize(item.status)))
     .reduce((sum, item) => sum + item.quantity, 0)
@@ -548,7 +550,7 @@ function formatDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
   const date = new Date(`${value}T12:00:00`)
   const noYear = { weekday: 'long' as const, day: 'numeric' as const, month: 'long' as const }
-  const opts = date.getFullYear() === new Date().getFullYear() ? noYear : { ...noYear, year: 'numeric' as const }
+  const opts = value.slice(0, 4) === hoyLocal().slice(0, 4) ? noYear : { ...noYear, year: 'numeric' as const }
   return new Intl.DateTimeFormat('es-AR', opts).format(date)
 }
 
@@ -678,7 +680,7 @@ function App() {
       <div className="content">
         {dataError && <div className="alert connection" role="alert"><div><b>No se pudieron cargar los datos</b><span>{dataError}</span></div><button className="button mini ghost" onClick={() => void loadData()}>Reintentar</button></div>}
         {page === 'dashboard' && <>
-          <section className="page-title hero-title"><div><p className="eyebrow">PANEL GENERAL</p><h1>Buen día, {session.user.name.split(' ')[0]}.</h1><p>Consultá la disponibilidad de los espacios técnicos.</p></div><div className="date-chip"><Icon name="calendar"/><div><small>HOY</small><b>{new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long' }).format(new Date())}</b></div></div></section>
+          <section className="page-title hero-title"><div><p className="eyebrow">PANEL GENERAL</p><h1>Buen día, {session.user.name.split(' ')[0]}.</h1><p>Consultá la disponibilidad de los espacios técnicos.</p></div><div className="date-chip"><Icon name="calendar"/><div><small>HOY</small><b>{new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long', timeZone: ZONA_HORARIA }).format(new Date())}</b></div></div></section>
           <section className="summary-grid"><article><span>RECURSOS ACTIVOS</span><b>{resources.filter((r) => r.active).length}</b><small>espacios y equipos</small></article><article><span>CAPACIDAD HABILITADA</span><b>{resources.reduce((sum, r) => sum + r.capacity, 0)}</b><small>unidades reservables</small></article><article><span>RESERVAS REGISTRADAS</span><b>{reservations.length}</b><small>en tu vista actual</small></article></section>
         </>}
         {(page === 'dashboard' || page === 'aulas' || page === 'panol') && <>
