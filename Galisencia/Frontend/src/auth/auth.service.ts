@@ -10,7 +10,6 @@ interface BackendUser {
   rol: string;
   rol_backend?: string;
   curso?: string;
-  avatarUrl?: string;
 }
 
 interface SessionResponse {
@@ -44,7 +43,6 @@ function toUser(data: SessionResponse): Usuario {
     permisos: data.permisos ?? [],
     sistemas: data.sistemas ?? [],
     curso: user.curso,
-    avatarUrl: user.avatarUrl ?? "",
   };
 }
 

@@ -134,7 +134,7 @@ export default function AppLayout() {
 
         <div className="app__profile">
           <div className="app__user">
-            <span className="app__avatar"><span>{initials}</span>{usuario.avatarUrl && <img src={usuario.avatarUrl} alt={`Foto de ${usuario.nombre}`} />}</span>
+            <span className="app__avatar"><span>{initials}</span></span>
             {!collapsed && <><span className="app__user-info"><strong>{usuario.nombre}</strong><small>{usuario.email}</small><small>{ROL_LABEL[usuario.rol]}</small></span><button className="app__logout" onClick={onLogout} title="Cerrar sesión" aria-label="Cerrar sesión"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg></button></>}
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function AppLayout() {
               {theme === "dark" ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg> : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>}
             </button>
             <button className="app__action-btn app__notification" title="Notificaciones" aria-label="Notificaciones"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg><span /></button>
-            <div className="app__user-pill"><span className="app__avatar app__avatar--small"><span>{initials}</span>{usuario.avatarUrl && <img src={usuario.avatarUrl} alt="" />}</span><span>{usuario.email}</span></div>
+            <div className="app__user-pill"><span className="app__avatar app__avatar--small"><span>{initials}</span></span><span>{usuario.email}</span></div>
           </div>
         </header>
         <main className="app__content"><Outlet /></main>

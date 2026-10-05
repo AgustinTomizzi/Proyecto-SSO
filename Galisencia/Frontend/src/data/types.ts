@@ -9,7 +9,6 @@ export interface Usuario {
   permisos: string[];
   sistemas: string[];
   curso?: string; // sólo alumnos
-  avatarUrl: string;
 }
 
 export type EstadoAsistencia = "presente" | "tarde" | "ausente";
