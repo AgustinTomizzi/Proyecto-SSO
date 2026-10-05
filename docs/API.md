@@ -22,7 +22,7 @@ La cookie representa autenticación compartida en el mismo host, pero SSO comple
 
 `POST /login.php`
 
-No requiere sesión. Valida que email y contraseña no estén vacíos, busca email exacto, verifica `password_verify`, regenera el ID de sesión y guarda identidad/rol.
+No requiere sesión. Valida que email y contraseña no estén vacíos, busca email exacto, verifica `password_verify`, regenera el ID de sesión y guarda identidad/rol. Si el email no existe igual ejecuta `password_verify` contra un hash falso, para que el tiempo de respuesta no revele qué cuentas existen; el mensaje de error es el mismo en ambos casos. Tras 5 intentos fallidos del mismo email en 15 minutos responde `429` con `Retry-After`, aunque la contraseña sea correcta.
 
 ```json
 {
@@ -45,7 +45,7 @@ No requiere sesión. Valida que email y contraseña no estén vacíos, busca ema
 
 Para Alumno, `id` se reemplaza por `alumnos.id_alumno` y se agrega `curso` si el email coincide. Roles de salida: `alumno`, `preceptor`, `directivo`, `admin`; `Docente` se mapea temporalmente a `preceptor`.
 
-Errores: `400` campos ausentes, `401` credenciales inválidas, `405` otro método, `500` conexión a BD.
+Errores: `400` campos ausentes, `401` credenciales inválidas, `405` otro método, `429` demasiados intentos fallidos, `500` conexión a BD.
 
 ### Consultar sesión: **Implementada**
 
@@ -103,7 +103,9 @@ Valida ID positivo y existencia. Si el actor fuera preceptor, limita curso origi
 
 Valida ID y alcance del preceptor, actualiza `estado=0` y conserva asistencias/notas. Audita antes/después. Respuesta: `{"ok":true}`.
 
-Errores del recurso: `400` dato inválido, `401` sin sesión, `403` sin permiso/fuera de alcance, `404` alumno inexistente, `405` método no permitido.
+Cuando un Preceptor cambia a un alumno de curso o lo da de baja debe reenviar `currentPassword`. Una contraseña incorrecta responde `401`; tras 5 reconfirmaciones fallidas en 15 minutos responde `429` (contador separado del de login).
+
+Errores del recurso: `400` dato inválido, `401` sin sesión o contraseña de reconfirmación incorrecta, `403` sin permiso/fuera de alcance, `404` alumno inexistente, `405` método no permitido, `429` demasiadas reconfirmaciones fallidas.
 
 ## Asistencias
 
@@ -302,6 +304,7 @@ También acepta `recursoId`, `fecha`, `horaInicio`, `horaFin`, `cantidad`, `moti
 | `404` | Entidad no encontrada. |
 | `405` | Método no permitido; algunos endpoints actuales aún no lo emiten al final. |
 | `409` | Recomendado para duplicado/solapamiento. |
+| `429` | Demasiados intentos fallidos de login o reconfirmación; incluye `Retry-After`. |
 | `422` | Recomendado para regla de negocio. |
 | `500` | BD inaccesible o auditoría no migrada. |
 

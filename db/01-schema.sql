@@ -163,6 +163,18 @@ CREATE TABLE auditoria (
   CONSTRAINT fk_auditoria_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Intentos fallidos de login y reconfirmacion de contrasena (ver 05-seguridad.sql).
+CREATE TABLE login_intentos (
+  id_intento BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  email VARCHAR(255) NOT NULL,
+  ip VARCHAR(45) DEFAULT NULL,
+  tipo ENUM('login', 'reauth') NOT NULL DEFAULT 'login',
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_intento),
+  KEY idx_intentos_email_tipo_fecha (email, tipo, fecha),
+  KEY idx_intentos_fecha (fecha)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Dominio Galiservas. Cada recurso representa un inventario reservable en
 -- una ubicacion; capacity permite reservar unidades sin modelar cada equipo.
 CREATE TABLE resources (

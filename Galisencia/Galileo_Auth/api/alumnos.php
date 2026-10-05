@@ -131,6 +131,7 @@ if ($method === "PUT") {
         api_json(["ok" => false, "error" => "curso invalido"], 400);
     }
 
+    $reautenticado = false;
     $pdo->beginTransaction();
     try {
         $actual = $pdo->prepare("SELECT nombre, apellido, email, dni, direccion, curso_id, estado FROM alumnos WHERE id_alumno = ? FOR UPDATE");
@@ -158,13 +159,12 @@ if ($method === "PUT") {
                     $pdo->rollBack();
                     api_json(["ok" => false, "error" => "currentPassword es requerido para cambiar al alumno de curso"], 400);
                 }
-                $passwordStmt = $pdo->prepare("SELECT contrasena FROM usuarios WHERE id_usuario = ? FOR UPDATE");
-                $passwordStmt->execute([$usuarioId]);
-                $hash = $passwordStmt->fetchColumn();
-                if (!$hash || !password_verify($currentPassword, $hash)) {
+                $reauth = api_verificar_contrasena_actual($currentPassword);
+                if ($reauth !== "ok") {
                     $pdo->rollBack();
-                    api_json(["ok" => false, "error" => "la contraseña actual es incorrecta"], 401);
+                    api_rechazar_contrasena($reauth);
                 }
+                $reautenticado = true;
             }
         }
 
@@ -178,6 +178,9 @@ if ($method === "PUT") {
 
         registrarAuditoria("alumnos.editar", "alumno", $id, ["antes" => $antes, "despues" => ["nombre" => $nombre, "apellido" => $apellido, "email" => $email, "dni" => $dni, "direccion" => $direccion, "curso_id" => $curso_id]]);
         $pdo->commit();
+        if ($reautenticado) {
+            api_limpiar_intentos((string) ($_SESSION["email"] ?? ""), "reauth");
+        }
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
@@ -200,6 +203,7 @@ if ($method === "DELETE") {
         api_json(["ok" => false, "error" => "currentPassword es requerido para dar de baja al alumno"], 400);
     }
 
+    $reautenticado = false;
     $pdo->beginTransaction();
     try {
         $actual = $pdo->prepare("SELECT nombre, apellido, email, dni, direccion, curso_id, estado FROM alumnos WHERE id_alumno = ? FOR UPDATE");
@@ -217,13 +221,12 @@ if ($method === "DELETE") {
                 $pdo->rollBack();
                 api_json(["ok" => false, "error" => "no podes quitar alumnos de un curso que no tenes asignado"], 403);
             }
-            $passwordStmt = $pdo->prepare("SELECT contrasena FROM usuarios WHERE id_usuario = ? FOR UPDATE");
-            $passwordStmt->execute([$usuarioId]);
-            $hash = $passwordStmt->fetchColumn();
-            if (!$hash || !password_verify((string) $d["currentPassword"], $hash)) {
+            $reauth = api_verificar_contrasena_actual((string) $d["currentPassword"]);
+            if ($reauth !== "ok") {
                 $pdo->rollBack();
-                api_json(["ok" => false, "error" => "la contraseña actual es incorrecta"], 401);
+                api_rechazar_contrasena($reauth);
             }
+            $reautenticado = true;
         }
 
         $pdo->prepare("UPDATE alumnos SET estado = 0 WHERE id_alumno = ?")->execute([$id]);
@@ -232,6 +235,9 @@ if ($method === "DELETE") {
 
         registrarAuditoria("alumnos.dar_baja", "alumno", $id, ["antes" => $antes, "despues" => ["estado" => 0]]);
         $pdo->commit();
+        if ($reautenticado) {
+            api_limpiar_intentos((string) ($_SESSION["email"] ?? ""), "reauth");
+        }
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();

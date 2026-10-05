@@ -151,6 +151,88 @@ function api_rol_es($rol)
     return estaLogueado() && strcasecmp(api_rol_actual(), $rol) === 0;
 }
 
+// ---- Limite de intentos de autenticacion (login y reconfirmacion) ----
+
+const API_INTENTOS_MAXIMOS = 5;
+const API_INTENTOS_VENTANA_MINUTOS = 15;
+// Hash bcrypt de un valor aleatorio descartado. Se verifica contra el cuando el
+// email no existe, para que "usuario inexistente" tarde lo mismo que
+// "contrasena incorrecta".
+const API_HASH_FALSO = '$2y$10$cpLNOwmtnvyND6.I3GGHiel5jclVML6PcIBKHL7dOu8XYgZ.U1sN6';
+
+function api_intentos_bloqueado($email, $tipo = "login")
+{
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM login_intentos WHERE email = ? AND tipo = ? AND fecha > NOW() - INTERVAL " . API_INTENTOS_VENTANA_MINUTOS . " MINUTE");
+    $stmt->execute([strtolower(trim((string) $email)), $tipo]);
+    return (int) $stmt->fetchColumn() >= API_INTENTOS_MAXIMOS;
+}
+
+function api_registrar_intento_fallido($email, $tipo = "login")
+{
+    global $pdo;
+    $pdo->prepare("INSERT INTO login_intentos (email, ip, tipo) VALUES (?, ?, ?)")
+        ->execute([strtolower(trim((string) $email)), substr((string) ($_SERVER["REMOTE_ADDR"] ?? ""), 0, 45) ?: null, $tipo]);
+    $pdo->exec("DELETE FROM login_intentos WHERE fecha < NOW() - INTERVAL 1 DAY");
+}
+
+function api_limpiar_intentos($email, $tipo = "login")
+{
+    global $pdo;
+    $pdo->prepare("DELETE FROM login_intentos WHERE email = ? AND tipo = ?")
+        ->execute([strtolower(trim((string) $email)), $tipo]);
+}
+
+function api_responder_bloqueo()
+{
+    header("Retry-After: " . (API_INTENTOS_VENTANA_MINUTOS * 60));
+    api_json(["ok" => false, "error" => "demasiados intentos fallidos: esperá unos minutos y volvé a probar"], 429);
+}
+
+/**
+ * Operacion sensible: el usuario en sesion reingresa su contrasena.
+ * Solo lee, asi que puede llamarse dentro de una transaccion.
+ * Devuelve "ok", "bloqueado" o "incorrecta".
+ */
+function api_verificar_contrasena_actual($contrasena)
+{
+    global $pdo;
+    $email = (string) ($_SESSION["email"] ?? "");
+    if (api_intentos_bloqueado($email, "reauth")) {
+        return "bloqueado";
+    }
+    $stmt = $pdo->prepare("SELECT contrasena FROM usuarios WHERE id_usuario = ? LIMIT 1");
+    $stmt->execute([usuarioActual()]);
+    $hash = $stmt->fetchColumn();
+    $valida = is_string($hash) && $hash !== "" && (string) $contrasena !== "" && password_verify((string) $contrasena, $hash);
+    return $valida ? "ok" : "incorrecta";
+}
+
+/**
+ * Responde al rechazo de api_verificar_contrasena_actual(). Llamar fuera de
+ * una transaccion (despues del rollBack) para que el intento quede registrado.
+ */
+function api_rechazar_contrasena($resultado)
+{
+    if ($resultado === "bloqueado") {
+        api_responder_bloqueo();
+    }
+    api_registrar_intento_fallido((string) ($_SESSION["email"] ?? ""), "reauth");
+    api_json(["ok" => false, "error" => "la contraseña actual es incorrecta"], 401);
+}
+
+function api_requerir_contrasena($contrasena)
+{
+    if (!estaLogueado()) {
+        api_json(["ok" => false, "error" => "no autenticado"], 401);
+    }
+    $resultado = api_verificar_contrasena_actual($contrasena);
+    if ($resultado !== "ok") {
+        api_rechazar_contrasena($resultado);
+    }
+    api_limpiar_intentos((string) ($_SESSION["email"] ?? ""), "reauth");
+}
+
 function api_id_positivo($valor)
 {
     $id = filter_var($valor, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);

@@ -12,6 +12,10 @@ if ($email === "" || $password === "") {
     api_json(["ok" => false, "error" => "email y contraseña requeridos"], 400);
 }
 
+if (api_intentos_bloqueado($email)) {
+    api_responder_bloqueo();
+}
+
 $stmt = $pdo->prepare("
     SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.contrasena, u.rol_id, r.nombre AS rol
     FROM usuarios u
@@ -22,9 +26,14 @@ $stmt = $pdo->prepare("
 $stmt->execute([$email]);
 $u = $stmt->fetch();
 
-if (!$u || !password_verify($password, $u["contrasena"])) {
+// Siempre se ejecuta password_verify (contra un hash falso si el email no
+// existe) para no revelar por tiempo de respuesta qué cuentas existen.
+$passwordValida = password_verify($password, $u ? $u["contrasena"] : API_HASH_FALSO);
+if (!$u || !$passwordValida) {
+    api_registrar_intento_fallido($email);
     api_json(["ok" => false, "error" => "credenciales inválidas"], 401);
 }
+api_limpiar_intentos($email);
 
 session_regenerate_id(true);
 

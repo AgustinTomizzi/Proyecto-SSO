@@ -196,6 +196,71 @@ async function main() {
   expectStatus(sesionRefrescada, 200, "sesion del ex administrador");
   assert.equal(sesionRefrescada.body.usuario.rol, "Alumno");
 
+  // ---- Limite de intentos de login y tiempos parejos ----
+  const crearUsuario = async (prefijo, rol) => {
+    const email = `${prefijo}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.invalid`;
+    const creado = await admin.json("/usuarios.php", "POST", { nombre: "Temporal", apellido: prefijo, email, password: "demo1234", rolId: rolId(rol) });
+    expectStatus(creado, 201, `admin crea usuario ${prefijo}`);
+    return { email, id: Number(creado.body.usuario.id) };
+  };
+  const intentoLogin = async (email, password) => {
+    const inicio = performance.now();
+    const result = await new PhpSession().json("/login.php", "POST", { email, password });
+    return { result, ms: performance.now() - inicio };
+  };
+  const mediana = (valores) => [...valores].sort((a, b) => a - b)[Math.floor(valores.length / 2)];
+
+  const usuarioTiempos = await crearUsuario("tiempos", "Alumno");
+  const tiemposMala = [];
+  const tiemposInexistente = [];
+  for (let i = 0; i < 3; i++) {
+    const mala = await intentoLogin(usuarioTiempos.email, "incorrecta");
+    expectStatus(mala.result, 401, "login con contraseña incorrecta");
+    tiemposMala.push(mala.ms);
+    const inexistente = await intentoLogin(`no.existe.${Date.now()}.${i}@example.invalid`, "incorrecta");
+    expectStatus(inexistente.result, 401, "login de usuario inexistente");
+    assert.equal(inexistente.result.body.error, mala.result.body.error, "mismo mensaje para usuario inexistente y contraseña mala");
+    tiemposInexistente.push(inexistente.ms);
+  }
+  assert.ok(
+    mediana(tiemposInexistente) >= mediana(tiemposMala) * 0.5,
+    `usuario inexistente responde mucho mas rapido (${mediana(tiemposInexistente).toFixed(1)} ms vs ${mediana(tiemposMala).toFixed(1)} ms)`
+  );
+
+  const usuarioBloqueo = await crearUsuario("bloqueo", "Alumno");
+  for (let i = 1; i <= 5; i++) {
+    expectStatus((await intentoLogin(usuarioBloqueo.email, "incorrecta")).result, 401, `intento fallido ${i}`);
+  }
+  const sexto = await intentoLogin(usuarioBloqueo.email, "demo1234");
+  expectStatus(sexto.result, 429, "sexto intento bloqueado aun con la contraseña correcta");
+  assert.ok(Number(sexto.result.headers.get("retry-after")) > 0, "429 incluye Retry-After");
+
+  // ---- Limite de reconfirmaciones de contraseña (preceptor temporal en el curso 2) ----
+  const preceptorTmp = await crearUsuario("reauth", "Preceptor");
+  const cursoReauth = (await admin.request("/cursos.php")).body.cursos.find((curso) => Number(curso.id) === 2);
+  const preceptorOriginalCurso2 = cursoReauth.preceptorId ?? null;
+  expectStatus(await admin.json("/cursos.php", "PUT", { id: 2, preceptorId: preceptorTmp.id }), 200, "asigna curso 2 al preceptor temporal");
+  try {
+    const sesionReauth = await login(preceptorTmp.email, "preceptor");
+    const alumnosCurso2 = await sesionReauth.request("/alumnos.php");
+    expectStatus(alumnosCurso2, 200, "preceptor temporal lista alumnos");
+    const alumnoCurso2 = alumnosCurso2.body.alumnos.find((item) => Number(item.cursoId) === 2);
+    assert.ok(alumnoCurso2, "el curso 2 debe tener alumnos");
+    const bajaConClave = (currentPassword) => sesionReauth.request(`/alumnos.php?id=${alumnoCurso2.id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword }),
+    });
+    for (let i = 1; i <= 5; i++) {
+      expectStatus(await bajaConClave("incorrecta"), 401, `reconfirmacion fallida ${i}`);
+    }
+    expectStatus(await bajaConClave("demo1234"), 429, "sexta reconfirmacion bloqueada");
+    const sigueActivo = await admin.request("/alumnos.php");
+    assert.ok(sigueActivo.body.alumnos.some((item) => String(item.id) === String(alumnoCurso2.id)), "el alumno no se dio de baja");
+  } finally {
+    expectStatus(await admin.json("/cursos.php", "PUT", { id: 2, preceptorId: preceptorOriginalCurso2 }), 200, "restaura preceptor del curso 2");
+  }
+
   // ---- Asignacion de preceptores (cursos.php PUT + auditoria) ----
   const cursosAdmin = await admin.request("/cursos.php");
   expectStatus(cursosAdmin, 200, "admin lista cursos");

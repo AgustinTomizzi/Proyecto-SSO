@@ -7,6 +7,8 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 1. `db/01-schema.sql`: estructura vigente.
 2. `db/02-seed.sql`: permisos, relaciones y datos de demostración.
 3. `db/03-migracion-rbac-auditoria.sql`: migración incremental para instalaciones anteriores. En una instalación nueva es redundante, pero es segura y el kit USB también la ejecuta.
+4. `db/04-horarios.sql`: imágenes de horario por curso y permisos `horarios.*`.
+5. `db/05-seguridad.sql`: tabla `login_intentos` (límite de intentos de autenticación). Idempotente.
 
 **Estado real:** el esquema canónico implementa identidad, RBAC, Galisencia, Galiservas y auditoría. Galiservas usa los nombres físicos ingleses `resources` y `reservations`; los prototipos históricos (`recursos`/`reservas`, carpetas `Backend/` eliminadas en la limpieza) no eran canónicos.
 
@@ -312,6 +314,18 @@ Propósito: trazabilidad común de operaciones sensibles.
 | `fecha` | `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | índice | Momento del servidor. |
 
 Hoy se auditan cambios de alumnos, cursos, asistencias, notas, usuarios, recursos y reservas. Las operaciones sensibles de alumnos registran también un movimiento estructurado.
+
+### `login_intentos`
+
+Propósito: limitar intentos fallidos de autenticación. Tras 5 fallos del mismo email y `tipo` en 15 minutos, el endpoint responde `429`. Un login o reconfirmación exitosa borra los fallos de ese email y tipo; las filas de más de un día se purgan al registrar un fallo.
+
+| Campo | Tipo y nulabilidad | Clave | Significado |
+|---|---|---|---|
+| `id_intento` | `BIGINT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Secuencia. |
+| `email` | `VARCHAR(255) NOT NULL` | índice (`email`, `tipo`, `fecha`) | Email intentado, en minúsculas. Puede no existir en `usuarios`. |
+| `ip` | `VARCHAR(45) NULL` | | IP vista por el backend. Solo diagnóstico: detrás del proxy todos comparten IP, por eso el bloqueo es por email. |
+| `tipo` | `ENUM('login','reauth') NOT NULL` | | Login o reconfirmación de contraseña en una acción sensible. |
+| `fecha` | `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | índice | Momento del fallo. |
 
 ## Dominio Galiservas
 
