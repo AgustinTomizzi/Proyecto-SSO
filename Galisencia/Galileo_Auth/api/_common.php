@@ -33,7 +33,7 @@ if ($origin !== "" && (in_array($origin, $configuredOrigins, true) || $isLocalOr
     header("Vary: Origin");
 }
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 
 set_exception_handler(function ($e) {
     error_log("API error: " . $e->getMessage());
@@ -47,6 +47,27 @@ set_exception_handler(function ($e) {
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
     http_response_code(204);
     exit;
+}
+
+// CSRF: toda escritura exige el header X-Requested-With: galileo (un formulario
+// de otro sitio no puede enviarlo, y un fetch cruzado necesita preflight CORS)
+// y un cuerpo JSON (multipart solo en horarios.php, que sube imagenes).
+if (in_array($_SERVER["REQUEST_METHOD"] ?? "GET", ["POST", "PUT", "PATCH", "DELETE"], true)) {
+    if (($_SERVER["HTTP_X_REQUESTED_WITH"] ?? "") !== "galileo") {
+        http_response_code(403);
+        echo json_encode(["ok" => false, "error" => "solicitud rechazada: falta el header X-Requested-With", "codigo" => "csrf"], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $tipoContenido = strtolower(trim(explode(";", (string) ($_SERVER["CONTENT_TYPE"] ?? ""))[0]));
+    $tieneCuerpo = $tipoContenido !== "" || (int) ($_SERVER["CONTENT_LENGTH"] ?? 0) > 0;
+    $tiposPermitidos = basename((string) ($_SERVER["SCRIPT_NAME"] ?? "")) === "horarios.php"
+        ? ["application/json", "multipart/form-data"]
+        : ["application/json"];
+    if ($tieneCuerpo && !in_array($tipoContenido, $tiposPermitidos, true)) {
+        http_response_code(415);
+        echo json_encode(["ok" => false, "error" => "tipo de contenido no admitido: usá application/json", "codigo" => "csrf"], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 }
 
 function api_json($data, $code = 200)

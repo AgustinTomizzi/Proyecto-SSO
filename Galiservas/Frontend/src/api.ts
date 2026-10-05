@@ -37,7 +37,8 @@ async function request(path: string, options: RequestInit = {}) {
     response = await fetch(`${API_URL}/${path.replace(/^\//, '')}`, {
       ...options,
       credentials: 'include',
-      headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...options.headers },
+      // X-Requested-With: la API rechaza escrituras sin este header (CSRF).
+      headers: { Accept: 'application/json', 'X-Requested-With': 'galileo', ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...options.headers },
     })
   } catch {
     throw new ApiError('No se pudo conectar con Galileo Auth. Verificá que XAMPP y la API estén activos.', 0, true)

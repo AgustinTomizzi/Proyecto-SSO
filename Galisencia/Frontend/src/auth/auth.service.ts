@@ -1,4 +1,5 @@
 import type { Rol, Usuario } from "../data/types";
+import { CSRF_HEADER } from "../data/apiClient";
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL ?? "/api";
 
@@ -52,7 +53,7 @@ async function request(path: string, init?: RequestInit): Promise<SessionRespons
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
     credentials: "include",
-    headers: init?.body ? { "Content-Type": "application/json", ...init.headers } : init?.headers,
+    headers: init?.body ? { ...CSRF_HEADER, "Content-Type": "application/json", ...init.headers } : { ...CSRF_HEADER, ...init?.headers },
   });
   const data = (await response.json().catch(() => null)) as SessionResponse | null;
   if (!response.ok || !data?.ok) {
@@ -86,7 +87,7 @@ export async function changePassword(actual: string, nueva: string): Promise<voi
   const response = await fetch(`${API_BASE}/cambiar_password.php`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { ...CSRF_HEADER, "Content-Type": "application/json" },
     body: JSON.stringify({ actual, nueva }),
   });
   const data = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;

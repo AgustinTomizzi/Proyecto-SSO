@@ -22,6 +22,8 @@ La cookie representa autenticación compartida en el mismo host, pero SSO comple
 
 **CORS.** Se habilita (con credenciales) para los orígenes listados en `CORS_ALLOWED_ORIGINS`, separados por coma. Solo con `APP_ENV=dev` se acepta además cualquier puerto de `localhost`/`127.0.0.1`. En Docker los frontends llaman a `/api` en su mismo origen, así que no dependen de CORS.
 
+**CSRF.** Todo `POST`, `PUT`, `PATCH` o `DELETE` debe enviar el header `X-Requested-With: galileo`; sin él la API responde `403` con `"codigo":"csrf"`. Si el pedido tiene cuerpo, su `Content-Type` debe ser `application/json` (en `horarios.php` también `multipart/form-data`); otro tipo, como un formulario HTML, recibe `415`. Un formulario de otro sitio no puede enviar ese header, y un `fetch` cruzado necesita preflight CORS. Ambos frontends lo mandan en todos sus pedidos.
+
 **Cabeceras.** Toda respuesta de la API incluye `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `Referrer-Policy: no-referrer` y `Cache-Control: no-store`; con HTTPS (directo o `X-Forwarded-Proto`) agrega `Strict-Transport-Security`. El nginx de cada frontend envía una CSP propia (`'self'` más Google Fonts), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` y `Permissions-Policy`; su HSTS queda comentado hasta tener HTTPS.
 
 ### Login: **Implementada**
@@ -320,12 +322,13 @@ También acepta `recursoId`, `fecha`, `horaInicio`, `horaFin`, `cantidad`, `moti
 | `204` | Preflight `OPTIONS`. |
 | `400` | Campo requerido o ID inválido. |
 | `401` | Sin sesión o credenciales inválidas. |
-| `403` | Falta permiso o alcance. |
+| `403` | Falta permiso o alcance, falta el header CSRF (`codigo: csrf`) o la cuenta debe cambiar su contraseña (`codigo: debe_cambiar_password`). |
 | `404` | Entidad no encontrada. |
 | `405` | Método no permitido; algunos endpoints actuales aún no lo emiten al final. |
 | `409` | Recomendado para duplicado/solapamiento. |
-| `429` | Demasiados intentos fallidos de login o reconfirmación; incluye `Retry-After`. |
 | `422` | Recomendado para regla de negocio. |
+| `415` | Escritura con un `Content-Type` no admitido (ver CSRF). |
+| `429` | Demasiados intentos fallidos de login o reconfirmación; incluye `Retry-After`. |
 | `500` | BD inaccesible o auditoría no migrada. |
 
 No se deben mostrar errores PDO ni hashes al cliente. La autorización siempre se repite en backend con `api_requerir_permiso`; las rutas React no son una barrera de seguridad.

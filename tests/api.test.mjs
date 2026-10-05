@@ -8,12 +8,17 @@ const PASSWORD_PRUEBA = process.env.TEST_PASSWORD ?? "Integracion-2026!";
 class PhpSession {
   cookie = "";
 
+  // Las escrituras llevan X-Requested-With: galileo como los frontends;
+  // init.sinCsrf = true lo omite para probar la proteccion CSRF.
   async request(path, init = {}) {
     const headers = new Headers(init.headers);
     if (this.cookie) headers.set("Cookie", this.cookie);
+    const metodo = (init.method ?? "GET").toUpperCase();
+    if (metodo !== "GET" && !init.sinCsrf) headers.set("X-Requested-With", "galileo");
 
+    const { sinCsrf: _sinCsrf, ...fetchInit } = init;
     const response = await fetch(`${API}${path}`, {
-      ...init,
+      ...fetchInit,
       headers,
       redirect: "manual",
     });
@@ -111,7 +116,7 @@ async function main() {
 
   const loginCookie = await fetch(`${API}/login.php`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Requested-With": "galileo" },
     body: JSON.stringify({ email: "academica@galileo.edu.ar", password: "incorrecta-a-proposito" }),
   });
   expectStatus({ status: loginCookie.status, body: null }, 401, "login fallido para inspeccionar cookie");
@@ -121,6 +126,31 @@ async function main() {
   assert.ok(!cookieNueva.startsWith("PHPSESSID=inventadaporelcliente123"), "strict mode: no adopta el ID del cliente");
   assert.match(cookieNueva, /HttpOnly/i);
   assert.match(cookieNueva, /SameSite=Lax/i);
+
+  // ---- CSRF: escrituras sin X-Requested-With o con otro Content-Type ----
+  const sinHeader = await new PhpSession().request("/login.php", {
+    method: "POST",
+    sinCsrf: true,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "admin@galileo.edu.ar", password: "x" }),
+  });
+  expectStatus(sinHeader, 403, "POST sin X-Requested-With");
+  assert.equal(sinHeader.body.codigo, "csrf");
+  const textoPlano = await new PhpSession().request("/login.php", {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({ email: "admin@galileo.edu.ar", password: "x" }),
+  });
+  expectStatus(textoPlano, 415, "POST con text/plain");
+  const formulario = await new PhpSession().request("/login.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "email=admin%40galileo.edu.ar&password=x",
+  });
+  expectStatus(formulario, 415, "POST de formulario urlencoded");
+  const multipartAjeno = new FormData();
+  multipartAjeno.append("email", "admin@galileo.edu.ar");
+  expectStatus(await new PhpSession().request("/login.php", { method: "POST", body: multipartAjeno }), 415, "multipart fuera de horarios");
 
   // ---- Cambio obligatorio de contraseña (cuentas demo; requiere base recién creada) ----
   const docente = new PhpSession();
