@@ -374,6 +374,10 @@
   padding-right: 44px;
 }
 
+.login__input--plain {
+  padding-left: 16px;
+}
+
 .login__input::placeholder {
   color: #9ca3af;
 }

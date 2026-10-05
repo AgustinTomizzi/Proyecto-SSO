@@ -17,7 +17,7 @@ if (api_intentos_bloqueado($email)) {
 }
 
 $stmt = $pdo->prepare("
-    SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.contrasena, u.rol_id, r.nombre AS rol
+    SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.contrasena, u.rol_id, u.debe_cambiar_password, r.nombre AS rol
     FROM usuarios u
     INNER JOIN roles r ON u.rol_id = r.id_rol
     WHERE u.email = ?
@@ -43,6 +43,7 @@ $_SESSION["apellido"] = $u["apellido"];
 $_SESSION["email"] = $u["email"];
 $_SESSION["rol"] = $u["rol"];
 $_SESSION["rol_id"] = $u["rol_id"];
+$_SESSION["debe_cambiar_password"] = (int) $u["debe_cambiar_password"];
 
 function normalizarRol($nombre)
 {
@@ -70,6 +71,7 @@ $usuario = [
     "email" => $u["email"],
     "rol" => $rol,
     "rol_backend" => $u["rol"],
+    "debeCambiarPassword" => (bool) $u["debe_cambiar_password"],
 ];
 
 if ($rol === "alumno") {

@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import LoginPage from "./auth/LoginPage";
+import CambiarPasswordPage from "./auth/CambiarPasswordPage";
 import AppLayout, { HOME } from "./components/layout/AppLayout";
 import type { Rol } from "./data/types";
 import AlumnoPage from "./components/alumno/AlumnoPage";
@@ -38,6 +39,7 @@ export default function App() {
   const { usuario, loading } = useAuth();
 
   if (loading) return null;
+  if (usuario?.debeCambiarPassword) return <CambiarPasswordPage />;
 
   return (
     <>

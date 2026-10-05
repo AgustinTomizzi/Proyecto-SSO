@@ -1,11 +1,17 @@
+# Las contraseñas salen de .env (copiar .env.example y cambiarlas).
+# docker compose falla con un mensaje claro si falta alguna.
+
 services:
   # Base de datos MySQL (única, compartida: ProyectoEstela)
   mysql:
     image: mysql:8.0
     container_name: galisencia-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Definí MYSQL_ROOT_PASSWORD en .env (ver .env.example)}
       MYSQL_DATABASE: ProyectoEstela
+      # Usuario de la aplicación: lo crea db/00-usuario-app.sh en el primer arranque.
+      DB_APP_USER: ${DB_APP_USER:-galileo_app}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:?Definí DB_APP_PASSWORD en .env (ver .env.example)}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db:/docker-entrypoint-initdb.d
@@ -13,25 +19,25 @@ services:
       - galisencia-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      # Por TCP y con el usuario de la app: solo pasa cuando terminó la inicialización.
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u\"$$DB_APP_USER\" -p\"$$DB_APP_PASSWORD\" -e 'SELECT 1' ProyectoEstela > /dev/null 2>&1"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 20s
+      retries: 10
+      start_period: 30s
 
-  # Backend PHP (Galileo_Auth) exponiendo la API JSON en /api
+  # Backend PHP (Galileo_Auth) con la API JSON en /api. No publica puertos:
+  # los frontends lo alcanzan por la red interna (nginx /api/).
   backend:
     build:
       context: ./Galisencia/Galileo_Auth
       dockerfile: Dockerfile
     container_name: galisencia-backend
-    ports:
-      - "8080:80"
     environment:
       - DB_HOST=mysql
       - DB_NAME=ProyectoEstela
-      - DB_USER=root
-      - DB_PASSWORD=rootpassword
+      - DB_USER=${DB_APP_USER:-galileo_app}
+      - DB_PASSWORD=${DB_APP_PASSWORD:?Definí DB_APP_PASSWORD en .env (ver .env.example)}
     depends_on:
       mysql:
         condition: service_healthy
@@ -44,6 +50,21 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  # Solo desarrollo: expone la API en http://localhost:8080 (por ejemplo para
+  # `npm run dev` de Galiservas). Activar con: docker compose --profile dev up
+  backend-dev-port:
+    image: nginx:alpine
+    profiles: ["dev"]
+    ports:
+      - "127.0.0.1:8080:80"
+    configs:
+      - source: backend_dev_proxy
+        target: /etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+    networks:
+      - galisencia-network
 
   # Frontend React (build estático servido por nginx) en el puerto 3000
   frontend:
@@ -77,6 +98,18 @@ services:
     networks:
       - galisencia-network
     restart: unless-stopped
+
+configs:
+  backend_dev_proxy:
+    content: |
+      server {
+        listen 80;
+        location / {
+          proxy_pass http://backend:80;
+          proxy_set_header Host $$host;
+          proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
+        }
+      }
 
 networks:
   galisencia-network:

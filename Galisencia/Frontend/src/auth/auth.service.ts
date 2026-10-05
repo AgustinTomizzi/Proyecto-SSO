@@ -10,6 +10,7 @@ interface BackendUser {
   rol: string;
   rol_backend?: string;
   curso?: string;
+  debeCambiarPassword?: boolean;
 }
 
 interface SessionResponse {
@@ -43,6 +44,7 @@ function toUser(data: SessionResponse): Usuario {
     permisos: data.permisos ?? [],
     sistemas: data.sistemas ?? [],
     curso: user.curso,
+    debeCambiarPassword: Boolean(user.debeCambiarPassword),
   };
 }
 
@@ -78,4 +80,17 @@ export async function restoreSession(): Promise<Usuario | null> {
 
 export async function closeSession(): Promise<void> {
   await request("/logout.php", { method: "POST" });
+}
+
+export async function changePassword(actual: string, nueva: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/cambiar_password.php`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actual, nueva }),
+  });
+  const data = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+  if (!response.ok || !data?.ok) {
+    throw new Error(data?.error || `No se pudo cambiar la contraseña (HTTP ${response.status}).`);
+  }
 }

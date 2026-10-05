@@ -14,6 +14,7 @@ const messageOf = (error: unknown) => error instanceof Error ? error.message : '
 const GALISENCIA_URL = import.meta.env.VITE_GALISENCIA_URL || 'http://localhost:3000'
 const canAccessGaliservas = (session: Session) => session.permissions.some((permission) => normalize(permission) === 'galiservas.acceder')
   && session.systems.some((system) => normalize(system) === 'galiservas')
+const stateFor = (session: Session) => !canAccessGaliservas(session) ? 'forbidden' as const : session.mustChangePassword ? 'password' as const : 'ready' as const
 const canAdmin = (session: Session) => {
   const role = normalize(session.user.role)
   const permissions = session.permissions.map(normalize)
@@ -553,7 +554,7 @@ function formatDate(value: string) {
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
-  const [authState, setAuthState] = useState<'loading' | 'guest' | 'offline' | 'forbidden' | 'ready'>('loading')
+  const [authState, setAuthState] = useState<'loading' | 'guest' | 'offline' | 'forbidden' | 'password' | 'ready'>('loading')
   const [authError, setAuthError] = useState('')
   const [page, setPage] = useState<Page>('dashboard')
   const [menu, setMenu] = useState(false)
@@ -573,7 +574,7 @@ function App() {
     try {
       const current = await restoreSession()
       setSession(current)
-      setAuthState(canAccessGaliservas(current) ? 'ready' : 'forbidden')
+      setAuthState(stateFor(current))
     }
     catch (error) {
       setSession(null)
@@ -649,7 +650,8 @@ function App() {
   if (authState === 'loading') return <div className="splash"><img className="system-logo splash-logo" src="/logo-galiservas.png" alt="Logotipo de Galiservas"/><span className="spinner dark"/><p>Conectando con Galileo Auth</p></div>
   if (authState === 'offline') return <main className="connection-page"><div className="connection-card"><div className="warning-mark">!</div><p className="eyebrow">SIN CONEXIÓN</p><h1>No pudimos llegar al servidor</h1><p>{authError}</p><button className="button primary" onClick={() => void restore()}>Reintentar conexión</button><code>API: {import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}</code></div></main>
   if (authState === 'forbidden') return <main className="connection-page"><div className="connection-card"><div className="warning-mark">!</div><p className="eyebrow">ACCESO RESTRINGIDO</p><h1>Tu rol no puede ingresar</h1><p>Galiservas está disponible únicamente para Preceptores, Docentes y Administradores.</p><a className="button primary" href={GALISENCIA_URL}>Volver a Galisencia</a></div></main>
-  if (!session) return <Login onSuccess={(current) => { setSession(current); setAuthState('ready') }}/>
+  if (authState === 'password') return <main className="connection-page"><div className="connection-card"><div className="warning-mark">!</div><p className="eyebrow">CONTRASEÑA INICIAL</p><h1>Cambiá tu contraseña</h1><p>Antes de usar Galiservas tenés que reemplazar la contraseña inicial. Hacelo desde Galisencia y después volvé a esta pantalla.</p><a className="button primary" href={GALISENCIA_URL}>Ir a Galisencia</a><button className="button" onClick={() => void restore()}>Ya la cambié</button></div></main>
+  if (!session) return <Login onSuccess={(current) => { setSession(current); setAuthState(stateFor(current)) }}/>
 
   const nav: { id: Page, label: string, icon: IconName }[] = [
     { id: 'dashboard', label: 'Panel general', icon: 'grid' },

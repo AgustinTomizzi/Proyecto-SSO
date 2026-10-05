@@ -16,7 +16,7 @@ Todas las respuestas usan JSON UTF-8. Éxito: `{"ok":true,...}`. Error: `{"ok":f
 
 PHP crea una sesión de servidor y entrega la cookie estándar `PHPSESSID`. Después del login, el navegador debe reenviar esa cookie. Con `fetch`, las llamadas necesitan `credentials: "include"`; el kit USB evita CORS proxificando `/api` a Apache desde Vite.
 
-La cookie representa autenticación compartida en el mismo host, pero SSO completo exige que ambos sistemas consuman la misma sesión PHP y comprueben permisos. El `localStorage` del frontend (`galisencia.session`) solo restaura la interfaz: no autoriza operaciones backend.
+La cookie representa autenticación compartida en el mismo host, pero SSO completo exige que ambos sistemas consuman la misma sesión PHP y comprueben permisos. El frontend no guarda la sesión ni datos de alumnos en `localStorage`: al cargar consulta `sesion.php`, y el backend autoriza cada operación por su cuenta.
 
 ### Login: **Implementada**
 
@@ -43,6 +43,8 @@ No requiere sesión. Valida que email y contraseña no estén vacíos, busca ema
 }
 ```
 
+`usuario.debeCambiarPassword` indica que la cuenta todavía tiene una contraseña inicial (por ejemplo `demo1234`): mientras sea `true`, el resto de la API responde `403` con `"codigo":"debe_cambiar_password"` y solo quedan disponibles `sesion.php`, `cambiar_password.php` y `logout.php`.
+
 Para Alumno, `id` se reemplaza por `alumnos.id_alumno` y se agrega `curso` si el email coincide. Roles de salida: `alumno`, `preceptor`, `directivo`, `admin`; `Docente` se mapea temporalmente a `preceptor`.
 
 Errores: `400` campos ausentes, `401` credenciales inválidas, `405` otro método, `429` demasiados intentos fallidos, `500` conexión a BD.
@@ -54,10 +56,22 @@ Errores: `400` campos ausentes, `401` credenciales inválidas, `405` otro métod
 Reconstruye el usuario desde `$_SESSION`/BD y devuelve sus permisos, sin confiar en rol enviado por el cliente.
 
 ```json
-{"ok":true,"usuario":{"id":"3","nombre":"Carlos","apellido":"Ramirez","email":"preceptor@galileo.edu.ar","rol":"Preceptor"},"permisos":["alumnos.ver","asistencia.registrar"]}
+{"ok":true,"usuario":{"id":"3","nombre":"Carlos","apellido":"Ramirez","email":"preceptor@galileo.edu.ar","rol":"Preceptor","debeCambiarPassword":false},"permisos":["alumnos.ver","asistencia.registrar"]}
 ```
 
 Sin sesión o usuario ya inexistente: `401`; otro método: `405`.
+
+### Cambiar contraseña: **Implementada**
+
+`POST /cambiar_password.php`, requiere sesión. Autoservicio: no requiere permiso RBAC, cada usuario cambia solo la suya.
+
+```json
+{"actual":"demo1234","nueva":"una-contraseña-propia"}
+```
+
+Valida que la nueva tenga entre 8 y 72 caracteres, sea distinta de la actual y no sea `demo1234`. Verifica la actual con el mismo límite de reconfirmaciones que las acciones sensibles. Guarda el hash, apaga `debe_cambiar_password`, regenera el ID de sesión y audita `usuarios.cambiar_password` sin datos de la contraseña. Respuesta: `{"ok":true}`.
+
+Errores: `400` datos inválidos, `401` sin sesión o contraseña actual incorrecta, `405` otro método, `429` demasiados intentos.
 
 ### Logout: **Implementada**
 

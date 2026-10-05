@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 
 const API = process.env.API_URL ?? "http://localhost:3000/api";
+const PASSWORD_DEMO = "demo1234";
+// Las cuentas demo deben cambiar demo1234 en el primer ingreso: los tests usan esta.
+const PASSWORD_PRUEBA = process.env.TEST_PASSWORD ?? "Integracion-2026!";
 
 class PhpSession {
   cookie = "";
@@ -46,8 +49,8 @@ class PhpSession {
     });
   }
 
-  login(email) {
-    return this.json("/login.php", "POST", { email, password: "demo1234" });
+  login(email, password = PASSWORD_DEMO) {
+    return this.json("/login.php", "POST", { email, password });
   }
 }
 
@@ -55,12 +58,29 @@ function expectStatus(result, status, label) {
   assert.equal(result.status, status, `${label}: esperado HTTP ${status}, recibido ${result.status}: ${JSON.stringify(result.body)}`);
 }
 
+// Inicia sesion y, si la cuenta todavia tiene la contrasena demo marcada,
+// la cambia por PASSWORD_PRUEBA. session.password guarda la contrasena vigente.
 async function login(email, role) {
-  const session = new PhpSession();
-  const result = await session.login(email);
+  let session = new PhpSession();
+  let password = PASSWORD_DEMO;
+  let result = await session.login(email, password);
+  if (result.status === 401) {
+    session = new PhpSession();
+    password = PASSWORD_PRUEBA;
+    result = await session.login(email, password);
+  }
   expectStatus(result, 200, `login ${email}`);
   assert.equal(result.body?.usuario?.rol, role);
   assert.match(session.cookie, /^PHPSESSID=/);
+  if (result.body.usuario.debeCambiarPassword) {
+    expectStatus(
+      await session.json("/cambiar_password.php", "POST", { actual: password, nueva: PASSWORD_PRUEBA }),
+      200,
+      `cambio de contraseña inicial de ${email}`
+    );
+    password = PASSWORD_PRUEBA;
+  }
+  session.password = password;
   return session;
 }
 
@@ -72,6 +92,25 @@ async function main() {
     const result = await anonymous.request(`/${endpoint}.php`);
     expectStatus(result, 401, `${endpoint} sin sesion`);
   }
+
+  // ---- Cambio obligatorio de contraseña (cuentas demo; requiere base recién creada) ----
+  const docente = new PhpSession();
+  const loginDocente = await docente.login("docente@galileo.edu.ar");
+  expectStatus(loginDocente, 200, "login del docente con la contraseña demo");
+  assert.equal(loginDocente.body.usuario.debeCambiarPassword, true, "las cuentas demo arrancan marcadas");
+  const docenteBloqueado = await docente.request("/cursos.php");
+  expectStatus(docenteBloqueado, 403, "cuenta marcada no puede operar");
+  assert.equal(docenteBloqueado.body.codigo, "debe_cambiar_password");
+  expectStatus(await docente.request("/sesion.php"), 200, "cuenta marcada consulta su sesion");
+  expectStatus(await docente.json("/cambiar_password.php", "POST", { actual: PASSWORD_DEMO, nueva: PASSWORD_DEMO }), 400, "demo1234 no sirve como contraseña nueva");
+  expectStatus(await docente.json("/cambiar_password.php", "POST", { actual: PASSWORD_DEMO, nueva: "corta" }), 400, "contraseña nueva demasiado corta");
+  expectStatus(await docente.json("/cambiar_password.php", "POST", { actual: "incorrecta", nueva: PASSWORD_PRUEBA }), 401, "cambio con la contraseña actual incorrecta");
+  expectStatus(await docente.json("/cambiar_password.php", "POST", { actual: PASSWORD_DEMO, nueva: PASSWORD_PRUEBA }), 200, "cambio de la contraseña inicial");
+  const sesionDocente = await docente.request("/sesion.php");
+  expectStatus(sesionDocente, 200, "sesion del docente tras el cambio");
+  assert.equal(sesionDocente.body.usuario.debeCambiarPassword, false);
+  assert.notEqual((await docente.request("/cursos.php")).body?.codigo, "debe_cambiar_password", "tras el cambio ya puede operar");
+  expectStatus(await new PhpSession().login("docente@galileo.edu.ar", PASSWORD_DEMO), 401, "la contraseña demo ya no sirve");
 
   const [admin, academica, preceptor, directivo, alumno] = await Promise.all([
     login("admin@galileo.edu.ar", "admin"),
@@ -120,7 +159,7 @@ async function main() {
     await preceptor.request("/alumnos.php?id=5", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ currentPassword: "demo1234" }),
+      body: JSON.stringify({ currentPassword: preceptor.password }),
     }),
     403,
     "preceptor elimina alumno ajeno"
@@ -437,7 +476,7 @@ async function main() {
   expectStatus(
     await preceptor.json("/alumnos.php", "PUT", {
       id: idTmp, nombre: "Temporal", apellido: "Reauth2", curso: "3 A",
-      currentPassword: "demo1234",
+      currentPassword: preceptor.password,
     }),
     200,
     "preceptor cambia de curso con contraseña correcta"
@@ -446,7 +485,7 @@ async function main() {
   const bajaTmp = await preceptor.request(`/alumnos.php?id=${idTmp}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ currentPassword: "demo1234" }),
+    body: JSON.stringify({ currentPassword: preceptor.password }),
   });
   expectStatus(bajaTmp, 200, "preceptor da de baja con contraseña correcta");
 

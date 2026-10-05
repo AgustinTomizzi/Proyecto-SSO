@@ -22,7 +22,7 @@ La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esqu
 
 ## Cuentas demo
 
-Contraseña común: `demo1234`.
+Contraseña inicial común: `demo1234`. **Es solo para demostración:** todas las cuentas del seed quedan marcadas con `debe_cambiar_password`, así que el primer ingreso pide elegir una contraseña propia (Galisencia muestra la pantalla; Galiservas deriva a Galisencia). No usar estas cuentas ni esta contraseña en una instalación real.
 
 | Email | Rol real del seed |
 |---|---|
@@ -62,9 +62,10 @@ Pasos completos y problemas de puertos: [USB-Setup/INSTRUCCIONES.md](USB-Setup/I
 
 ## Docker
 
-La configuración vigente de `docker-compose.yml` levanta MySQL `ProyectoEstela`, el backend PHP (Galileo_Auth), Galisencia en <http://localhost:3000> y Galiservas en <http://localhost:5174>:
+La configuración vigente de `docker-compose.yml` levanta MySQL `ProyectoEstela`, el backend PHP (Galileo_Auth), Galisencia en <http://localhost:3000> y Galiservas en <http://localhost:5174>. Las contraseñas salen de `.env`, que no se versiona:
 
 ```bash
+cp .env.example .env   # y cambiar las contraseñas
 docker compose up --build
 ```
 

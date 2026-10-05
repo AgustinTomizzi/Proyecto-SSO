@@ -11,6 +11,7 @@ export interface Session {
   user: User
   permissions: string[]
   systems: string[]
+  mustChangePassword: boolean
 }
 
 export interface Resource {

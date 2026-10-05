@@ -20,6 +20,7 @@ CREATE TABLE usuarios (
   email VARCHAR(255) NOT NULL UNIQUE,
   contrasena VARCHAR(255) NOT NULL,
   rol_id INT UNSIGNED DEFAULT NULL,
+  debe_cambiar_password TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (id_usuario),
   CONSTRAINT fk_usuario_rol FOREIGN KEY (rol_id) REFERENCES roles (id_rol) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

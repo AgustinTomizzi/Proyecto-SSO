@@ -125,7 +125,7 @@ function api_rol_actual()
     }
 
     global $pdo;
-    $stmt = $pdo->prepare("SELECT u.nombre, u.apellido, u.email, u.rol_id, r.nombre AS rol FROM usuarios u LEFT JOIN roles r ON r.id_rol = u.rol_id WHERE u.id_usuario = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT u.nombre, u.apellido, u.email, u.rol_id, u.debe_cambiar_password, r.nombre AS rol FROM usuarios u LEFT JOIN roles r ON r.id_rol = u.rol_id WHERE u.id_usuario = ? LIMIT 1");
     $stmt->execute([usuarioActual()]);
     $u = $stmt->fetch();
     if (!$u) {
@@ -137,6 +137,7 @@ function api_rol_actual()
     $_SESSION["apellido"] = $u["apellido"];
     $_SESSION["email"] = $u["email"];
     $_SESSION["rol_id"] = $u["rol_id"];
+    $_SESSION["debe_cambiar_password"] = (int) $u["debe_cambiar_password"];
     $_SESSION["rol"] = (string) ($u["rol"] ?? "");
     return $cache[$id] = $_SESSION["rol"];
 }
@@ -282,3 +283,13 @@ function api_hora_valida($hora)
 
 // Refresca rol y datos de la sesion desde la base en cada request autenticado.
 api_rol_actual();
+
+// Una cuenta marcada con debe_cambiar_password solo puede consultar su sesion,
+// cambiar la contrasena o salir hasta que elija una contrasena propia.
+if (
+    estaLogueado()
+    && !empty($_SESSION["debe_cambiar_password"])
+    && !in_array(basename((string) ($_SERVER["SCRIPT_NAME"] ?? "")), ["login.php", "sesion.php", "cambiar_password.php", "logout.php"], true)
+) {
+    api_json(["ok" => false, "error" => "tenés que cambiar tu contraseña antes de continuar", "codigo" => "debe_cambiar_password"], 403);
+}

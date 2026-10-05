@@ -83,6 +83,10 @@ INSERT INTO usuarios (nombre, apellido, email, contrasena, rol_id) VALUES
   ('Sofia', 'Gutierrez', 'alumno@galileo.edu.ar', '$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy', (SELECT id_rol FROM roles WHERE nombre = 'Alumno')),
   ('Mateo', 'Fernandez', 'mateo.usuario@galileo.edu.ar', '$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy', (SELECT id_rol FROM roles WHERE nombre = 'Alumno'));
 
+-- Todas las cuentas del seed usan la contrasena de demostracion demo1234:
+-- quedan marcadas para que su primer ingreso exija elegir una contrasena propia.
+UPDATE usuarios SET debe_cambiar_password = 1;
+
 INSERT INTO cursos (anio, division, turno, preceptor, preceptor_id) VALUES
   ('1', 'A', 'Mañana', 'Carlos Ramirez', (SELECT id_usuario FROM usuarios WHERE email = 'preceptor@galileo.edu.ar')),
   ('1', 'B', 'Mañana', 'Laura Lagos', (SELECT id_usuario FROM usuarios WHERE email = 'preceptora.lagos@galileo.edu.ar')),

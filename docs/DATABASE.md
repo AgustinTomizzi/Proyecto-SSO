@@ -4,11 +4,12 @@
 
 La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fuente canónica es:
 
+0. `db/00-usuario-app.sh`: crea el usuario MySQL de la aplicación (`DB_APP_USER`) con `SELECT/INSERT/UPDATE/DELETE` sobre `ProyectoEstela`. El backend ya no se conecta como root.
 1. `db/01-schema.sql`: estructura vigente.
 2. `db/02-seed.sql`: permisos, relaciones y datos de demostración.
 3. `db/03-migracion-rbac-auditoria.sql`: migración incremental para instalaciones anteriores. En una instalación nueva es redundante, pero es segura y el kit USB también la ejecuta.
 4. `db/04-horarios.sql`: imágenes de horario por curso y permisos `horarios.*`.
-5. `db/05-seguridad.sql`: tabla `login_intentos` (límite de intentos de autenticación). Idempotente.
+5. `db/05-seguridad.sql`: tabla `login_intentos` (límite de intentos de autenticación) y columna `usuarios.debe_cambiar_password` (al crearla marca las cuentas demo). Idempotente.
 
 **Estado real:** el esquema canónico implementa identidad, RBAC, Galisencia, Galiservas y auditoría. Galiservas usa los nombres físicos ingleses `resources` y `reservations`; los prototipos históricos (`recursos`/`reservas`, carpetas `Backend/` eliminadas en la limpieza) no eran canónicos.
 
@@ -166,6 +167,7 @@ Propósito: identidad única para autenticación y permisos de ambos sistemas.
 | `email` | `VARCHAR(255) NOT NULL` | UNIQUE | Credencial de inicio de sesión. |
 | `contrasena` | `VARCHAR(255) NOT NULL` | | Hash de contraseña, nunca texto plano. |
 | `rol_id` | `INT UNSIGNED NULL` | FK a `roles.id_rol` | Perfil RBAC. |
+| `debe_cambiar_password` | `TINYINT(1) NOT NULL DEFAULT 0` | | `1` obliga a elegir contraseña propia antes de operar. El seed lo marca en todas las cuentas demo (`demo1234`). |
 
 Relación: muchos usuarios pertenecen a un rol. Al borrar el rol, `rol_id` queda `NULL`; ese usuario no puede autenticarse mediante el `INNER JOIN` actual. El alumno de login se vincula con `alumnos` por igualdad de `email`, no mediante FK.
 

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Usuario } from "../data/types";
-import { closeSession, login as loginService, restoreSession } from "./auth.service";
+import { changePassword, closeSession, login as loginService, restoreSession } from "./auth.service";
 import { limpiarDatosLocales } from "../data/localData";
 
 interface AuthState {
@@ -8,6 +8,7 @@ interface AuthState {
   loading: boolean;
   login: (email: string, password: string) => Promise<Usuario>;
   logout: () => Promise<void>;
+  cambiarPassword: (actual: string, nueva: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -50,8 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function cambiarPassword(actual: string, nueva: string) {
+    await changePassword(actual, nueva);
+    setUsuario(await restoreSession());
+  }
+
   return (
-    <AuthContext.Provider value={{ usuario, loading, login, logout }}>
+    <AuthContext.Provider value={{ usuario, loading, login, logout, cambiarPassword }}>
       {children}
     </AuthContext.Provider>
   );

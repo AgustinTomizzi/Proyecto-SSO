@@ -78,14 +78,23 @@ function parsePermissions(value: unknown): string[] {
   return typeof value === 'string' ? value.split(',').map((item) => item.trim()).filter(Boolean) : []
 }
 
+function parseSession(data: JsonRecord): Session {
+  return {
+    user: parseUser(data.usuario ?? data.user),
+    permissions: parsePermissions(data.permisos ?? data.permissions),
+    systems: parsePermissions(data.sistemas ?? data.systems),
+    mustChangePassword: record(data.usuario ?? data.user).debeCambiarPassword === true,
+  }
+}
+
 export async function login(email: string, password: string): Promise<Session> {
   const data = await request('login.php', { method: 'POST', body: JSON.stringify({ email, password }) })
-  return { user: parseUser(data.usuario ?? data.user), permissions: parsePermissions(data.permisos ?? data.permissions), systems: parsePermissions(data.sistemas ?? data.systems) }
+  return parseSession(data)
 }
 
 export async function restoreSession(): Promise<Session> {
   const data = await request('sesion.php')
-  return { user: parseUser(data.usuario ?? data.user), permissions: parsePermissions(data.permisos ?? data.permissions), systems: parsePermissions(data.sistemas ?? data.systems) }
+  return parseSession(data)
 }
 
 export async function logout() {
