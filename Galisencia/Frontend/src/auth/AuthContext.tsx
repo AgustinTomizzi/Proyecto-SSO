@@ -9,6 +9,9 @@ interface AuthState {
   login: (email: string, password: string) => Promise<Usuario>;
   logout: () => Promise<void>;
   cambiarPassword: (actual: string, nueva: string) => Promise<void>;
+  /** Error al consultar la sesión porque el servidor no respondió. */
+  errorConexion: string | null;
+  reintentarSesion: () => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -16,12 +19,19 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorConexion, setErrorConexion] = useState<string | null>(null);
+  const [intento, setIntento] = useState(0);
 
   useEffect(() => {
     let active = true;
     restoreSession()
       .then((sessionUser) => {
-        if (active) setUsuario(sessionUser);
+        if (!active) return;
+        setUsuario(sessionUser);
+        setErrorConexion(null);
+      })
+      .catch((error: unknown) => {
+        if (active) setErrorConexion(error instanceof Error ? error.message : "No se pudo conectar con el servidor.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -29,12 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [intento]);
+
+  function reintentarSesion() {
+    setLoading(true);
+    setIntento((n) => n + 1);
+  }
 
   async function login(email: string, password: string) {
     setLoading(true);
     try {
       const authenticatedUser = await loginService(email, password);
+      setErrorConexion(null);
       setUsuario(authenticatedUser);
       return authenticatedUser;
     } finally {
@@ -57,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ usuario, loading, login, logout, cambiarPassword }}>
+    <AuthContext.Provider value={{ usuario, loading, login, logout, cambiarPassword, errorConexion, reintentarSesion }}>
       {children}
     </AuthContext.Provider>
   );

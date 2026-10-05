@@ -76,7 +76,7 @@ Se inyectan como `args` en el service `galiservas` del compose:
 
 ## Solución de problemas
 
-- **La UI abre pero no persiste nada:** puede estar usando el fallback mock de Galisencia. Verificar en la red o recargar después de escribir, y comprobar `docker compose ps` (los tres services deben estar `running`).
+- **Aparece "Sin conexión con el servidor":** el frontend no llega a la API. Comprobar `docker compose ps` (`mysql`, `backend`, `frontend` y `galiservas` deben estar `running`/`healthy`) y `docker compose logs backend`.
 - **Cambios en el código no se reflejan:** reconstruir con `docker compose build` y reiniciar con `docker compose up -d`.
 - **Base corrupta o con datos inválidos:** usar `down -v` para reaplicar el seed (destructivo).
 - **Volumen creado antes de esta versión (el backend no conecta):** los scripts de `db/` solo corren al crear el volumen, así que falta el usuario de la app y la migración 05. Sin borrar datos:

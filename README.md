@@ -89,7 +89,7 @@ npm install
 npm run dev -- --port 5174
 ```
 
-Galisencia usa `/api` por defecto y dispone de fallback mock cuando el backend no responde. Que la UI abra no demuestra persistencia: comprobar el modo y recargar después de escribir.
+Galisencia usa `/api` por defecto. Con sesión iniciada nunca muestra datos inventados: si la API no responde, muestra el aviso "Sin conexión con el servidor" con un botón para reintentar.
 
 Valores PHP por defecto compatibles con XAMPP: `DB_HOST=localhost`, `DB_NAME=ProyectoEstela`, `DB_USER=root`, `DB_PASSWORD` vacío. Docker los reemplaza con variables de entorno.
 

@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { useTheme } from "../../theme/ThemeContext";
+import { useStore } from "../../data/StoreContext";
 import type { Rol } from "../../data/types";
 import { ROL_LABEL } from "../../data/types";
 import "./AppLayout.css";
@@ -70,6 +71,7 @@ function iniciales(nombre: string) {
 
 export default function AppLayout() {
   const { usuario, logout } = useAuth();
+  const { errorConexion, cargando, reintentarCarga } = useStore();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -154,6 +156,15 @@ export default function AppLayout() {
             <div className="app__user-pill"><span className="app__avatar app__avatar--small"><span>{initials}</span></span><span>{usuario.email}</span></div>
           </div>
         </header>
+        {errorConexion && (
+          <div className="app__offline" role="alert">
+            <div>
+              <strong>Sin conexión con el servidor</strong>
+              <span>No se muestran datos hasta recuperar la conexión. {errorConexion}</span>
+            </div>
+            <button type="button" onClick={reintentarCarga} disabled={cargando}>{cargando ? "Reintentando..." : "Reintentar"}</button>
+          </div>
+        )}
         <main className="app__content"><Outlet /></main>
       </div>
     </div>

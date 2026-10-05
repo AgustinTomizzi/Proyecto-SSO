@@ -113,7 +113,7 @@ function SunGlow() {
 }
 
 export default function LoginPage() {
-  const { login, loading } = useAuth();
+  const { login, loading, errorConexion, reintentarSesion } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -195,6 +195,15 @@ export default function LoginPage() {
             <h3 className="login__card-title">Iniciar sesión</h3>
             <p className="login__card-sub">Ingresá con tu correo galileo.</p>
           </div>
+
+          {errorConexion && !error && (
+            <div className="login__error" role="alert">
+              <span>
+                <strong>Sin conexión con el servidor.</strong> {errorConexion}{" "}
+                <button type="button" className="login__forgot" onClick={reintentarSesion}>Reintentar</button>
+              </span>
+            </div>
+          )}
 
           {error && (
             <div className="login__error" role="alert">

@@ -86,6 +86,10 @@ export interface StoreState {
   ) => Promise<void>;
   borrarAlumno: (id: string, currentPassword?: string) => Promise<void>;
   resetDemo: () => void;
+  /** Mensaje si hay sesión pero la API no respondió; los datos quedan vacíos. */
+  errorConexion: string | null;
+  cargando: boolean;
+  reintentarCarga: () => void;
 }
 
 const StoreContext = createContext<StoreState | null>(null);
@@ -96,19 +100,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cursos, setCursos] = useState<Curso[]>(inicial.cursos);
   const [registros, setRegistros] = useState<RegistroAsistencia[]>(inicial.registros);
   const { usuario } = useAuth();
+  const [errorConexion, setErrorConexion] = useState<string | null>(null);
+  const [cargando, setCargando] = useState(false);
+  const [intentoCarga, setIntentoCarga] = useState(0);
 
   // Carga los datos del backend autenticado. Se re-ejecuta al cambiar el
   // usuario (login / sesion restaurada). El alumno solo puede ver sus propias
-  // asistencias; el resto de roles ve el listado completo. Sin sesion usa mock.
+  // asistencias; el resto de roles ve el listado completo. Sin sesion usa mock;
+  // con sesion nunca: si la API falla se vacian los datos y se avisa.
   useEffect(() => {
     if (!usuario) {
       const init = datosDemo();
       setAlumnos(init.alumnos);
       setCursos(init.cursos);
       setRegistros(init.registros);
+      setErrorConexion(null);
+      setCargando(false);
       return;
     }
+    if (usuario.debeCambiarPassword) return;
     let cancelled = false;
+    setCargando(true);
     (async () => {
       try {
         if (usuario.rol === "alumno") {
@@ -140,18 +152,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setCursos(cu.cursos.map((c) => ({ ...c, id: String(c.id) })));
           setRegistros(normalizarRegistros(as.registros));
         }
-      } catch {
+        setErrorConexion(null);
+      } catch (error) {
         if (cancelled) return;
-        const init = datosDemo();
-        setAlumnos(init.alumnos);
-        setCursos(init.cursos);
-        setRegistros(init.registros);
+        setAlumnos([]);
+        setCursos([]);
+        setRegistros([]);
+        // Error de red o timeout de apiGet: mensaje claro en lugar del técnico.
+        const sinRespuesta = error instanceof TypeError || (error instanceof DOMException && error.name === "AbortError");
+        setErrorConexion(sinRespuesta || !(error instanceof Error) ? "El servidor no respondió." : error.message);
+      } finally {
+        if (!cancelled) setCargando(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [usuario]);
+  }, [usuario, intentoCarga]);
+
+  const reintentarCarga = useCallback(() => setIntentoCarga((n) => n + 1), []);
 
   const getRegistrosDeAlumno = useCallback(
     (alumnoId: string) => registros.filter((r) => r.alumnoId === alumnoId),
@@ -248,6 +267,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     editarAlumno,
     borrarAlumno,
     resetDemo,
+    errorConexion,
+    cargando,
+    reintentarCarga,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

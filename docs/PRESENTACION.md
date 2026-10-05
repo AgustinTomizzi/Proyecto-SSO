@@ -113,4 +113,4 @@ Alcance propio/curso en asistencias y notas, logout API en Galisencia, auditorí
 - No decir "Administrador Académico y Administrador son iguales".
 - No decir "Docker publica el frontend Galiservas".
 - No decir "la UI protege la API".
-- No decir "la demo siempre persiste": puede caer a mock si el backend no responde.
+- Si el backend no responde, la app lo avisa ("Sin conexión con el servidor") y no muestra datos de demostración.

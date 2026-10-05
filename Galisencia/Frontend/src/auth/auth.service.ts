@@ -70,13 +70,21 @@ export async function login(email: string, password: string): Promise<Usuario> {
   return toUser(data);
 }
 
+// null solo si no hay sesión (401). Si el servidor no responde, lanza un
+// error para que la UI avise en lugar de mandar al login en silencio.
 export async function restoreSession(): Promise<Usuario | null> {
+  let response: Response;
   try {
-    const data = await request("/sesion.php");
-    return toUser(data);
+    response = await fetch(`${API_BASE}/sesion.php`, { credentials: "include", headers: CSRF_HEADER });
   } catch {
-    return null;
+    throw new Error("No se pudo conectar con el servidor.");
   }
+  if (response.status === 401) return null;
+  const data = (await response.json().catch(() => null)) as SessionResponse | null;
+  if (!response.ok || !data?.ok) {
+    throw new Error(data?.error || `El servidor no respondió correctamente (HTTP ${response.status}).`);
+  }
+  return toUser(data);
 }
 
 export async function closeSession(): Promise<void> {

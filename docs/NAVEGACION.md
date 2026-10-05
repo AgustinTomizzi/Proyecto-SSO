@@ -23,7 +23,7 @@ flowchart TD
 
 Estado demostrable hoy:
 
-- **Galisencia React:** rutas y vistas por rol, con API real si Apache está disponible y fallback mock si no responde.
+- **Galisencia React:** rutas y vistas por rol, con datos de la API; si la API no responde muestra "Sin conexión con el servidor" y no carga datos de demostración.
 - **Galileo Auth PHP:** solo API JSON (`api/*.php`); las páginas PHP legadas se eliminaron.
 - **Galiservas React independiente:** gestor conectado a sesión, recursos y reservas de la API compartida.
 
@@ -82,7 +82,7 @@ Abrir `http://localhost:5173`, ingresar con `preceptor@galileo.edu.ar` / `demo12
 
 ### 2:30-3:45 - Preceptor
 
-Mostrar cursos/alumnos y registrar una asistencia. Destacar el *upsert* por alumno, materia y fecha. Si la integración real falla, mostrar el indicador de modo mock y no afirmar persistencia.
+Mostrar cursos/alumnos y registrar una asistencia. Destacar el *upsert* por alumno, materia y fecha. Si la integración falla, la app muestra el aviso "Sin conexión con el servidor" en lugar de datos.
 
 ### 3:45-4:45 - Directivo
 
@@ -110,4 +110,4 @@ Resumir: identidad común, RBAC backend, asistencia por ciclo, reservas automát
 2. Tener las seis cuentas demo visibles.
 3. No ejecutar `REINICIAR_BASE_DEMO.bat` durante la exposición salvo necesidad.
 4. Tener `docs/PRESENTACION.md` abierto como ayuda.
-5. Probar exactamente una escritura y recargar para comprobar si fue backend o mock.
+5. Probar una escritura y recargar para comprobar que persistió.
