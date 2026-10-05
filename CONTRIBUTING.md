@@ -19,16 +19,16 @@ Nombrá la rama según lo que estés haciendo:
 - `fix/nombre-corto` → arreglo de un bug (ej: `fix/filtro-materia`)
 - `chore/nombre-corto` → tareas que no son feature ni fix (config, dependencias, docs)
 
-Como el repo tiene dos sistemas (`Frontend/` y `Backend/`), sumale cuál de los dos toca la rama, para que se entienda de un vistazo sin tener que abrirla:
+El repo tiene tres partes: el frontend de Galisencia (`Galisencia/Frontend`), el frontend de Galiservas (`Galiservas/Frontend`) y la API compartida (`Galisencia/Galileo_Auth`). Sumale a la rama cuál toca, para que se entienda de un vistazo sin tener que abrirla:
 
-- `feature/frontend-dashboard-preceptor`
-- `feature/backend-auth-jwt`
-- `fix/backend-calculo-porcentaje`
+- `feature/galisencia-dashboard-preceptor`
+- `feature/galiservas-filtro-recursos`
+- `fix/api-calculo-porcentaje`
 
-Si la rama toca los dos sistemas a la vez, va sin prefijo: `feature/nuevo-campo-legajo`.
+Si la rama toca más de una parte a la vez, va sin prefijo: `feature/nuevo-campo-legajo`.
 
 ```bash
-git checkout -b feature/frontend-dashboard-preceptor
+git checkout -b feature/galisencia-dashboard-preceptor
 ```
 
 ## 3. Mientras trabajás
@@ -40,10 +40,20 @@ git add .
 git commit -m "agrega tabla de asistencia por curso"
 ```
 
+Antes de subir, corré lint y build de los dos frontends y las pruebas de integración contra el stack Docker (ver [tests/README.md](./tests/README.md)):
+
+```bash
+cd Galisencia/Frontend && npm run lint && npm run build
+cd ../../Galiservas/Frontend && npm run lint && npm run build
+cd ../.. && node tests/api.test.mjs
+```
+
+Si algo no lo pudiste correr, aclaralo en el PR.
+
 ## 4. Subir la rama y abrir el PR
 
 ```bash
-git push -u origin feature/dashboard-preceptor
+git push -u origin feature/galisencia-dashboard-preceptor
 ```
 
 Después andá a GitHub y abrí el Pull Request contra `main`. En la descripción contá:

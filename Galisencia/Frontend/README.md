@@ -2,33 +2,49 @@
 
 React + TypeScript + Vite.
 
-Para info general del proyecto (roles, estado de módulos, cómo contribuir), mirá el [README de la raíz](../README.md) y el [CONTRIBUTING.md](../CONTRIBUTING.md).
+Para info general del proyecto (roles, estado de módulos, cómo contribuir), mirá el [README de la raíz](../../README.md) y el [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Levantar en local
+
+La forma soportada es Docker Compose desde la raíz del repo: Galisencia queda en `http://localhost:3000` y nginx reenvía `/api` al backend.
+
+Para desarrollar con recarga en caliente:
 
 ```bash
 npm install
 npm run dev
 ```
 
+Vite corre en `http://localhost:5173` y reenvía `/api` a `http://localhost:80` (ver `vite.config.ts`). Necesitás un backend PHP escuchando ahí, o cambiar `VITE_API_URL` (ver `.env.example`).
+
+Antes de subir cambios: `npm run lint` y `npm run build`.
+
 ## Estructura
 
 ```
 src/
-├── App.tsx
-├── main.tsx
-└── components/
-    └── asistencia/       # Módulo 1: consulta de asistencia del alumno
-        ├── AsistenciaDashboard.tsx
-        ├── asistenciaCard.tsx
-        ├── subjectFilter.tsx
-        ├── HistoryTable.tsx
-        ├── RealtimeIndicador.tsx
-        ├── attendance.service.ts   # acá se reemplaza el mock por la API real
-        └── attendance.types.ts
+├── auth/         # Login, cambio obligatorio de contraseña, sesión (AuthContext, auth.service.ts)
+├── components/
+│   ├── layout/     # AppLayout: menú lateral por rol, banner "Sin conexión con el servidor"
+│   ├── alumno/     # Mi asistencia
+│   ├── asistencia/ # Tarjetas, filtros e indicadores de asistencia reutilizables
+│   ├── preceptor/  # Registrar asistencia
+│   ├── directivo/  # Panel institucional
+│   ├── admin/      # Panel de administración y gestión de usuarios
+│   ├── gestion/    # Gestión académica (alumnos, cursos)
+│   ├── horarios/   # Mi horario (alumno) y carga de horarios (admin)
+│   ├── reportes/   # Reportes de asistencia
+│   ├── auditoria/  # Consulta de auditoría
+│   └── ui/         # Componentes genéricos (gráficos, diálogos, toasts, estados vacíos)
+├── data/         # apiClient.ts + StoreContext.tsx (datos de la API), tipos y helpers
+├── hooks/        # Hooks compartidos
+├── styles/       # Tema y estilos globales
+└── theme/        # Modo claro/oscuro
 ```
 
 ## Notas
 
-- `attendance.service.ts` usa datos mock. Cuando el Backend tenga el endpoint de asistencia, reemplazar `obtenerRegistros` por el `fetch` real (queda marcado con un `TODO` en el archivo).
-- Cada módulo nuevo va en su propia carpeta dentro de `components/`, siguiendo el mismo patrón que `asistencia/` (componentes + `.service.ts` + `.types.ts` + `.css`).
+- Los datos salen de la API a través de `data/apiClient.ts` y `data/StoreContext.tsx`. Con sesión iniciada no hay datos mock: si la API falla, se muestra el aviso "Sin conexión con el servidor" con el botón Reintentar.
+- `data/mock.ts` solo aporta tipos, helpers y datos en memoria para cuando no hay sesión. No se guardan datos de alumnos en `localStorage`.
+- El enlace a Galiservas usa `VITE_GALISERVAS_URL` (por defecto `http://localhost:5174`) y solo aparece si el rol tiene acceso.
+- El menú de cada rol está definido en `NAV` de `components/layout/AppLayout.tsx`.

@@ -16,9 +16,8 @@ flowchart TD
     G --> A2[Preceptor: registro]
     G --> A3[Directivo: institución y reportes]
     G --> A4[Admin académico: gestión]
-    R --> R1[Usuario: recursos y reservas propias]
-    R --> R2[Directivo o Admin académico: todas las reservas]
-    R --> R3[Administrador: recursos y reservas]
+    R --> R1[Preceptor o Docente: recursos y reservas propias]
+    R --> R3[Administrador: recursos, todas las reservas y reportes]
 ```
 
 Estado demostrable hoy:
@@ -29,16 +28,16 @@ Estado demostrable hoy:
 
 ## Galisencia React por rol
 
-URL USB: `http://localhost:5173`.
+URL con Docker: `http://localhost:3000` (con `npm run dev`, `http://localhost:5173`).
 
 | Rol UI | Inicio | Navegación visible | Función |
 |---|---|---|---|
-| Alumno | `/alumno` | Mi asistencia | Porcentaje e historial del alumno. |
-| Preceptor | `/preceptor` | Registrar asistencia, Reportes | Tomar asistencia y consultar reportes. |
-| Directivo | `/directivo` | Institucional, Reportes | Indicadores, riesgo y análisis. |
-| Admin | `/admin` | Panel, Gestión académica, Reportes, Auditoría, Usuarios | Gestión transversal. |
+| Alumno | `/alumno` | Mi asistencia, Mi horario | Porcentaje e historial del alumno y horario de su curso. |
+| Preceptor (también Docente) | `/preceptor` | Registrar asistencia, Reportes | Tomar asistencia y consultar reportes. |
+| Directivo | `/directivo` | Panel institucional, Reportes | Indicadores, riesgo y análisis. |
+| Admin (Administrador y Administrador Académico) | `/admin` | Panel, Gestión académica, Horarios, Reportes, Auditoría, Usuarios | Gestión transversal; el backend igual limita por permiso lo que cada uno puede hacer. |
 
-`/login` permite seleccionar un rol visual, pero cuando responde el backend prevalece el rol derivado de la base. `RutaProtegida` redirige al inicio del usuario. Esto mejora UX, no reemplaza RBAC del servidor.
+`/login` solo pide email y contraseña: no hay selector de rol. El rol sale siempre de la base y se relee en cada request. Si la cuenta tiene `debe_cambiar_password`, Galisencia muestra primero la pantalla para elegir una contraseña nueva. `RutaProtegida` redirige al inicio del usuario. Esto mejora UX, no reemplaza RBAC del servidor.
 
 El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre la aplicación independiente en `http://localhost:5174`.
 
@@ -50,7 +49,7 @@ El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre
 | Administrador | Panel, Aulas, Pañol, Reservas, Reportes, Mis reservas, Nueva reserva | Todas las reservas, reportes y API de recursos. |
 | Alumno, Directivo, Administrador Académico | Sin acceso | UI y API rechazan la sesión para Galiservas. |
 
-Al cargar, Galiservas llama `GET sesion.php`; si la cookie es válida recupera usuario, permisos y sistemas habilitados. La UI exige `galiservas.acceder`, mientras `reservas.php`, `recursos.php` y reportes vuelven a validar `rol_sistema` y permisos. El logout destruye la sesión y redirige a Galisencia.
+Al cargar, Galiservas llama `GET sesion.php`; si la cookie es válida recupera usuario, permisos y sistemas habilitados. La UI exige `galiservas.acceder`, mientras `reservas.php`, `recursos.php` y `reportes_reservas.php` vuelven a validar `rol_sistema` (`api_requerir_sistema`) y permisos. Si la cuenta todavía tiene la contraseña inicial, Galiservas pide cambiarla desde Galisencia. El logout destruye la sesión y redirige a Galisencia.
 
 ## Flujo SSO con cookie
 
@@ -62,7 +61,7 @@ Al cargar, Galiservas llama `GET sesion.php`; si la cookie es válida recupera u
 6. Al cambiar de sistema bajo el mismo host/instancia PHP, la cookie puede identificar la misma sesión; cada sistema debe volver a validar su permiso.
 7. `api/logout.php` destruye sesión/cookie y ambos frontends lo utilizan. Galiservas redirige después a Galisencia.
 
-En USB, ambos Vite proxifican `/api` hacia Apache para compartir cookie sin depender de CORS. El selector de rol y `localStorage` nunca conceden permisos.
+Con Docker, el nginx de cada frontend (`:3000` y `:5174`) reenvía `/api` al backend, así que la cookie se comparte sin CORS. En desarrollo, el Vite de Galisencia reenvía `/api` a `http://localhost:80` y Galiservas llama directo a `http://localhost:8080/api` (`docker compose --profile dev up`; con `APP_ENV=dev` el backend acepta CORS desde `localhost`). `localStorage` nunca concede permisos.
 
 ## Guion de exposición (8 minutos)
 
@@ -74,11 +73,11 @@ Mostrar el diagrama y explicar que ambas aplicaciones consumen la API y sesión 
 
 ### 0:45-1:40 - Arquitectura
 
-Mostrar `README.md`: React/Vite en interfaz, PHP/PDO en API, MySQL `ProyectoEstela`. Explicar que el kit USB reproduce la arquitectura con XAMPP, mientras Docker es otra modalidad.
+Mostrar `README.md`: React/Vite en interfaz, PHP/PDO en API, MySQL `ProyectoEstela`. Explicar que todo se levanta con Docker Compose: MySQL, backend PHP y los dos frontends servidos por nginx.
 
 ### 1:40-2:30 - Login y SSO
 
-Abrir `http://localhost:5173`, ingresar con `preceptor@galileo.edu.ar` / `demo1234`. Explicar cookie de sesión, hash bcrypt y consulta de permisos backend. No decir que `localStorage` es SSO.
+Abrir `http://localhost:3000`, ingresar con `preceptor@galileo.edu.ar` / `demo1234` (el primer ingreso pide cambiar la contraseña). Explicar cookie de sesión, hash bcrypt y consulta de permisos backend. No decir que `localStorage` es SSO.
 
 ### 2:30-3:45 - Preceptor
 
@@ -102,12 +101,12 @@ Abrir `http://localhost:5174`, restaurar/iniciar sesión, crear una reserva y ex
 
 ### 7:20-8:00 - Cierre y seguridad
 
-Resumir: identidad común, RBAC backend, asistencia por ciclo, reservas automáticas con concurrencia y despliegue portátil. Reconocer que los períodos trimestrales aún no están modelados de forma independiente.
+Resumir: identidad común, RBAC backend, asistencia por ciclo, reservas automáticas con concurrencia y despliegue con Docker. Reconocer que los períodos trimestrales aún no están modelados de forma independiente.
 
 ## Antes de presentar
 
-1. Ejecutar `USB-Setup\VERIFICAR.bat`.
-2. Tener las seis cuentas demo visibles.
-3. No ejecutar `REINICIAR_BASE_DEMO.bat` durante la exposición salvo necesidad.
+1. Ejecutar `docker compose ps` y comprobar que los servicios estén `running`/`healthy`.
+2. Tener las seis cuentas demo visibles (y las contraseñas nuevas si ya se cambió la inicial).
+3. No ejecutar `docker compose down -v` durante la exposición: borra la base. Solo usarlo si hace falta volver al seed desde cero.
 4. Tener `docs/PRESENTACION.md` abierto como ayuda.
 5. Probar una escritura y recargar para comprobar que persistió.

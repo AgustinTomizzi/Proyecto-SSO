@@ -15,10 +15,10 @@ Galiservas/Frontend       React 19 + TypeScript + Vite
 Galisencia/Galileo_Auth   PHP + PDO + sesión + API JSON
 db/                       MySQL ProyectoEstela (esquema y demo)
 docs/                     arquitectura funcional y guía de exposición
-USB-Setup/                ejecución portátil Windows/XAMPP
+tests/                    pruebas de integración contra el stack Docker
 ```
 
-La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esquema y el seed viven en `db/` (`01-schema.sql` → `02-seed.sql` → `03-migracion-rbac-auditoria.sql`) y son la única fuente de verdad.
+La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esquema y el seed viven en `db/` y son la única fuente de verdad; se aplican en orden: `00-usuario-app.sh` → `01-schema.sql` → `02-seed.sql` → `03-migracion-rbac-auditoria.sql` → `04-horarios.sql` → `05-seguridad.sql`.
 
 ## Cuentas demo
 
@@ -37,43 +37,26 @@ Contraseña inicial común: `demo1234`. **Es solo para demostración:** todas la
 
 El catálogo demo de Galiservas incluye las aulas 208/209/210 y, en el Pañol, 30 notebooks, teclados, mouse, CPUs, proyectores, cámaras, micrófonos, parlantes y cables. Las reservas se confirman automáticamente si la suma de unidades solapadas no supera el stock.
 
-## Inicio rápido USB/XAMPP (recomendado para aula)
+## Inicio rápido con Docker
 
-El paquete se prepara, no se descarga automáticamente. Layout soportado:
-
-```text
-X:\nodejs\
-X:\xampp\htdocs\Proyecto-SSO\
-```
-
-1. En casa y con Internet: `USB-Setup\PREPARAR_USB.bat`.
-2. Para iniciar sin borrar datos: `USB-Setup\INICIAR_DEMO.bat`.
-3. Para diagnosticar: `USB-Setup\VERIFICAR.bat`.
-4. Solo para restaurar el seed, con confirmación destructiva: `USB-Setup\REINICIAR_BASE_DEMO.bat`.
-
-URLs del kit:
-
-- Galisencia: <http://localhost:5173>
-- Galiservas independiente: <http://localhost:5174>
-- Galileo Auth/PHP: <http://localhost/Proyecto-SSO/Galisencia/Galileo_Auth>
-- API: <http://localhost/Proyecto-SSO/Galisencia/Galileo_Auth/api>
-
-Pasos completos y problemas de puertos: [USB-Setup/INSTRUCCIONES.md](USB-Setup/INSTRUCCIONES.md).
-
-## Docker
-
-La configuración vigente de `docker-compose.yml` levanta MySQL `ProyectoEstela`, el backend PHP (Galileo_Auth), Galisencia en <http://localhost:3000> y Galiservas en <http://localhost:5174>. Las contraseñas salen de `.env`, que no se versiona:
+`docker-compose.yml` levanta MySQL `ProyectoEstela`, el backend PHP (Galileo_Auth), Galisencia en <http://localhost:3000> y Galiservas en <http://localhost:5174>. Las contraseñas salen de `.env`, que no se versiona:
 
 ```bash
 cp .env.example .env   # y cambiar las contraseñas
-docker compose up --build
+docker compose up --build -d
 ```
 
 ```bash
 docker compose down
 ```
 
-El volumen conserva datos; `docker compose down -v` los elimina. El enlace lateral "Galiservas" dentro de Galisencia usa `/galiservas/` (leaf servido por el service `galiservas`). Detalles en [DOCKER_INSTRUCTIONS.md](DOCKER_INSTRUCTIONS.md).
+El volumen conserva datos; `docker compose down -v` los elimina (pide confirmación antes de usarlo). El backend no publica puertos: la API se usa por `/api` de cada frontend. El enlace lateral "Galiservas" de Galisencia abre `http://localhost:5174` (configurable con `VITE_GALISERVAS_URL`). Detalles, variables y solución de problemas en [DOCKER_INSTRUCTIONS.md](DOCKER_INSTRUCTIONS.md).
+
+Pruebas de integración (con el stack levantado sobre una base recién creada):
+
+```bash
+node tests/api.test.mjs
+```
 
 ## Desarrollo local
 
@@ -85,13 +68,17 @@ npm run dev
 
 ```bash
 cd Galiservas/Frontend
-npm install
+npm ci
 npm run dev -- --port 5174
 ```
 
+Galisencia corre en `:5173` y su Vite proxifica `/api` a `http://localhost:80`. Galiservas llama a `http://localhost:8080/api` salvo que definas `VITE_API_URL`; para eso levantá el backend con `docker compose --profile dev up --build -d`.
+
+Antes de subir cambios: `npm run lint` y `npm run build` en ambos frontends, más `node tests/api.test.mjs`.
+
 Galisencia usa `/api` por defecto. Con sesión iniciada nunca muestra datos inventados: si la API no responde, muestra el aviso "Sin conexión con el servidor" con un botón para reintentar.
 
-Valores PHP por defecto compatibles con XAMPP: `DB_HOST=localhost`, `DB_NAME=ProyectoEstela`, `DB_USER=root`, `DB_PASSWORD` vacío. Docker los reemplaza con variables de entorno.
+Sin variables de entorno, `config/database.php` usa `DB_HOST=localhost`, `DB_NAME=ProyectoEstela`, `DB_USER=root` y `DB_PASSWORD` vacío, pensados solo para una instalación local de desarrollo. Docker usa el usuario de la aplicación definido en `.env`.
 
 ## Documentación
 
@@ -100,12 +87,14 @@ Valores PHP por defecto compatibles con XAMPP: `DB_HOST=localhost`, `DB_NAME=Pro
 - [Mapa de navegación y guion de 8 minutos](docs/NAVEGACION.md)
 - [Matriz exacta de roles y permisos](docs/ROLES_Y_PERMISOS.md)
 - [Guía oral y preguntas](docs/PRESENTACION.md)
-- [Kit USB paso a paso](USB-Setup/INSTRUCCIONES.md)
+- [Docker: variables, puertos y problemas comunes](DOCKER_INSTRUCTIONS.md)
+- [Pruebas de integración](tests/README.md)
 
 ## Límites conocidos relevantes
 
 - El ciclo lectivo de asistencia se obtiene del año de la fecha; aún no se modelan períodos trimestrales independientes.
 - La relación entre alumno y usuario continúa resolviéndose por email institucional, no mediante FK.
-- En Docker el enlace lateral apunta a `/galiservas/` (service `galiservas` en `:5174`); en el kit USB/XAMPP apunta a `:5174` vía `VITE_GALISERVAS_URL`.
+- Galiservas todavía tiene su propio formulario de login (el login único llega en la Fase 2).
+- El Docente no tiene alcance por curso o materia: hasta la Fase 1 puede registrar asistencia y notas de cualquier alumno activo.
 
 Para convenciones de colaboración, consultar [CONTRIBUTING.md](CONTRIBUTING.md).

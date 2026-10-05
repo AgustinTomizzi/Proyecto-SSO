@@ -9,14 +9,13 @@ Las cuentas demo arrancan con `debe_cambiar_password`: en el primer login el scr
 ```powershell
 docker compose down -v
 docker compose up --build -d
-$env:API_URL = "http://localhost:3000/api"
 node tests/api.test.mjs
 ```
 
-La URL puede cambiarse con `API_URL`, por ejemplo:
+Por defecto usa `http://localhost:3000/api`. Para otra URL (por ejemplo Galiservas):
 
 ```powershell
-$env:API_URL="http://localhost:3000/api"
+$env:API_URL = "http://localhost:5174/api"
 node tests/api.test.mjs
 ```
 

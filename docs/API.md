@@ -2,19 +2,23 @@
 
 ## Alcance y convención
 
-La API JSON implementada está en `Galisencia/Galileo_Auth/api`. En USB/XAMPP su base Apache es:
+La API JSON está en `Galisencia/Galileo_Auth/api`. En Docker se accede por el nginx de cada frontend, en el mismo origen que la app:
 
 ```text
-http://localhost/Proyecto-SSO/Galisencia/Galileo_Auth/api
+http://localhost:3000/api      (Galisencia)
+http://localhost:5174/api      (Galiservas)
+http://127.0.0.1:8080/api      (solo con docker compose --profile dev)
 ```
 
-Todas las respuestas usan JSON UTF-8. Éxito: `{"ok":true,...}`. Error: `{"ok":false,"error":"mensaje"}`. Los cuerpos de escritura son `application/json`.
+Todas las respuestas usan JSON UTF-8. Éxito: `{"ok":true,...}`. Error: `{"ok":false,"error":"mensaje"}` y, en algunos casos, `"codigo"`. Los cuerpos de escritura son `application/json` (multipart solo para subir horarios).
 
-**Estado:** login, sesión, logout, alumnos, asistencias, cursos/asignaciones, notas, usuarios, reportes, auditoría, recursos y reservas están implementados. Las limitaciones indicadas son comportamiento observado en el código, no contratos deseados.
+**Estado:** están implementados login, sesión, cambio de contraseña, logout, alumnos, historial de alumno, asistencias, cursos/asignaciones, notas, horarios, usuarios, reportes, auditoría, recursos, reservas y reportes de reservas. Las limitaciones indicadas son comportamiento observado en el código, no contratos deseados.
+
+**Orden en cada endpoint:** sesión (`401`) → cuenta sin contraseña inicial pendiente (`403`) → permiso (`403`) → alcance → validación (`400`) → transacción si hay concurrencia → auditoría → respuesta.
 
 ## Autenticación, sesión y CORS
 
-PHP crea una sesión de servidor y entrega la cookie estándar `PHPSESSID`. Después del login, el navegador debe reenviar esa cookie. Con `fetch`, las llamadas necesitan `credentials: "include"`; el kit USB evita CORS proxificando `/api` a Apache desde Vite.
+PHP crea una sesión de servidor y entrega la cookie estándar `PHPSESSID`. Después del login, el navegador debe reenviar esa cookie. Con `fetch`, las llamadas necesitan `credentials: "include"`. En desarrollo, el Vite de Galisencia proxifica `/api` a `http://localhost:80`; Galiservas llama a `http://localhost:8080/api` (perfil `dev` de Docker) y se apoya en el CORS que `APP_ENV=dev` habilita para localhost.
 
 La cookie representa autenticación compartida en el mismo host, pero SSO completo exige que ambos sistemas consuman la misma sesión PHP y comprueben permisos. El frontend no guarda la sesión ni datos de alumnos en `localStorage`: al cargar consulta `sesion.php`, y el backend autoriza cada operación por su cuenta.
 
@@ -43,17 +47,21 @@ No requiere sesión. Valida que email y contraseña no estén vacíos, busca ema
 {
   "ok": true,
   "usuario": {
-    "id": "2",
-    "nombre": "Prof.",
+    "id": "3",
+    "nombre": "Carlos",
     "email": "preceptor@galileo.edu.ar",
-    "rol": "preceptor"
-  }
+    "rol": "preceptor",
+    "rol_backend": "Preceptor",
+    "debeCambiarPassword": true
+  },
+  "permisos": ["alumnos.ver", "asistencia.registrar", "..."],
+  "sistemas": ["Galisencia", "Galiservas"]
 }
 ```
 
 `usuario.debeCambiarPassword` indica que la cuenta todavía tiene una contraseña inicial (por ejemplo `demo1234`): mientras sea `true`, el resto de la API responde `403` con `"codigo":"debe_cambiar_password"` y solo quedan disponibles `sesion.php`, `cambiar_password.php` y `logout.php`.
 
-Para Alumno, `id` se reemplaza por `alumnos.id_alumno` y se agrega `curso` si el email coincide. Roles de salida: `alumno`, `preceptor`, `directivo`, `admin`; `Docente` se mapea temporalmente a `preceptor`.
+Para Alumno, `id` se reemplaza por `alumnos.id_alumno` y se agrega `curso` si el email coincide. Roles de salida (`rol`): `alumno`, `preceptor`, `directivo`, `admin`. `Administrador` y `Administrador Academico` salen como `admin`, `Docente` como `preceptor` y un rol desconocido como `alumno`; `rol_backend` conserva el nombre real. La autorización nunca usa `rol`: el backend relee el rol de la base en cada request.
 
 Errores: `400` campos ausentes, `401` credenciales inválidas, `405` otro método, `429` demasiados intentos fallidos, `500` conexión a BD.
 
@@ -64,8 +72,10 @@ Errores: `400` campos ausentes, `401` credenciales inválidas, `405` otro métod
 Reconstruye el usuario desde `$_SESSION`/BD y devuelve sus permisos, sin confiar en rol enviado por el cliente.
 
 ```json
-{"ok":true,"usuario":{"id":"3","nombre":"Carlos","apellido":"Ramirez","email":"preceptor@galileo.edu.ar","rol":"Preceptor","debeCambiarPassword":false},"permisos":["alumnos.ver","asistencia.registrar"]}
+{"ok":true,"usuario":{"id":"3","nombre":"Carlos","apellido":"Ramirez","email":"preceptor@galileo.edu.ar","rol":"Preceptor","rol_backend":"Preceptor","debeCambiarPassword":false},"permisos":["alumnos.ver","asistencia.registrar"],"sistemas":["Galisencia","Galiservas"]}
 ```
+
+Para un Alumno activo, `id` pasa a ser `alumnos.id_alumno` y se agrega `curso`.
 
 Sin sesión o usuario ya inexistente: `401`; otro método: `405`.
 
@@ -117,15 +127,15 @@ Preceptor: solo cursos cuyo `cursos.preceptor_id` sea su `id_usuario`. Por defec
 {"id":1,"nombre":"Sofia","apellido":"Gutierrez","curso":"2 A","email":"alumno@galileo.edu.ar"}
 ```
 
-Valida ID positivo y existencia. Si el actor fuera preceptor, limita curso original y destino; en el seed canónico el preceptor no posee `alumnos.editar`. Audita `alumnos.editar`.
+Valida ID positivo y existencia. El Preceptor tiene `alumnos.editar`, pero solo sobre alumnos de sus cursos y hacia cursos suyos (`403`). Todo cambio de curso registra una fila `cambio_curso` en `alumno_movimientos`. Audita `alumnos.editar` con antes/después.
 
 ### Dar de baja: **Implementada como baja lógica**
 
 `DELETE /alumnos.php?id=15`, permiso `alumnos.dar_baja`.
 
-Valida ID y alcance del preceptor, actualiza `estado=0` y conserva asistencias/notas. Audita antes/después. Respuesta: `{"ok":true}`.
+Valida ID y alcance del preceptor, actualiza `estado=0`, registra un movimiento `baja` en `alumno_movimientos` y conserva asistencias/notas. Audita antes/después. Respuesta: `{"ok":true}`.
 
-Cuando un Preceptor cambia a un alumno de curso o lo da de baja debe reenviar `currentPassword`. Una contraseña incorrecta responde `401`; tras 5 reconfirmaciones fallidas en 15 minutos responde `429` (contador separado del de login).
+Cuando un Preceptor cambia a un alumno de curso o lo da de baja debe reenviar `currentPassword` (sin él, `400`). Una contraseña incorrecta responde `401`; tras 5 reconfirmaciones fallidas en 15 minutos responde `429` (contador separado del de login).
 
 Errores del recurso: `400` dato inválido, `401` sin sesión o contraseña de reconfirmación incorrecta, `403` sin permiso/fuera de alcance, `404` alumno inexistente, `405` método no permitido, `429` demasiadas reconfirmaciones fallidas.
 
@@ -133,9 +143,11 @@ Errores del recurso: `400` dato inválido, `401` sin sesión o contraseña de re
 
 ### Consultar: **Implementada**
 
-`GET /asistencias.php?alumnoId=1&fecha=2026-06-09&materia=Matematica`, permiso `asistencia.ver`.
+`GET /asistencias.php?alumnoId=1&fecha=2026-06-09&materia=Matematica&cursoId=1&ciclo=2026`, permiso `asistencia.ver`.
 
-Todos los filtros son opcionales y combinables.
+Todos los filtros son opcionales, combinables y validados (`400` si son inválidos): `alumnoId` y `cursoId` enteros positivos, `fecha` YYYY-MM-DD real, `materia` de hasta 255 caracteres, `ciclo` año de cuatro dígitos. Solo incluye alumnos activos y ordena por fecha.
+
+**Alcance:** el Alumno ve solo sus registros y el Preceptor solo los de sus cursos (un filtro fuera de alcance devuelve lista vacía). Docente, Directivo, Administrador Académico y Administrador ven todo.
 
 ```json
 {"ok":true,"registros":[{"id":"1","alumnoId":"1","materia":"Matematica","fecha":"2026-06-09","estado":"presente"}]}
@@ -149,9 +161,20 @@ Todos los filtros son opcionales y combinables.
 {"alumnoId":1,"materia":"Matematica","fecha":"2026-09-03","estado":"tarde"}
 ```
 
-Requiere alumno positivo, materia y fecha no vacías. Si ya existe `(alumno, materia, fecha)`, actualiza; si no, inserta. Estados permitidos: `presente`, `tarde`, `ausente`; un valor desconocido se reemplaza hoy por `presente`.
+- **Validación (`400`):** `alumnoId` entero positivo, `materia` obligatoria de hasta 255 caracteres, `fecha` YYYY-MM-DD real y `estado` en `presente`/`tarde`/`ausente`. El alumno debe existir y estar activo (`400`).
+- **Alcance (`403`):** el Preceptor solo opera sobre alumnos de sus cursos; el Alumno solo sobre sí mismo.
+- **Corrección:** si ya existe `(alumno, materia, fecha)` actualiza el estado, pero exige además `asistencia.editar` (`403` si falta).
+- Bloquea alumno y registro con `FOR UPDATE` dentro de una transacción, audita `asistencia.registrar` o `asistencia.editar` con antes/después y responde `200`:
 
-Límites actuales: no valida formato de fecha/materia/alumno, no audita y no restringe al preceptor a sus cursos. No existe `PUT` separado aunque el permiso `asistencia.editar` está sembrado. Métodos restantes devuelven `405`.
+```json
+{"ok":true,"registro":{"id":"41","alumnoId":"1","materia":"Matematica","fecha":"2026-09-03","estado":"tarde"}}
+```
+
+Otros métodos: `405`.
+
+### Historial de un alumno: **Implementada**
+
+`GET /historial_alumno.php?id=1`, permiso `asistencia.ver`. El Alumno solo ve el suyo y el Preceptor solo alumnos de sus cursos actuales (`403`). Devuelve `alumno`, `asistencia` agrupada por ciclo y materia con porcentaje, y `movimientos` (`alumno_movimientos`: cambios de curso y bajas). Errores: `400` id inválido, `404` alumno inexistente.
 
 ## Cursos y asignaciones
 
@@ -191,7 +214,7 @@ No existe entidad `asignaciones` separada: la asignación vigente es `cursos.pre
 
 ### Consultar: **Implementada**
 
-`GET /notas.php?alumnoId=1`, permiso `notas.ver`. El filtro es opcional.
+`GET /notas.php?alumnoId=1`, permiso `notas.ver`. El filtro es opcional. Solo incluye alumnos activos; el Alumno ve solo sus notas y el Preceptor solo las de sus cursos.
 
 ```json
 {"ok":true,"notas":[{"id":"1","alumnoId":"1","materia":"Lengua","fecha":"2026-09-03","nota":"8.50"}]}
@@ -202,10 +225,26 @@ No existe entidad `asignaciones` separada: la asignación vigente es `cursos.pre
 `POST /notas.php`, permiso `notas.crear`.
 
 ```json
-{"alumnoId":1,"materia":"Lengua","nota":"8.50"}
+{"alumnoId":1,"materia":"Lengua","fecha":"2026-09-03","nota":8.5}
 ```
 
-Exige alumno positivo y materia; nota puede ser vacía/`NULL`; fecha es la del servidor. No valida rango, existencia, alcance ni audita. Otros métodos no responden `405` explícito.
+Exige alumno activo, `materia` de hasta 255 caracteres y `nota` numérica entre 1 y 10; `fecha` es opcional (si falta, la fecha del servidor en hora argentina). Cualquier dato inválido da `400`. El Preceptor solo puede cargar en sus cursos (`403`). Audita `notas.crear` y responde `200` `{"ok":true}`. Otros métodos: `405`.
+
+## Horarios
+
+### Consultar: **Implementada**
+
+`GET /horarios.php[?cursoId=1]`, permiso `horarios.ver`. Lista los cursos con los datos del horario cargado (`horarioId`, `nombreArchivo`, `mimeType`, `tamanio`, `actualizadoEn`). El Alumno solo ve su curso.
+
+`GET /horarios.php?imagen=1&cursoId=1[&download=1]` devuelve la imagen. Errores: `400` curso inválido, `403` Alumno pidiendo otro curso, `404` sin horario.
+
+### Cargar o reemplazar: **Implementada**
+
+`POST /horarios.php` (`multipart/form-data` con `cursoId` e `imagen`), permiso `horarios.gestionar`. Solo PNG, JPG o WEBP válidos de hasta 5 MB (se verifica el contenido, no la extensión). Reemplaza el horario anterior del curso, audita `horarios.gestionar` y responde `201`. Curso inexistente: `404`.
+
+### Eliminar: **Implementada**
+
+`DELETE /horarios.php` con `{"cursoId":1}`, permiso `horarios.gestionar`. Audita y responde `200`; sin horario, `404`.
 
 ## Usuarios y roles
 
@@ -227,7 +266,7 @@ No expone hashes. Devuelve también el catálogo de roles.
 {"nombre":"Julia","apellido":"Paz","email":"julia@galileo.edu.ar","password":"demo1234","rolId":5}
 ```
 
-Exige nombre, email válido/único, contraseña de al menos ocho caracteres y rol existente. Hashea con `PASSWORD_DEFAULT`, audita y devuelve `201`; duplicado `409`.
+Exige nombre, email válido/único, contraseña de al menos ocho caracteres (`password` o `contrasena`) y rol existente. Guarda el email en minúsculas, hashea con `PASSWORD_DEFAULT`, audita y devuelve `201`; duplicado `409`. El usuario creado no queda marcado con `debe_cambiar_password`.
 
 ### Cambiar rol: **Implementada**
 
@@ -245,7 +284,7 @@ Los usuarios se crean solo por esta API (el formulario PHP legado se eliminó).
 
 ### Resumen institucional: **Implementada**
 
-`GET /reportes.php`, permiso `reportes.ver`.
+`GET /reportes.php[?cursoId=1&ciclo=2026&materia=Matematica]`. Acceden quienes tienen `reportes.ver`, el Alumno (solo su resumen) y el Preceptor (solo sus cursos; `403` si pide un `cursoId` ajeno). Los filtros son opcionales y validados (`400`).
 
 ```json
 {
@@ -253,14 +292,16 @@ Los usuarios se crean solo por esta API (el formulario PHP legado se eliminó).
   "resumen": {
     "promedio": 88,
     "totalAlumnos": 15,
+    "alumnosConDatos": 14,
     "enRiesgo": 2,
     "porCurso": [{"curso":"1 A","promedio":83,"enRiesgo":1}],
+    "alumnos": [{"alumno":{"id":"3","nombre":"Valentina Lopez","curso":"1 A"},"general":63,"enRiesgo":true,"porMateria":[]}],
     "alumnosEnRiesgo": [{"alumno":{"id":"3","nombre":"Valentina Lopez","curso":"1 A","email":"..."},"general":63}]
   }
 }
 ```
 
-Regla: porcentaje = `(presentes + 0,5 * tardes) / registros * 100`, redondeado. Riesgo es `< 75`. Sin registros se considera `100` para promedio, pero porcentaje individual queda nulo. No acepta filtros ni limita por curso del preceptor. Otro método: `405`.
+Regla: porcentaje = `(presentes + 0,5 * tardes) / registros * 100`, redondeado. Riesgo es `< 75`. Un alumno sin registros tiene porcentaje `null` y no entra al promedio; sin datos, `promedio` es `null`. Otro método: `405`.
 
 ## Auditoría
 
@@ -278,11 +319,13 @@ Orden descendente. `detalle` se decodifica a JSON. Si falta la tabla devuelve `5
 
 ## Galiservas: recursos y reservas
 
+Todos los endpoints de Galiservas (`recursos.php`, `reservas.php`, `reportes_reservas.php`) exigen primero que el rol tenga habilitado el sistema Galiservas en `rol_sistema` (`403` «tu rol no tiene acceso a Galiservas»). La UI pide además el permiso `galiservas.acceder`. Alumno, Directivo y Administrador Académico no tienen acceso.
+
 ### Recursos: **Implementada**
 
 | Método | Permiso y regla | Comportamiento |
 |---|---|---|
-| `GET /recursos.php` | `galiservas.acceder` + `recursos.ver` | Activos y disponibles; acepta fecha/horario, ubicación y categoría. Administrador puede usar `?incluirInactivos=1`. |
+| `GET /recursos.php` | sistema Galiservas en `rol_sistema` + `recursos.ver` | Activos y disponibles; acepta fecha/horario, ubicación y categoría. Administrador puede usar `?incluirInactivos=1`. |
 | `POST /recursos.php` | `recursos.crear` + rol exacto Administrador | Crea; `201`. |
 | `PUT /recursos.php` | `recursos.editar` + Administrador | Reemplaza campos; `200`. |
 | `DELETE /recursos.php?id=7` | `recursos.desactivar` + Administrador | Baja lógica; `200`. |
@@ -293,11 +336,11 @@ POST/PUT aceptan nombres ingleses o alias españoles:
 {"name":"Notebooks","type":"notebook","category":"hardware_pc","location":"Pañol","description":"Equipo móvil","capacity":30,"active":true,"available":true}
 ```
 
-Nombre, tipo, categoría (`hardware_pc` o `audiovisual`), ubicación y capacidad `1..10000` son obligatorios. Para consultar stock de una franja: `GET /recursos.php?fecha=2026-09-15&hora_inicio=10:00&hora_fin=12:00`; cada fila incluye `reserved` y `available`. También acepta `ubicacion` y `categoria`. ID inexistente: `404`. Altas/cambios/bajas se auditan.
+Nombre, tipo, categoría (`hardware_pc` o `audiovisual`), ubicación y capacidad `1..10000` son obligatorios. Para consultar stock de una franja: `GET /recursos.php?fecha=2026-09-15&hora_inicio=10:00&hora_fin=12:00` (los tres juntos; `400` si la franja es inválida); cada fila incluye `reserved` y `available`. La respuesta trae la lista en `recursos` y, por compatibilidad, también en `resources`. También acepta `ubicacion` y `categoria`. ID inexistente: `404`. Altas/cambios/bajas se auditan.
 
 ### Reservas: **Implementada**
 
-`GET /reservas.php`, permiso `reservas.ver`. Quien tiene `reservas.administrar` ve todas; los demás solo `user_id` propio. La consulta `?mias=1` enviada por el frontend no cambia la lógica porque el backend ya aplica el alcance.
+`GET /reservas.php`, permiso `reservas.ver`. Quien tiene `reservas.administrar` ve todas; los demás solo `user_id` propio. La consulta `?mias=1` enviada por el frontend no cambia la lógica porque el backend ya aplica el alcance. En la respuesta, `confirmada` se muestra como `aprobada` y `completada` como `finalizada`; el `PUT` acepta esos alias.
 
 `POST /reservas.php`, permiso `reservas.crear`:
 
@@ -305,9 +348,9 @@ Nombre, tipo, categoría (`hardware_pc` o `audiovisual`), ubicación y capacidad
 {"resourceId":3,"date":"2026-09-04","startTime":"10:00","endTime":"11:00","quantity":2,"reason":"Clase de laboratorio"}
 ```
 
-También acepta `recursoId`, `fecha`, `horaInicio`, `horaFin`, `cantidad`, `motivo`. Solo un administrador de reservas puede indicar `userId`; si hay stock el estado inicial es `confirmada`, sin aprobación manual. Dentro de transacción bloquea el recurso, exige fecha actual o futura, horas válidas, inicio menor a fin, motivo, recurso activo/disponible y capacidad. Suma cantidades solapadas `pendiente`/`confirmada`; falta de capacidad devuelve `409`. Éxito `201` y auditoría.
+También acepta `recursoId`, `fecha`, `horaInicio`, `horaFin`, `cantidad`, `motivo`. Solo un administrador de reservas puede indicar `userId`; si hay stock el estado inicial es `confirmada`, sin aprobación manual. Dentro de transacción bloquea el recurso, exige fecha actual o futura (en hora argentina; una fecha pasada da `400`), horas válidas, inicio menor a fin y motivo. Recurso inexistente o no disponible: `409`. Suma cantidades solapadas `pendiente`/`confirmada`; falta de capacidad devuelve `409`. Éxito `201` y auditoría.
 
-`GET /reportes_reservas.php`, permiso `reservas.administrar`, resume unidades/reservas por recurso, categoría y hora de inicio.
+`GET /reportes_reservas.php[?desde=2026-09-01&hasta=2026-09-30]`, permiso `reservas.administrar`. Cuenta solo reservas `confirmada`/`completada` y responde `{"ok":true,"report":{"byResource":[],"byCategory":[],"byHour":[]}}` con reservas y unidades por recurso, categoría y hora de inicio. Rango inválido: `400`.
 
 `PUT /reservas.php`, permiso `reservas.editar`, requiere `id` en JSON. Usuario común: solo propia y activa (`pendiente` legado o `confirmada`); no puede cambiar estado salvo cancelar. Administrador: puede editar cualquiera y finalizar/cancelar. Revalida capacidad para estados activos. Respuesta `200`.
 
@@ -318,17 +361,16 @@ También acepta `recursoId`, `fecha`, `horaInicio`, `horaFin`, `cantidad`, `moti
 | Código | Uso real/recomendado |
 |---|---|
 | `200` | Lectura, actualización o borrado exitoso. |
-| `201` | Recomendado para nuevas altas; los POST actuales devuelven `200`. |
+| `201` | Altas de cursos, usuarios, recursos, reservas y horarios. Alumnos, asistencias y notas todavía responden `200`. |
 | `204` | Preflight `OPTIONS`. |
 | `400` | Campo requerido o ID inválido. |
 | `401` | Sin sesión o credenciales inválidas. |
 | `403` | Falta permiso o alcance, falta el header CSRF (`codigo: csrf`) o la cuenta debe cambiar su contraseña (`codigo: debe_cambiar_password`). |
 | `404` | Entidad no encontrada. |
-| `405` | Método no permitido; algunos endpoints actuales aún no lo emiten al final. |
-| `409` | Recomendado para duplicado/solapamiento. |
-| `422` | Recomendado para regla de negocio. |
+| `405` | Método no permitido, con cabecera `Allow`. |
+| `409` | Duplicado (curso, email), quitar el último Administrador, o reserva sin recurso disponible o sin capacidad. |
 | `415` | Escritura con un `Content-Type` no admitido (ver CSRF). |
 | `429` | Demasiados intentos fallidos de login o reconfirmación; incluye `Retry-After`. |
-| `500` | BD inaccesible o auditoría no migrada. |
+| `500` | Error interno o BD inaccesible; nunca incluye detalles de PDO. |
 
 No se deben mostrar errores PDO ni hashes al cliente. La autorización siempre se repite en backend con `api_requerir_permiso`; las rutas React no son una barrera de seguridad.

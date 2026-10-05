@@ -41,7 +41,7 @@ async function request(path: string, options: RequestInit = {}) {
       headers: { Accept: 'application/json', 'X-Requested-With': 'galileo', ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...options.headers },
     })
   } catch {
-    throw new ApiError('No se pudo conectar con Galileo Auth. Verificá que XAMPP y la API estén activos.', 0, true)
+    throw new ApiError('No se pudo conectar con Galileo Auth. Verificá que el backend esté levantado.', 0, true)
   }
 
   const raw = await response.text()

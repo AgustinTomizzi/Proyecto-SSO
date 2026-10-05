@@ -1,6 +1,6 @@
 # Instrucciones Docker - Proyecto SSO
 
-El stack levanta los cuatro servicios definidos en `docker-compose.yml`, todos en la red `galisencia-network`:
+`docker-compose.yml` define cinco servicios en la red `galisencia-network`. Por defecto levanta cuatro; `backend-dev-port` solo con `--profile dev`:
 
 | Servicio | Build | Puertos | Rol |
 |---|---|---|---|
@@ -61,7 +61,7 @@ docker compose up --build -d
 - API vía nginx de cada frontend: <http://localhost:3000/api> y <http://localhost:5174/api>
 - Backend directo: <http://localhost:8080> solo con `--profile dev`
 
-El enlace lateral "Galiservas" dentro de Galisencia usa `/galiservas/`. En dev con Vite puntual, se sobreescribe con `VITE_GALISERVAS_URL` (ver `Galisencia/Frontend/.env.example`).
+El enlace lateral "Galiservas" dentro de Galisencia abre `VITE_GALISERVAS_URL`, por defecto `http://localhost:5174` (ver `Galisencia/Frontend/.env.example`).
 
 ## Zona horaria
 
@@ -79,9 +79,10 @@ Se inyectan como `args` en el service `galiservas` del compose:
 - **Aparece "Sin conexión con el servidor":** el frontend no llega a la API. Comprobar `docker compose ps` (`mysql`, `backend`, `frontend` y `galiservas` deben estar `running`/`healthy`) y `docker compose logs backend`.
 - **Cambios en el código no se reflejan:** reconstruir con `docker compose build` y reiniciar con `docker compose up -d`.
 - **Base corrupta o con datos inválidos:** usar `down -v` para reaplicar el seed (destructivo).
-- **Volumen creado antes de esta versión (el backend no conecta):** los scripts de `db/` solo corren al crear el volumen, así que falta el usuario de la app y la migración 05. Sin borrar datos:
+- **Volumen creado antes de esta versión (el backend no conecta):** los scripts de `db/` solo corren al crear el volumen, así que falta el usuario de la app, la migración 05 y, si el volumen es anterior a los horarios, también la 04. Sin borrar datos:
   ```bash
   docker compose exec mysql bash /docker-entrypoint-initdb.d/00-usuario-app.sh
+  docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < db/04-horarios.sql
   docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < db/05-seguridad.sql
   ```
   El volumen tiene que haberse creado con la misma `MYSQL_ROOT_PASSWORD` que hay ahora en `.env`.

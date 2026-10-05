@@ -2,9 +2,9 @@
 
 ## Principio de seguridad
 
-La matriz efectiva sale de `db/02-seed.sql`. La interfaz puede ocultar pantallas, pero la autorización real ocurre en PHP mediante sesión y `tienePermiso`. El rol seleccionado, una ruta React, `localStorage` o un botón oculto nunca autorizan una operación.
+La matriz efectiva sale de `db/02-seed.sql`. La interfaz puede ocultar pantallas, pero la autorización real ocurre en PHP mediante sesión y `tienePermiso`. Una ruta React, `localStorage` o un botón oculto nunca autorizan una operación; el rol se relee de la base en cada request.
 
-Los seis roles están asociados a **Galisencia**. Galiservas está asociado exclusivamente a Preceptor, Docente y Administrador, y la API exige además `galiservas.acceder`.
+Los seis roles están asociados a **Galisencia**. Galiservas está asociado exclusivamente a Preceptor, Docente y Administrador. La API de Galiservas exige que el rol tenga el sistema habilitado en `rol_sistema`; la UI pide además el permiso `galiservas.acceder`.
 
 ## Matriz exacta del seed canónico
 
@@ -37,6 +37,8 @@ Los seis roles están asociados a **Galisencia**. Galiservas está asociado excl
 | `reservas.cancelar` | No | Sí | No | No | Sí | Sí |
 | `reservas.administrar` | No | No | No | No | No | Sí |
 | `galiservas.acceder` | No | Sí | No | No | Sí | Sí |
+| `horarios.ver` | Sí | No | No | Sí | No | Sí |
+| `horarios.gestionar` | No | No | No | Sí | No | Sí |
 
 `Administrador` recibe todos los permisos con un `CROSS JOIN`, de modo que también recibirá futuros permisos al regenerar un seed adaptado. La migración eleva `admin@galileo.edu.ar` a este rol.
 
@@ -44,7 +46,7 @@ Los seis roles están asociados a **Galisencia**. Galiservas está asociado excl
 
 ### Alumno
 
-Puede consultar únicamente su propia asistencia y sus notas.
+Puede consultar únicamente su propia asistencia, sus notas, su historial, su resumen de reportes y el horario de su curso.
 
 No puede acceder a Galiservas, gestionar alumnos/cursos, tomar asistencia, cargar notas, ver reportes institucionales, administrar recursos, usuarios o auditoría.
 
@@ -62,13 +64,13 @@ No puede acceder a Galiservas ni modificar alumnos/cursos/asistencias/notas, adm
 
 ### Administrador Académico
 
-Puede gestionar alumnos, cursos/asignaciones, asistencia, notas y reportes académicos.
+Puede gestionar alumnos, cursos/asignaciones, asistencia, notas, reportes académicos y los horarios por curso.
 
 No puede acceder a Galiservas ni gestionar recursos, usuarios/roles o auditoría.
 
 ### Docente
 
-Puede ver alumnos/cursos/asistencia/notas, tomar asistencia, cargar notas y operar reservas propias.
+Puede ver alumnos/cursos/asistencia/notas, tomar asistencia, cargar notas y operar reservas propias. Hoy no tiene alcance por curso: puede registrar asistencia y notas de cualquier alumno activo (el alcance por las materias que dicta llega en la Fase 1).
 
 No puede modificar alumnos/cursos, ver reportes globales, administrar reservas ajenas/recursos/usuarios/auditoría. El login Galisencia lo normaliza visualmente a `preceptor`; Galiservas conserva el rol textual de `sesion.php`.
 
@@ -84,7 +86,7 @@ No puede violar validaciones: capacidad, solapamientos, FKs y protección del ú
 |---|---|---|
 | Alumnos de preceptor | Solo cursos con `preceptor_id` propio | Según permiso. |
 | Cursos de preceptor | Solo asignados | Todos según permiso. |
-| Asistencia/notas | Alumno propio o cursos asignados | Según permiso. |
+| Asistencia/notas | Alumno: solo lo suyo. Preceptor: sus cursos. Docente, Directivo y Admin. Académico: sin restricción de curso | Según permiso. |
 | Reservas | Solo `user_id` propio | Todas con `reservas.administrar`. |
 | Edición de reserva | Propia y activa | Cualquiera; puede finalizar/cancelar. |
 | Cancelación | Propia pendiente/confirmada | Cualquiera. |

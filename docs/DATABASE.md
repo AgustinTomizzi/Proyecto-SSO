@@ -7,9 +7,11 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 0. `db/00-usuario-app.sh`: crea el usuario MySQL de la aplicación (`DB_APP_USER`) con `SELECT/INSERT/UPDATE/DELETE` sobre `ProyectoEstela`. El backend ya no se conecta como root.
 1. `db/01-schema.sql`: estructura vigente.
 2. `db/02-seed.sql`: permisos, relaciones y datos de demostración.
-3. `db/03-migracion-rbac-auditoria.sql`: migración incremental para instalaciones anteriores. En una instalación nueva es redundante, pero es segura y el kit USB también la ejecuta.
+3. `db/03-migracion-rbac-auditoria.sql`: migración incremental para instalaciones anteriores. En una instalación nueva es redundante pero segura; Docker la ejecuta igual porque monta todo `db/` en `docker-entrypoint-initdb.d`.
 4. `db/04-horarios.sql`: imágenes de horario por curso y permisos `horarios.*`.
 5. `db/05-seguridad.sql`: tabla `login_intentos` (límite de intentos de autenticación) y columna `usuarios.debe_cambiar_password` (al crearla marca las cuentas demo). Idempotente.
+
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `06-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) quedará obsoleta cuando la Fase 1 pase los horarios a tabla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -31,6 +33,9 @@ erDiagram
     USUARIOS o|--o{ AUDITORIA : ejecuta
     USUARIOS ||--o{ RESERVATIONS : solicita
     RESOURCES ||--o{ RESERVATIONS : ocupa
+    CURSOS ||--o| HORARIOS_CURSO : publica
+    ALUMNOS ||--o{ ALUMNO_MOVIMIENTOS : historial
+    USUARIOS ||--o{ ALUMNO_MOVIMIENTOS : realiza
 
     ROLES {
       int id_rol PK
@@ -43,6 +48,7 @@ erDiagram
       varchar email UK
       varchar contrasena
       int rol_id FK
+      boolean debe_cambiar_password
     }
     SISTEMAS {
       int id_sistema PK
@@ -119,6 +125,7 @@ erDiagram
       int id_resource PK
       varchar name
       varchar type
+      enum category
       varchar location
       varchar description
       int capacity
@@ -139,6 +146,33 @@ erDiagram
       enum status
       datetime created_at
       datetime updated_at
+    }
+    HORARIOS_CURSO {
+      int id_horario PK
+      int curso_id FK
+      varchar nombre_archivo
+      varchar mime_type
+      int tamanio
+      mediumblob imagen
+      int actualizado_por FK
+      datetime actualizado_en
+    }
+    ALUMNO_MOVIMIENTOS {
+      bigint id_movimiento PK
+      int alumno_id FK
+      enum tipo
+      int curso_origen_id FK
+      int curso_destino_id FK
+      year ciclo_lectivo
+      int realizado_por FK
+      datetime fecha
+    }
+    LOGIN_INTENTOS {
+      bigint id_intento PK
+      varchar email
+      varchar ip
+      enum tipo
+      datetime fecha
     }
 ```
 
@@ -180,11 +214,11 @@ Propósito: catálogo de aplicaciones habilitables por rol.
 | Campo | Tipo y nulabilidad | Clave | Significado |
 |---|---|---|---|
 | `id_sistema` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
-| `nombre` | `VARCHAR(50) NOT NULL` | UNIQUE | Nombre, hoy `Galisencia` en el seed canónico. |
+| `nombre` | `VARCHAR(50) NOT NULL` | UNIQUE | Nombre del sistema: el seed carga `Galisencia` y `Galiservas`. |
 | `descripcion` | `VARCHAR(255) NULL` | | Descripción funcional. |
 | `activo` | `TINYINT(1) NOT NULL DEFAULT 1` | | Habilitación global prevista. |
 
-Nota: la autenticación actual no comprueba `activo` ni `rol_sistema`; las páginas deciden el acceso por permisos.
+La API de Galiservas exige que el rol tenga el sistema habilitado en `rol_sistema` y con `activo = 1` (`api_requerir_sistema`). Login y sesión devuelven `sistemas` para que cada frontend muestre u oculte la otra aplicación.
 
 ### `permisos`
 
@@ -275,7 +309,7 @@ Propósito: un estado de asistencia por alumno, materia y fecha.
 | `alumno_id` | `INT UNSIGNED NULL` | FK y UNIQUE parcial | Alumno; borrado en cascada. |
 | `materia` | `VARCHAR(255) NOT NULL` | UNIQUE parcial | Materia textual. |
 
-La clave única `(alumno_id, materia, fecha)` evita duplicados. El POST es un *upsert*: actualiza el estado si ya existe. Reportes pondera presente `1`, tarde `0,5`, ausente `0`.
+La clave única `(alumno_id, materia, fecha)` evita duplicados. El POST es un *upsert*: actualiza el estado si ya existe, y para actualizar exige además `asistencia.editar`. Reportes pondera presente `1`, tarde `0,5`, ausente `0`.
 
 ### `notas`
 
@@ -284,8 +318,8 @@ Propósito: calificaciones por alumno y materia.
 | Campo | Tipo y nulabilidad | Clave | Significado |
 |---|---|---|---|
 | `id_nota` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
-| `nota` | `DECIMAL(4,2) NULL` | | Calificación; la BD no limita rango. |
-| `fecha` | `DATE NULL` | | Fecha, el API usa `CURDATE()`. |
+| `nota` | `DECIMAL(4,2) NULL` | | Calificación. La BD no limita el rango; la API exige entre 1 y 10. |
+| `fecha` | `DATE NULL` | | Puede venir en el cuerpo; si falta, la API usa la fecha del servidor (hora argentina). |
 | `alumno_id` | `INT UNSIGNED NULL` | FK a `alumnos.id_alumno` | Alumno; borrado en cascada. |
 | `materia` | `VARCHAR(255) NOT NULL` | | Materia textual. |
 
@@ -298,6 +332,21 @@ Propósito: catálogo mínimo de docentes, actualmente sin endpoints ni relacion
 | `id_profesor` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
 | `nombre` | `VARCHAR(255) NOT NULL` | | Nombre. |
 | `apellido` | `VARCHAR(255) NOT NULL DEFAULT ''` | | Apellido. |
+
+### `horarios_curso`
+
+Propósito: imagen del horario publicado para cada curso (`db/04-horarios.sql`).
+
+| Campo | Tipo y nulabilidad | Clave | Significado |
+|---|---|---|---|
+| `id_horario` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
+| `curso_id` | `INT UNSIGNED NOT NULL` | UNIQUE, FK a `cursos` (CASCADE) | Un horario por curso. |
+| `nombre_archivo` | `VARCHAR(255) NOT NULL` | | Nombre original. |
+| `mime_type` | `VARCHAR(50) NOT NULL` | | `image/png`, `image/jpeg` o `image/webp`. |
+| `tamanio` | `INT UNSIGNED NOT NULL` | | Bytes (máximo 5 MB por API). |
+| `imagen` | `MEDIUMBLOB NOT NULL` | | Contenido. |
+| `actualizado_por` | `INT UNSIGNED NULL` | FK a `usuarios` (SET NULL) | Quién lo cargó. |
+| `actualizado_en` | `DATETIME NOT NULL` | | Última carga. |
 
 ## Auditoría
 
@@ -317,7 +366,7 @@ Propósito: trazabilidad común de operaciones sensibles.
 | `detalle` | `JSON NULL` | | Datos relevantes del cambio. |
 | `fecha` | `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | índice | Momento del servidor. |
 
-Hoy se auditan cambios de alumnos, cursos, asistencias, notas, usuarios, recursos y reservas. Las operaciones sensibles de alumnos registran también un movimiento estructurado.
+Hoy se auditan cambios de alumnos, cursos, asistencias, notas, usuarios (incluido el cambio de contraseña), horarios, recursos y reservas. El login todavía no se audita. Las operaciones sensibles de alumnos registran también un movimiento estructurado.
 
 ### `login_intentos`
 
