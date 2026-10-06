@@ -230,7 +230,8 @@ async function main() {
 
   const asistenciaPropia = await alumno.request("/asistencias.php?alumnoId=1");
   expectStatus(asistenciaPropia, 200, "alumno consulta asistencia propia");
-  assert.equal(asistenciaPropia.body.registros.length, 4);
+  assert.ok(asistenciaPropia.body.registros.length >= 4, "el seed carga asistencias del alumno");
+  assert.ok(asistenciaPropia.body.registros.every((r) => String(r.alumnoId) === "1"), "solo las propias");
   // El alcance del alumno filtra por email: consultar a otro alumno no filtra datos ajenos.
   expectStatus(await alumno.request("/asistencias.php?alumnoId=2"), 200, "alumno consulta asistencia ajena (filtrada)");
   const notasAjenas = await alumno.request("/notas.php?alumnoId=2");
@@ -626,7 +627,8 @@ async function main() {
   // ---- Filtros por ciclo y materia en asistencias / reportes ----
   const asistenciasCiclo = await preceptor.request("/asistencias.php?ciclo=2026");
   expectStatus(asistenciasCiclo, 200, "asistencias filtradas por ciclo");
-  assert.equal(asistenciasCiclo.body.registros.length, 48);
+  assert.ok(asistenciasCiclo.body.total >= 48, "asistencias del ciclo de los cursos del preceptor");
+  assert.equal(asistenciasCiclo.body.registros.length, Math.min(500, asistenciasCiclo.body.total), "primera página con el máximo de 500");
   assert.ok(asistenciasCiclo.body.registros.every((r) => String(r.fecha).startsWith("2026-")));
 
   // Paginación de asistencias (limit máximo 500).
@@ -635,7 +637,7 @@ async function main() {
   expectStatus(pagina2, 200, "segunda página de asistencias");
   assert.equal(pagina1.body.registros.length, 5);
   assert.equal(pagina1.body.total, asistenciasCiclo.body.total, "total independiente de la página");
-  assert.equal(pagina1.body.total, asistenciasCiclo.body.registros.length);
+  assert.ok(pagina1.body.total > 10);
   assert.ok(!pagina2.body.registros.some((r) => pagina1.body.registros.some((q) => q.id === r.id)), "páginas sin repetidos");
   expectStatus(await preceptor.request("/asistencias.php?limit=501"), 400, "limit mayor a 500");
   expectStatus(await preceptor.request("/asistencias.php?page=0"), 400, "page inválida");

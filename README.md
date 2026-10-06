@@ -18,7 +18,7 @@ docs/                     arquitectura funcional y guía de exposición
 tests/                    pruebas de integración contra el stack Docker
 ```
 
-La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esquema y el seed viven en `db/` y son la única fuente de verdad; se aplican en orden: `00-usuario-app.sh` → `01-schema.sql` → `02-seed.sql` → `03-migracion-rbac-auditoria.sql` → `04-horarios.sql` → `05-seguridad.sql` → `06-horarios-grilla.sql` → `07-materias-fk.sql` → `08-alcance-docente.sql` → `09-cursos-reales.sql` → `10-horarios-reales.sql` → `11-alumno-usuario.sql`.
+La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esquema y el seed viven en `db/` y son la única fuente de verdad; se aplican en orden: `00-usuario-app.sh` → `01-schema.sql` → `02-seed.sql` → `03-migracion-rbac-auditoria.sql` → `04-horarios.sql` → `05-seguridad.sql` → `06-horarios-grilla.sql` → `07-materias-fk.sql` → `08-alcance-docente.sql` → `09-cursos-reales.sql` → `10-horarios-reales.sql` → `11-alumno-usuario.sql` → `12-actividad-demo.sql` (solo demo).
 
 ## Cuentas demo
 
@@ -32,6 +32,8 @@ Contraseña inicial común: `demo1234`. **Es solo para demostración:** todas la
 | `academica@galileo.edu.ar` | Administrador Academico |
 | `docente@galileo.edu.ar` | Docente |
 | `admin@galileo.edu.ar` | Administrador |
+
+Además, cada alumno demo tiene su propia cuenta (su email, misma contraseña inicial) y cada docente de los horarios reales una cuenta `docente.<nombre>@galileo.edu.ar`.
 
 `admin@...` es el superrol `Administrador`. Galiservas admite únicamente `Preceptor`, `Docente` y `Administrador`; Alumno, Directivo y Administrador Académico no ven el enlace ni pueden entrar por URL directa.
 

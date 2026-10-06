@@ -169,7 +169,15 @@ INSERT INTO alumnos (nombre, apellido, dni, direccion, email, curso_id, estado) 
   ('Pedro','Luna','46000034','Italia 902','pedro.luna@galileo.edu.ar',10,1),
   ('Mia','Benitez','46000035','Italia 903','mia.benitez@galileo.edu.ar',10,1);
 
--- Vínculo alumno ↔ usuario (cuenta de login del alumno).
+-- Cada alumno demo tiene su cuenta (contraseña inicial demo1234, cambio
+-- obligatorio en el primer ingreso) vinculada por alumnos.usuario_id.
+INSERT INTO usuarios (nombre, apellido, email, contrasena, rol_id, debe_cambiar_password)
+SELECT a.nombre, a.apellido, a.email, '$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy',
+       (SELECT id_rol FROM roles WHERE nombre = 'Alumno'), 1
+FROM alumnos a
+LEFT JOIN usuarios u ON u.email = a.email
+WHERE a.email IS NOT NULL AND u.id_usuario IS NULL;
+
 UPDATE alumnos a JOIN usuarios u ON u.email = a.email SET a.usuario_id = u.id_usuario;
 
 INSERT INTO materias (nombre) VALUES
