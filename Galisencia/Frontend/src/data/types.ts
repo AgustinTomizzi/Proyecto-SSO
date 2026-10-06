@@ -1,4 +1,14 @@
-export type Rol = "alumno" | "preceptor" | "directivo" | "admin";
+export type Rol = "alumno" | "preceptor" | "directivo" | "admin" | "tutor";
+
+/** Alumno vinculado a un tutor (portal de familias). */
+export interface AlumnoVinculado {
+  id: string;
+  nombre: string;
+  apellido: string;
+  curso: string | null;
+  cursoId: string | null;
+  parentesco: string | null;
+}
 
 export interface Usuario {
   id: string;
@@ -9,6 +19,8 @@ export interface Usuario {
   permisos: string[];
   sistemas: string[];
   curso?: string; // sólo alumnos
+  /** Sólo tutores: sus alumnos vinculados. */
+  alumnos?: AlumnoVinculado[];
   debeCambiarPassword: boolean;
 }
 
@@ -131,4 +143,5 @@ export const ROL_LABEL: Record<Rol, string> = {
   preceptor: "Preceptor",
   directivo: "Directivo",
   admin: "Administrador",
+  tutor: "Familia",
 };

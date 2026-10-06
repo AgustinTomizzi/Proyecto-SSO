@@ -383,6 +383,26 @@ Filtros opcionales: `usuarioId`, `entidad`, `accion`, `desde`, `hasta`, `limit`.
 
 Orden descendente. `detalle` se decodifica a JSON. Si falta la tabla devuelve `500` con instrucción de migración. Otro método: `405`.
 
+## Portal de familias
+
+Rol **Tutor**: lectura de sus alumnos vinculados (`tutor_alumno`) y activos. `login.php` y `sesion.php` le devuelven `rol: "tutor"` y `usuario.alumnos` (id, nombre, apellido, curso, cursoId, parentesco). Alcance en cada endpoint:
+
+| Endpoint | Tutor |
+|---|---|
+| `asistencias.php` y `notas.php` (GET) | Solo registros de sus alumnos. |
+| `historial_alumno.php` y `justificaciones.php` (GET) | Solo sus alumnos (`403` con uno ajeno); ve motivo y adjunto de las justificaciones. |
+| `horario_grilla.php` y `horarios.php` (GET) | Solo los cursos de sus alumnos (sin `cursoId`, el del primero; otro curso, `403`). |
+| `alumnos.php`, `cursos.php` y `reportes.php` | `403` (no tiene esos permisos). |
+| Escrituras | `403`. |
+
+Gestión, permiso `tutores.gestionar` (Administración Académica y Administrador):
+
+- `GET /tutores.php?alumnoId=12`: tutores del alumno (`tutorId`, nombre, email, `parentesco`, `pendienteDeIngreso`) y la lista de `parentescos` válidos. Sin `alumnoId` (opcional `?q=`): hasta 200 tutores con sus alumnos.
+- `POST /tutores.php` con `{"alumnoId":12,"email":"...","parentesco":"Madre"}`: vincula una cuenta de Tutor existente. Si el email no existe, crea la cuenta con `nombre`, `apellido` y `passwordInicial` (8 a 72 caracteres; queda con `debe_cambiar_password`). Errores: `400` validación, `404` alumno inexistente o inactivo, `409` vínculo repetido o email de una cuenta que no es de tutor. Responde `201` con `tutor` y `cuentaCreada`. Audita `tutores.vincular`.
+- `DELETE /tutores.php` con `{"tutorId":40,"alumnoId":12}`: desvincula (`404` si no existe) y borra los avisos de inasistencia pendientes. Audita `tutores.desvincular`.
+
+**Aviso diario de inasistencias** (tipo `inasistencia`): uno por tutor, alumno y día, con las materias en las que estuvo ausente. Lo programa `asistencias.php` para `notificaciones.hora_resumen_inasistencias` (18:00 por defecto) o para ya si esa hora pasó. Se recalcula al cambiar la asistencia o las justificaciones: las ausencias justificadas no se avisan y, si no queda ninguna, el aviso se borra. Solo para fechas de los últimos 7 días.
+
 ## Justificaciones de inasistencias
 
 Una justificación cubre un rango de fechas de un alumno. Al crearla, sus ausencias de ese rango pasan a `justificado` (con `justificacion_id`), y una ausencia que se cargue después dentro del rango queda justificada sola. `justificado` no se puede cargar a mano en `asistencias.php` (`400`).
@@ -403,9 +423,10 @@ Avisos de reservas (`reservas.php`), para el usuario de la reserva:
 | `reserva_creada` | Alta (`POST`). |
 | `reserva_modificada` | `PUT` que cambia recurso, fecha, horario o cantidad de una reserva activa. |
 | `reserva_cancelada` | `DELETE`, o `PUT` a `cancelada` o `rechazada`. |
+| `inasistencia` | Solo tutores: aviso diario de inasistencias de sus alumnos (ver «Portal de familias»). |
 | `reserva_recordatorio` | Programado `notificaciones.recordatorio_horas` antes del inicio (24 por defecto; `0` lo desactiva). Hay uno solo pendiente por reserva: se reprograma al cambiarla y se quita al cancelarla o finalizarla. |
 
-- `GET /notificaciones.php`: cualquier sesión. Devuelve `preferencias` (`tipo`, `etiqueta`, `habilitada`; por defecto todas habilitadas) y las últimas 30 `notificaciones` propias (`asunto`, `estado` `pendiente`/`enviada`/`error`/`cancelada`, `programadaPara`, `enviadaEn`).
+- `GET /notificaciones.php`: cualquier sesión. Devuelve `preferencias` de los tipos que corresponden a su rol (el Tutor, solo `inasistencia`; el resto, los de reservas) (`tipo`, `etiqueta`, `habilitada`; por defecto todas habilitadas) y las últimas 30 `notificaciones` propias (`asunto`, `estado` `pendiente`/`enviada`/`error`/`cancelada`, `programadaPara`, `enviadaEn`).
 - `PUT /notificaciones.php` con `{"preferencias":{"reserva_recordatorio":false}}`: cambio parcial de las propias (`400` con un tipo inexistente o un valor no booleano). Apagar los recordatorios quita los pendientes. Audita `notificaciones.preferencias`.
 - `GET /notificaciones.php?cola=1`, permiso `config.gestionar`: `smtpConfigurado`, conteo `porEstado` y las 50 últimas con problemas (`ultimoError`, `intentos`).
 
@@ -431,7 +452,7 @@ Reglas de reserva:
 | `reservas.anticipacion_minima_horas` | `0` (0 a 168) | Horas mínimas entre ahora y el inicio; `0` = sin mínimo. |
 | `reservas.anticipacion_maxima_dias` | `90` (0 a 365) | Días máximos hacia adelante; `0` = sin límite. |
 
-Recordatorios: `notificaciones.recordatorio_horas` (`24`, 0 a 168): horas antes del inicio de una reserva en que se envía el recordatorio; `0` lo desactiva.
+Recordatorios: `notificaciones.recordatorio_horas` (`24`, 0 a 168): horas antes del inicio de una reserva en que se envía el recordatorio; `0` lo desactiva. `notificaciones.hora_resumen_inasistencias` (`18:00`): hora del aviso diario de inasistencias a las familias.
 
 Reglas de asistencia (las usan `reportes.php` e `historial_alumno.php`, que las devuelven en `reglas`):
 

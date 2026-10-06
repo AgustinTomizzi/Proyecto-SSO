@@ -6,7 +6,7 @@ USE ProyectoEstela;
 SET NAMES utf8mb4;
 
 INSERT INTO roles (nombre) VALUES
-  ('Alumno'), ('Preceptor'), ('Directivo'), ('Administrador Academico'), ('Docente'), ('Administrador');
+  ('Alumno'), ('Preceptor'), ('Directivo'), ('Administrador Academico'), ('Docente'), ('Administrador'), ('Tutor');
 
 INSERT INTO sistemas (nombre, descripcion) VALUES
   ('Galisencia', 'Sistema de gestion academica y asistencia'),
@@ -45,7 +45,8 @@ INSERT INTO permisos (nombre, descripcion) VALUES
   ('suplencias.crear', 'Registrar suplencias de preceptores'),
   ('ciclos.promover', 'Promover alumnos y cerrar el ciclo lectivo'),
   ('config.gestionar', 'Modificar la configuracion institucional'),
-  ('asistencia.justificar', 'Justificar inasistencias de alumnos');
+  ('asistencia.justificar', 'Justificar inasistencias de alumnos'),
+  ('tutores.gestionar', 'Crear cuentas de tutores y vincularlas con alumnos');
 
 -- Galisencia admite todos los perfiles; Galiservas solo Preceptor, Docente y Administrador.
 INSERT INTO rol_sistema (rol_id, sistema_id)
@@ -57,6 +58,11 @@ INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
 WHERE r.nombre = 'Alumno' AND p.nombre IN ('asistencia.ver','notas.ver','horarios.ver');
 
+-- El Tutor lee lo mismo que el Alumno, limitado a sus alumnos vinculados.
+INSERT INTO rol_permiso (rol_id, permiso_id)
+SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
+WHERE r.nombre = 'Tutor' AND p.nombre IN ('asistencia.ver','notas.ver','horarios.ver');
+
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
 WHERE r.nombre = 'Preceptor' AND p.nombre IN ('asistencia.justificar','suplencias.crear','horarios.ver','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','reportes.ver','recursos.ver','reservas.ver','reservas.crear','reservas.editar','reservas.cancelar','galiservas.acceder');
@@ -67,7 +73,7 @@ WHERE r.nombre = 'Directivo' AND p.nombre IN ('alumnos.ver','cursos.ver','asiste
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Administrador Academico' AND p.nombre IN ('asistencia.justificar','ciclos.promover','suplencias.crear','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','cursos.crear','cursos.asignar','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','reportes.ver','horarios.ver','horarios.gestionar');
+WHERE r.nombre = 'Administrador Academico' AND p.nombre IN ('tutores.gestionar','asistencia.justificar','ciclos.promover','suplencias.crear','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','cursos.crear','cursos.asignar','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','reportes.ver','horarios.ver','horarios.gestionar');
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
@@ -85,7 +91,8 @@ INSERT INTO usuarios (nombre, apellido, email, contrasena, rol_id) VALUES
   ('Marta', 'Barbosa', 'directivo@galileo.edu.ar', '$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy', (SELECT id_rol FROM roles WHERE nombre = 'Directivo')),
   ('Diego', 'Medina', 'docente@galileo.edu.ar', '$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy', (SELECT id_rol FROM roles WHERE nombre = 'Docente')),
   ('Sofia', 'Gutierrez', 'alumno@galileo.edu.ar', '$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy', (SELECT id_rol FROM roles WHERE nombre = 'Alumno')),
-  ('Mateo', 'Fernandez', 'mateo.usuario@galileo.edu.ar', '$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy', (SELECT id_rol FROM roles WHERE nombre = 'Alumno'));
+  ('Mateo', 'Fernandez', 'mateo.usuario@galileo.edu.ar', '$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy', (SELECT id_rol FROM roles WHERE nombre = 'Alumno')),
+  ('Graciela', 'Gutierrez', 'familia@galileo.edu.ar', '$2y$10$xu8KOpcBqHX3AOKJ6tcLVeHQiq7SpujLIgYtY2E3TGp5zdjNKPDuy', (SELECT id_rol FROM roles WHERE nombre = 'Tutor'));
 
 -- Todas las cuentas del seed usan la contrasena de demostracion demo1234:
 -- quedan marcadas para que su primer ingreso exija elegir una contrasena propia.
@@ -245,3 +252,10 @@ INSERT INTO auditoria (usuario_id, usuario_nombre, rol, accion, entidad, entidad
   ((SELECT id_usuario FROM usuarios WHERE email='admin@galileo.edu.ar'), 'Admin Estela', 'Administrador', 'sistema.seed', 'base_datos', NULL, JSON_OBJECT('usuarios', 8, 'alumnos', 35), '2026-09-01 08:00:00'),
   ((SELECT id_usuario FROM usuarios WHERE email='academica@galileo.edu.ar'), 'Ana Suarez', 'Administrador Academico', 'cursos.asignar', 'curso', '1', JSON_OBJECT('preceptor', 'Carlos Ramirez'), '2026-09-01 09:00:00'),
   ((SELECT id_usuario FROM usuarios WHERE email='docente@galileo.edu.ar'), 'Diego Medina', 'Docente', 'reservas.crear', 'reserva', '1', JSON_OBJECT('recurso', 'Aula 210', 'cantidad_pc', 4), '2026-09-02 10:30:00');
+
+-- Tutora de demostracion: madre de Sofia Gutierrez y responsable de Mateo Fernandez.
+INSERT INTO tutor_alumno (tutor_id, alumno_id, parentesco)
+SELECT u.id_usuario, a.id_alumno, IF(a.email = 'alumno@galileo.edu.ar', 'Madre', 'Responsable')
+FROM usuarios u
+JOIN alumnos a ON a.email IN ('alumno@galileo.edu.ar', 'mateo.usuario@galileo.edu.ar')
+WHERE u.email = 'familia@galileo.edu.ar';

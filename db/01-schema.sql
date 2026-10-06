@@ -345,6 +345,20 @@ CREATE TABLE ciclos_lectivos (
   CONSTRAINT fk_ciclo_cerrado_por FOREIGN KEY (cerrado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Portal de familias: un tutor (rol Tutor) ve a sus alumnos vinculados.
+CREATE TABLE tutor_alumno (
+  tutor_id INT UNSIGNED NOT NULL,
+  alumno_id INT UNSIGNED NOT NULL,
+  parentesco VARCHAR(40) NULL,
+  creado_por INT UNSIGNED NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (tutor_id, alumno_id),
+  KEY idx_tutor_alumno_alumno (alumno_id),
+  CONSTRAINT fk_tutor_alumno_tutor FOREIGN KEY (tutor_id) REFERENCES usuarios (id_usuario) ON DELETE CASCADE,
+  CONSTRAINT fk_tutor_alumno_alumno FOREIGN KEY (alumno_id) REFERENCES alumnos (id_alumno) ON DELETE CASCADE,
+  CONSTRAINT fk_tutor_alumno_creado_por FOREIGN KEY (creado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Notificaciones por email: cola (notificaciones) y tipos apagados por usuario.
 CREATE TABLE notificaciones (
   id_notificacion INT UNSIGNED NOT NULL AUTO_INCREMENT,

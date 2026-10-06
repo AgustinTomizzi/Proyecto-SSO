@@ -24,6 +24,9 @@ function horario_validar_acceso_curso($cursoId)
     if (api_rol_es("Alumno") && horario_curso_del_alumno() !== $cursoId) {
         api_json(["ok" => false, "error" => "sin acceso a este curso"], 403);
     }
+    if (api_rol_es("Tutor") && !in_array($cursoId, api_cursos_del_tutor(usuarioActual()), true)) {
+        api_json(["ok" => false, "error" => "sin acceso a este curso"], 403);
+    }
 }
 
 if ($method === "GET") {
@@ -60,6 +63,13 @@ if ($method === "GET") {
         }
         $where = "WHERE c.id_cursos = ?";
         $params[] = $cursoId;
+    } elseif (api_rol_es("Tutor")) {
+        $cursosTutor = api_cursos_del_tutor(usuarioActual());
+        if (!$cursosTutor) {
+            api_json(["ok" => true, "cursos" => []]);
+        }
+        $where = "WHERE c.id_cursos IN (" . implode(",", array_fill(0, count($cursosTutor), "?")) . ")";
+        array_push($params, ...$cursosTutor);
     } elseif ($cursoSolicitado !== null) {
         $where = "WHERE c.id_cursos = ?";
         $params[] = $cursoSolicitado;

@@ -15,6 +15,7 @@ import ReportesPage from "./components/reportes/ReportesPage";
 import AuditoriaPage from "./components/auditoria/AuditoriaPage";
 import UsuariosPage from "./components/admin/UsuariosPage";
 import HorariosPage from "./components/horarios/HorariosPage";
+import FamiliaPage from "./components/familia/FamiliaPage";
 
 function RutaProtegida({
   rol,
@@ -122,6 +123,14 @@ export default function App() {
             element={
               <RutaProtegida rol="admin">
                 <UsuariosPage />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/familia"
+            element={
+              <RutaProtegida rol="tutor">
+                <FamiliaPage />
               </RutaProtegida>
             }
           />

@@ -8,41 +8,42 @@ Los seis roles están asociados a **Galisencia**. Galiservas está asociado excl
 
 ## Matriz exacta del seed canónico
 
-| Permiso | Alumno | Preceptor | Directivo | Admin. Académico | Docente | Administrador |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| `alumnos.ver` | No | Sí | Sí | Sí | Sí | Sí |
-| `alumnos.crear` | No | Sí | No | Sí | No | Sí |
-| `alumnos.editar` | No | Sí | No | Sí | No | Sí |
-| `alumnos.dar_baja` | No | Sí | No | Sí | No | Sí |
-| `cursos.ver` | No | Sí | Sí | Sí | Sí | Sí |
-| `cursos.crear` | No | No | No | Sí | No | Sí |
-| `cursos.asignar` | No | No | No | Sí | No | Sí |
-| `asistencia.ver` | Sí | Sí | Sí | Sí | Sí | Sí |
-| `asistencia.registrar` | No | Sí | No | Sí | Sí | Sí |
-| `asistencia.editar` | No | Sí | No | Sí | Sí | Sí |
-| `notas.ver` | Sí | Sí | Sí | Sí | Sí | Sí |
-| `notas.crear` | No | No | No | Sí | Sí | Sí |
-| `reportes.ver` | No | Sí | Sí | Sí | No | Sí |
-| `usuarios.ver` | No | No | No | No | No | Sí |
-| `usuarios.crear` | No | No | No | No | No | Sí |
-| `usuarios.editar_rol` | No | No | No | No | No | Sí |
-| `auditoria.ver` | No | No | No | No | No | Sí |
-| `recursos.ver` | No | Sí | No | No | Sí | Sí |
-| `recursos.crear` | No | No | No | No | No | Sí |
-| `recursos.editar` | No | No | No | No | No | Sí |
-| `recursos.desactivar` | No | No | No | No | No | Sí |
-| `reservas.ver` | No | Sí | No | No | Sí | Sí |
-| `reservas.crear` | No | Sí | No | No | Sí | Sí |
-| `reservas.editar` | No | Sí | No | No | Sí | Sí |
-| `reservas.cancelar` | No | Sí | No | No | Sí | Sí |
-| `reservas.administrar` | No | No | No | No | No | Sí |
-| `galiservas.acceder` | No | Sí | No | No | Sí | Sí |
-| `horarios.ver` | Sí | Sí | Sí | Sí | Sí | Sí |
-| `horarios.gestionar` | No | No | No | Sí | No | Sí |
-| `suplencias.crear` | No | Sí | No | Sí | No | Sí |
-| `ciclos.promover` | No | No | No | Sí | No | Sí |
-| `config.gestionar` | No | No | No | No | No | Sí |
-| `asistencia.justificar` | No | Sí | No | Sí | No | Sí |
+| Permiso | Alumno | Preceptor | Directivo | Admin. Académico | Docente | Administrador | Tutor |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `alumnos.ver` | No | Sí | Sí | Sí | Sí | Sí | No |
+| `alumnos.crear` | No | Sí | No | Sí | No | Sí | No |
+| `alumnos.editar` | No | Sí | No | Sí | No | Sí | No |
+| `alumnos.dar_baja` | No | Sí | No | Sí | No | Sí | No |
+| `cursos.ver` | No | Sí | Sí | Sí | Sí | Sí | No |
+| `cursos.crear` | No | No | No | Sí | No | Sí | No |
+| `cursos.asignar` | No | No | No | Sí | No | Sí | No |
+| `asistencia.ver` | Sí | Sí | Sí | Sí | Sí | Sí | Sí |
+| `asistencia.registrar` | No | Sí | No | Sí | Sí | Sí | No |
+| `asistencia.editar` | No | Sí | No | Sí | Sí | Sí | No |
+| `notas.ver` | Sí | Sí | Sí | Sí | Sí | Sí | Sí |
+| `notas.crear` | No | No | No | Sí | Sí | Sí | No |
+| `reportes.ver` | No | Sí | Sí | Sí | No | Sí | No |
+| `usuarios.ver` | No | No | No | No | No | Sí | No |
+| `usuarios.crear` | No | No | No | No | No | Sí | No |
+| `usuarios.editar_rol` | No | No | No | No | No | Sí | No |
+| `auditoria.ver` | No | No | No | No | No | Sí | No |
+| `recursos.ver` | No | Sí | No | No | Sí | Sí | No |
+| `recursos.crear` | No | No | No | No | No | Sí | No |
+| `recursos.editar` | No | No | No | No | No | Sí | No |
+| `recursos.desactivar` | No | No | No | No | No | Sí | No |
+| `reservas.ver` | No | Sí | No | No | Sí | Sí | No |
+| `reservas.crear` | No | Sí | No | No | Sí | Sí | No |
+| `reservas.editar` | No | Sí | No | No | Sí | Sí | No |
+| `reservas.cancelar` | No | Sí | No | No | Sí | Sí | No |
+| `reservas.administrar` | No | No | No | No | No | Sí | No |
+| `galiservas.acceder` | No | Sí | No | No | Sí | Sí | No |
+| `horarios.ver` | Sí | Sí | Sí | Sí | Sí | Sí | Sí |
+| `horarios.gestionar` | No | No | No | Sí | No | Sí | No |
+| `suplencias.crear` | No | Sí | No | Sí | No | Sí | No |
+| `ciclos.promover` | No | No | No | Sí | No | Sí | No |
+| `config.gestionar` | No | No | No | No | No | Sí | No |
+| `asistencia.justificar` | No | Sí | No | Sí | No | Sí | No |
+| `tutores.gestionar` | No | No | No | Sí | No | Sí | No |
 
 `Administrador` recibe todos los permisos con un `CROSS JOIN`, de modo que también recibirá futuros permisos al regenerar un seed adaptado. La migración eleva `admin@galileo.edu.ar` a este rol.
 
@@ -61,6 +62,10 @@ Puede gestionar alumnos de cursos asignados, ver historial, tomar/corregir asist
 No puede crear/asignar cursos, cargar notas, ver reportes ajenos, administrar reservas ajenas, recursos, usuarios o auditoría. Alumnos, asistencia, notas, reportes e historial aplican alcance por `preceptor_id`.
 
 Suplencias: puede registrar las propias para cubrir un curso ajeno, con límites para que no se puedan encadenar: hasta 30 días, sin fechas pasadas, empezando como mucho dentro de 7 días, una sola vigente o futura a la vez y hasta 30 días por curso en cualquier ventana de 60. Mientras están vigentes, el curso entra en su alcance para la operación diaria (asistencia, justificaciones y consulta de alumnos, notas, historial y reportes), pero no para altas, bajas ni cambios de curso de alumnos, que siguen limitados a sus cursos titulares. Administración Académica y Administrador las gestionan para cualquier preceptor.
+
+### Tutor (portal de familias)
+
+Solo lectura, y solo de sus alumnos vinculados en `tutor_alumno` (activos): asistencia, notas, historial, justificaciones (con motivo y adjunto, como el propio alumno) y el horario de sus cursos. No lista alumnos, cursos ni reportes, y no escribe nada. Recibe por email el aviso diario de inasistencias, que puede apagar. Solo accede a Galisencia. Las cuentas las crea y vincula quien tiene `tutores.gestionar` (Administración Académica y Administrador).
 
 ### Directivo
 
@@ -90,6 +95,7 @@ No puede violar validaciones: capacidad, solapamientos, FKs y protección del ú
 
 | Recurso | Usuario común | Administrador funcional |
 |---|---|---|
+| Datos del tutor | Solo alumnos vinculados (`api_alumnos_del_tutor`) | Según permiso. |
 | Alumnos de preceptor | Cursos con `preceptor_id` propio y cursos con suplencia vigente | Según permiso. |
 | Cursos de preceptor | Asignados y con suplencia vigente | Todos según permiso. |
 | Asistencia/notas | Alumno: solo lo suyo. Preceptor: sus cursos. Docente: los pares curso/materia que dicta según la grilla. Directivo y Admin. Académico: sin restricción de curso | Según permiso. |

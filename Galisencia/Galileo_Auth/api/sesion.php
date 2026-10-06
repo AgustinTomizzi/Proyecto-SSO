@@ -24,5 +24,8 @@ if (strcasecmp((string) $usuario["rol"], "Alumno") === 0) {
         $usuario["curso"] = $alumno["curso"];
     }
 }
+if (strcasecmp((string) $usuario["rol"], "Tutor") === 0) {
+    $usuario["alumnos"] = api_alumnos_vinculados($usuarioIdSesion);
+}
 $permisos = api_permisos_usuario($usuarioIdSesion);
 api_json(["ok" => true, "usuario" => $usuario, "permisos" => $permisos, "sistemas" => api_sistemas_usuario($usuarioIdSesion)]);

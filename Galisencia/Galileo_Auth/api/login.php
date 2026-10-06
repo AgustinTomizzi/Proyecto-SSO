@@ -43,8 +43,10 @@ $map = [
     "administrador academico" => "admin",
     "administrador" => "admin",
     "docente" => "preceptor",
+    "tutor" => "tutor",
 ];
-$rol = $map[strtolower(normalizarRol($u["rol"]))] ?? "alumno";
+// Un rol sin mapeo no hereda la interfaz de otro: se informa tal cual.
+$rol = $map[strtolower(normalizarRol($u["rol"]))] ?? strtolower(normalizarRol($u["rol"]));
 
 $usuario = [
     "id" => (string) $u["id_usuario"],
@@ -69,6 +71,10 @@ if ($rol === "alumno") {
         $usuario["id"] = (string) $a["id"];
         $usuario["curso"] = $a["curso"];
     }
+}
+
+if ($rol === "tutor") {
+    $usuario["alumnos"] = api_alumnos_vinculados((int) $u["id_usuario"]);
 }
 
 api_json([

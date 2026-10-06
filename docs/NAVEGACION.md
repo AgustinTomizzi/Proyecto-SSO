@@ -35,6 +35,7 @@ URL con Docker: `http://localhost:3000/` (con `npm run dev`, `http://localhost:5
 | Alumno | `/alumno` | Mi asistencia, Mi horario | Porcentaje e historial del alumno y horario de su curso. |
 | Preceptor (también Docente) | `/preceptor` | Registrar asistencia, Horarios, Reportes | Tomar asistencia, ver horarios (el Docente ve "Mis clases") y consultar reportes. |
 | Directivo | `/directivo` | Panel institucional, Horarios, Reportes | Indicadores, riesgo, análisis y consulta de horarios. |
+| Tutor (familias) | `/familia` | Familia, Horarios | Asistencia, justificaciones y horario de cada hijo vinculado; aviso diario de inasistencias por email. |
 | Admin (Administrador y Administrador Académico) | `/admin` | Panel, Gestión académica, Horarios, Reportes, Auditoría, Usuarios | Gestión transversal; el backend igual limita por permiso lo que cada uno puede hacer. |
 
 `/login` solo pide email y contraseña: no hay selector de rol. El rol sale siempre de la base y se relee en cada request. Si la cuenta tiene `debe_cambiar_password`, Galisencia muestra primero la pantalla para elegir una contraseña nueva. `RutaProtegida` redirige al inicio del usuario. Esto mejora UX, no reemplaza RBAC del servidor.
@@ -57,6 +58,11 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 ### Reportes de asistencia
 
 Filtros por ciclo, curso, materia y situación (todos, en riesgo general o por materia). "Excel" descarga un libro con el resumen por alumno (clases, presentes, tardes, ausentes, justificadas, porcentaje y situación) y todos los registros del filtro; "CSV" baja los registros; "Imprimir / PDF" imprime en A4 el resumen por alumno con los filtros y las reglas aplicadas, sin el resto de la aplicación.
+
+### Portal de familias
+
+- **Tutor:** entra a `/familia`. Si tiene más de un hijo vinculado, los elige con las pestañas. Por cada uno ve la misma vista de asistencia que el alumno (con textos para la familia) y sus justificaciones, con motivo y descarga del certificado. Más abajo puede apagar el aviso diario de inasistencias por email. En "Horarios" ve la grilla del curso de cada hijo.
+- **Administrador Académico y Administrador:** en "Gestión académica", la pestaña "Familias" elige curso y alumno, lista sus tutores y vincula uno: con una cuenta nueva (nombre, apellido, email y contraseña inicial generada, que se cambia en el primer ingreso) o con la cuenta que la familia ya tiene por otro hijo. También desvincula.
 
 ### Justificaciones y reglas de asistencia
 

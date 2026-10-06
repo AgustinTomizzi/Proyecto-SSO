@@ -178,7 +178,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setCargando(true);
     (async () => {
       try {
-        if (usuario.rol === "alumno") {
+        if (usuario.rol === "tutor") {
+          // Portal de familias: el backend limita la asistencia a sus alumnos vinculados.
+          const [as, ma, re] = await Promise.all([
+            cargarAsistencias(),
+            apiGet<{ ok: true; materias: Materia[] }>("/materias.php"),
+            cargarReglas(),
+          ]);
+          if (cancelled) return;
+          setAlumnos((usuario.alumnos ?? []).map((a) => ({
+            id: a.id,
+            nombre: a.nombre,
+            apellido: a.apellido,
+            dni: "",
+            curso: a.curso ?? "",
+            cursoId: a.cursoId ?? "",
+            division: a.curso?.trim().split(/\s+/).at(-1) ?? "",
+            email: "",
+          })));
+          setCursos([]);
+          setRegistros(normalizarRegistros(as));
+          setMaterias(normalizarMaterias(ma.materias));
+          setReglas(re);
+        } else if (usuario.rol === "alumno") {
           const [as, ma, re] = await Promise.all([
             cargarAsistencias(`alumnoId=${encodeURIComponent(usuario.id)}`),
             apiGet<{ ok: true; materias: Materia[] }>("/materias.php"),

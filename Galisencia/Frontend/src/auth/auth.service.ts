@@ -1,4 +1,4 @@
-import type { Rol, Usuario } from "../data/types";
+import type { AlumnoVinculado, Rol, Usuario } from "../data/types";
 import { CSRF_HEADER } from "../data/apiClient";
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL ?? "/api";
@@ -11,6 +11,7 @@ interface BackendUser {
   rol: string;
   rol_backend?: string;
   curso?: string;
+  alumnos?: AlumnoVinculado[];
   debeCambiarPassword?: boolean;
 }
 
@@ -31,6 +32,7 @@ function normalizeRole(value: string): Rol {
   if (role === "preceptor" || role === "docente") return "preceptor";
   if (role === "directivo") return "directivo";
   if (role.includes("administrador") || role === "admin") return "admin";
+  if (role === "tutor") return "tutor";
   return "alumno";
 }
 
@@ -45,6 +47,7 @@ function toUser(data: SessionResponse): Usuario {
     permisos: data.permisos ?? [],
     sistemas: data.sistemas ?? [],
     curso: user.curso,
+    alumnos: user.alumnos?.map((a) => ({ ...a, id: String(a.id), cursoId: a.cursoId === null || a.cursoId === undefined ? null : String(a.cursoId) })),
     debeCambiarPassword: Boolean(user.debeCambiarPassword),
   };
 }

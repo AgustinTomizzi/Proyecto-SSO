@@ -8,6 +8,8 @@ interface Props {
   alumnoId: string;
   nombre: string;
   curso: string;
+  /** "familia": textos en tercera persona para el portal de familias. */
+  vista?: "alumno" | "familia";
 }
 
 const COLORS = ["#0ea5e9", "#10b981", "#f59e0b", "#059669", "#0284c7", "#34d399", "#8b5cf6"];
@@ -16,7 +18,9 @@ function horaActualizada(iso: string) {
   return new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
 }
 
-export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) {
+export default function AsistenciaDashboard({ alumnoId, nombre, curso, vista = "alumno" }: Props) {
+  const familia = vista === "familia";
+  const primerNombre = nombre.split(" ")[0];
   const { getRegistrosDeAlumno, reglas } = useStore();
   const umbral = reglas.umbral;
   const [ciclo, setCiclo] = useState("");
@@ -81,7 +85,7 @@ export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) 
   return (
     <div className="asistencia-dashboard">
       <div className="asistencia-dashboard__header">
-        <div><h1>Hola, {nombre.split(" ")[0]} <span aria-hidden="true">👋</span></h1><p>Revisá tu asistencia y rendimiento del ciclo lectivo{curso ? ` · ${curso}` : ""}</p></div>
+        <div>{familia ? <><h1>Asistencia de {primerNombre}</h1><p>Su asistencia y rendimiento del ciclo lectivo{curso ? ` · ${curso}` : ""}</p></> : <><h1>Hola, {primerNombre} <span aria-hidden="true">👋</span></h1><p>Revisá tu asistencia y rendimiento del ciclo lectivo{curso ? ` · ${curso}` : ""}</p></>}</div>
         <div className="asistencia-dashboard__controls">
           <button className="asistencia-refresh" onClick={refrescar} disabled={actualizando}><svg className={actualizando ? "spin" : ""} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>{actualizando ? "Actualizando" : "Actualizar"}</button>
           <label className="asistencia-year"><span>Ciclo lectivo</span><select value={ciclo} onChange={(event) => setCiclo(event.target.value)} disabled={ciclos.length === 0}>{ciclos.length === 0 && <option value="">Sin registros</option>}{ciclos.map((anio) => <option key={anio} value={anio}>{anio}</option>)}</select></label>
@@ -96,7 +100,7 @@ export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) 
 
       <section className="asistencia-hero">
         <div className="asistencia-ring" style={{ "--progress": `${general}` } as CSSProperties}><svg viewBox="0 0 110 110" aria-hidden="true"><circle cx="55" cy="55" r="46" className="track"/><circle cx="55" cy="55" r="46" className="progress"/></svg><strong>{stats.general === null ? "—" : `${general}%`}</strong></div>
-        <div className="asistencia-hero__copy"><h2>Asistencia general</h2><p>Mantené tu asistencia por encima del <strong>{umbral}%</strong> en cada materia para conservar la regularidad.</p><span className={`asistencia-status ${regular ? "ok" : "risk"}`}><i />{stats.general === null ? "Sin clases registradas" : regular ? "Regular · Cumpliendo el mínimo requerido" : "En riesgo · Por debajo del mínimo"}</span></div>
+        <div className="asistencia-hero__copy"><h2>Asistencia general</h2><p>{familia ? <>Para conservar la regularidad, {primerNombre} necesita al menos el <strong>{umbral}%</strong> de asistencia en cada materia.</> : <>Mantené tu asistencia por encima del <strong>{umbral}%</strong> en cada materia para conservar la regularidad.</>}</p><span className={`asistencia-status ${regular ? "ok" : "risk"}`}><i />{stats.general === null ? "Sin clases registradas" : regular ? "Regular · Cumpliendo el mínimo requerido" : "En riesgo · Por debajo del mínimo"}</span></div>
         <div className="asistencia-mini-chart" aria-label="Asistencia por materia">{stats.porMateria.slice(0, 7).map((materia) => <div key={materia.materia}><span><i style={{ height: `${materia.pct ?? 0}%` }}/></span><small>{materia.materia.slice(0, 3).toUpperCase()}</small></div>)}</div>
       </section>
 
@@ -110,7 +114,7 @@ export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) 
             const color = COLORS[index % COLORS.length];
             return <article className={`materia-card${abierta ? " open" : ""}`} key={materia.materia}>
               <button className="materia-card__summary" onClick={() => setExpandida(abierta ? null : materia.materia)} aria-expanded={abierta}><span className="materia-card__mark" style={{ "--subject-color": color } as CSSProperties}><i/></span><strong className="materia-card__name">{materia.materia}</strong><span className="materia-card__quick"><QuickStat label="Pres." value={materia.presentes} tone="success"/><QuickStat label="Tard." value={materia.tardes} tone="warning"/><QuickStat label="Aus." value={materia.ausencias} tone="danger"/><QuickStat label="Cls." value={materia.total} tone="muted"/></span><span className={`materia-card__pct ${ok ? "ok" : "risk"}`}><strong>{materia.pct === null ? "—" : `${pct}%`}</strong><i><b style={{ width: `${pct}%` }}/></i></span><svg className="materia-card__chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg></button>
-              {abierta && <div className="materia-card__detail"><DetailCard label="Asistencias" value={materia.presentes} total={materia.total} tone="success" icon={<CheckIcon/>}/><DetailCard label="Tardanzas" value={materia.tardes} total={materia.total} tone="warning" icon={<ClockIcon/>}/><DetailCard label="Ausencias" value={materia.ausencias} total={materia.total} tone="danger" icon={<XIcon/>}/>{materia.justificadas > 0 && <DetailCard label="Justificadas" value={materia.justificadas} total={materia.total} tone="sky" icon={<CheckIcon/>}/>}<DetailCard label="Clases totales" value={materia.total} total={materia.total} tone="sky" icon={<CalendarIcon/>}/><div className={`materia-card__note ${ok ? "ok" : "risk"}`}><strong>{ok ? "✓ Regular" : "✕ En riesgo"}</strong><span>{ok ? `Superás el mínimo con ${pct}% de asistencia.` : `Estás al ${pct}%; el mínimo requerido es ${umbral}%.`}</span></div></div>}
+              {abierta && <div className="materia-card__detail"><DetailCard label="Asistencias" value={materia.presentes} total={materia.total} tone="success" icon={<CheckIcon/>}/><DetailCard label="Tardanzas" value={materia.tardes} total={materia.total} tone="warning" icon={<ClockIcon/>}/><DetailCard label="Ausencias" value={materia.ausencias} total={materia.total} tone="danger" icon={<XIcon/>}/>{materia.justificadas > 0 && <DetailCard label="Justificadas" value={materia.justificadas} total={materia.total} tone="sky" icon={<CheckIcon/>}/>}<DetailCard label="Clases totales" value={materia.total} total={materia.total} tone="sky" icon={<CalendarIcon/>}/><div className={`materia-card__note ${ok ? "ok" : "risk"}`}><strong>{ok ? "✓ Regular" : "✕ En riesgo"}</strong><span>{ok ? (familia ? `Supera el mínimo con ${pct}% de asistencia.` : `Superás el mínimo con ${pct}% de asistencia.`) : (familia ? `Está al ${pct}%; el mínimo requerido es ${umbral}%.` : `Estás al ${pct}%; el mínimo requerido es ${umbral}%.`)}</span></div></div>}
             </article>;
           })}</div>
         )}

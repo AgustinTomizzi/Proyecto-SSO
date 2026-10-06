@@ -1,0 +1,6 @@
+/* Portal de familias: usa los tokens y clases del tema. */
+.familia-page { display: grid; gap: 18px; align-content: start; }
+.familia-page > .page-head { margin-bottom: 0; }
+.familia__contenido { display: grid; gap: 18px; }
+.familia__aviso { display: flex; align-items: center; gap: 10px; min-height: 40px; cursor: pointer; }
+.familia__aviso input { width: 18px; height: 18px; accent-color: var(--brand, var(--accent)); }

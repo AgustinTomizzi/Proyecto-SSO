@@ -23,8 +23,9 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 16. `db/16-config-institucion.sql`: tabla `config_institucion` (clave/valor) y permiso `config.gestionar` (Administrador). Idempotente.
 17. `db/17-justificaciones.sql`: tabla `justificaciones`, estado `justificado` y columna `justificacion_id` en `asistencias`, y permiso `asistencia.justificar` (Preceptor, Administrador Académico, Administrador). Idempotente.
 18. `db/18-notificaciones.sql`: tablas `notificaciones` (cola de emails) y `notificacion_preferencias`. Idempotente.
+19. `db/19-familias.sql`: rol `Tutor` (Galisencia, lectura de asistencia, notas y horarios), tabla `tutor_alumno` y permiso `tutores.gestionar`. Idempotente.
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `19-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `20-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -441,6 +442,17 @@ Propósito: la grilla. Una fila por curso, día, módulo y grupo, con vigencia. 
 | `vigente_hasta` | `DATE NULL` | CHECK ≥ desde | Hasta cuándo; `NULL` = vigente. |
 
 Únicos e índices: (`curso_id`, `dia_semana`, `franja_id`, `grupo`, `vigente_desde`); `idx_clase_docente` e `idx_clase_aula`. La API valida lo que la base no puede expresar: con vigencias superpuestas, el curso completo choca con cualquier grupo del mismo módulo, y un docente o un aula no compartida no pueden estar en dos clases en el mismo día y módulo. El horario real del colegio ya trae un caso (aula 201, jueves 17:30–19:30, 6º 4ª y 7º 3ª): se cargó tal cual y la API lo marcaría al editar esas celdas.
+
+### `tutor_alumno`
+
+Propósito: portal de familias (`db/19-familias.sql`). Vincula una cuenta con rol Tutor con los alumnos que puede ver.
+
+| Campo | Tipo y nulabilidad | Clave | Significado |
+|---|---|---|---|
+| `tutor_id` | `INT UNSIGNED NOT NULL` | PK, FK a `usuarios` (CASCADE) | Cuenta del tutor. |
+| `alumno_id` | `INT UNSIGNED NOT NULL` | PK, FK a `alumnos` (CASCADE) | Alumno vinculado. |
+| `parentesco` | `VARCHAR(40) NULL` | | Madre, Padre, Tutor legal, Responsable u Otro. |
+| `creado_por`, `creado_en` | `INT UNSIGNED NULL`, `DATETIME` | FK a `usuarios` (SET NULL) | Quién lo vinculó y cuándo. |
 
 ### `notificaciones` y `notificacion_preferencias`
 

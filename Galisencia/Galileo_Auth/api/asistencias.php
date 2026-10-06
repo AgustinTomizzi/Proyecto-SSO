@@ -54,6 +54,10 @@ if ($method === "GET") {
     if (api_rol_es("Alumno")) {
         $where[] = "a.usuario_id = ?";
         $params[] = $usuarioId;
+    } elseif (api_rol_es("Tutor")) {
+        [$condicion, $extra] = api_sql_alumno_del_tutor($usuarioId, "a.id_alumno");
+        $where[] = $condicion;
+        array_push($params, ...$extra);
     } elseif (api_rol_es("Preceptor")) {
         [$condicion, $extra] = api_sql_curso_del_preceptor($usuarioId, "a.curso_id");
         $where[] = $condicion;
@@ -164,5 +168,8 @@ try {
     }
     throw $e;
 }
+
+// Aviso diario a las familias (se recalcula con cada cambio del día).
+notif_inasistencias($alumnoId, $fecha);
 
 api_json(["ok" => true, "registro" => ["id" => (string) $id, "alumnoId" => (string) $alumnoId, "materiaId" => (string) $materia["id"], "materia" => $materia["nombre"], "fecha" => $fecha, "estado" => $estado]]);

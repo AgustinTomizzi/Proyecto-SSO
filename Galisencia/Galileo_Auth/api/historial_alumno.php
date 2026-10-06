@@ -16,6 +16,9 @@ if (!$alumno) api_json(["ok" => false, "error" => "alumno no encontrado"], 404);
 if (api_rol_es("Alumno") && (int) $alumno["usuario_id"] !== (int) usuarioActual()) {
     api_json(["ok" => false, "error" => "solo podés ver tu propio historial"], 403);
 }
+if (api_rol_es("Tutor") && !in_array((int) $alumno["id"], api_alumnos_del_tutor(usuarioActual()), true)) {
+    api_json(["ok" => false, "error" => "solo podés ver el historial de tus alumnos vinculados"], 403);
+}
 if (api_rol_es("Preceptor") && !in_array((int) $alumno["cursoId"], api_cursos_del_preceptor(usuarioActual()), true)) {
     api_json(["ok" => false, "error" => "el alumno no pertenece a uno de tus cursos actuales"], 403);
 }

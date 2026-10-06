@@ -399,6 +399,41 @@ function api_sql_docente_dicta($usuarioId, $columnaCurso, $columnaMateria)
 }
 
 /** Alumno vinculado al usuario (alumnos.usuario_id); null si no hay. */
+// ---- Alcance del Tutor: sus alumnos vinculados y activos (tutor_alumno) ----
+
+/** ids de los alumnos activos vinculados al tutor. */
+function api_alumnos_del_tutor($usuarioId)
+{
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT ta.alumno_id FROM tutor_alumno ta JOIN alumnos a ON a.id_alumno = ta.alumno_id AND a.estado = 1 WHERE ta.tutor_id = ? ORDER BY ta.alumno_id");
+    $stmt->execute([$usuarioId]);
+    return array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
+/** Cursos de los alumnos vinculados al tutor (para horarios). */
+function api_cursos_del_tutor($usuarioId)
+{
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT DISTINCT a.curso_id FROM tutor_alumno ta JOIN alumnos a ON a.id_alumno = ta.alumno_id AND a.estado = 1 WHERE ta.tutor_id = ? AND a.curso_id IS NOT NULL");
+    $stmt->execute([$usuarioId]);
+    return array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
+/** Condición SQL: la columna de alumno es de un alumno vinculado al tutor. Devuelve [sql, params]. */
+function api_sql_alumno_del_tutor($usuarioId, $columnaAlumno)
+{
+    return ["$columnaAlumno IN (SELECT ta.alumno_id FROM tutor_alumno ta WHERE ta.tutor_id = ?)", [$usuarioId]];
+}
+
+/** Alumnos vinculados con nombre y curso, para la sesión del tutor. */
+function api_alumnos_vinculados($usuarioId)
+{
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT a.id_alumno AS id, a.nombre, a.apellido, a.curso_id AS cursoId, CONCAT(c.anio, ' ', c.division) AS curso, ta.parentesco FROM tutor_alumno ta JOIN alumnos a ON a.id_alumno = ta.alumno_id AND a.estado = 1 LEFT JOIN cursos c ON c.id_cursos = a.curso_id WHERE ta.tutor_id = ? ORDER BY a.apellido, a.nombre");
+    $stmt->execute([$usuarioId]);
+    return array_map(fn ($a) => array_merge($a, ["id" => (string) $a["id"], "cursoId" => $a["cursoId"] === null ? null : (string) $a["cursoId"]]), $stmt->fetchAll());
+}
+
 function api_alumno_del_usuario($usuarioId)
 {
     global $pdo;

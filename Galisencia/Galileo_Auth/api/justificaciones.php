@@ -28,6 +28,9 @@ function justif_puede_ver(array $alumno, $usuarioId)
     if (api_rol_es("Alumno")) {
         return (int) $alumno["usuario_id"] === $usuarioId;
     }
+    if (api_rol_es("Tutor")) {
+        return in_array((int) $alumno["id_alumno"], api_alumnos_del_tutor($usuarioId), true);
+    }
     if (api_rol_es("Preceptor")) {
         return in_array((int) $alumno["curso_id"], api_cursos_del_preceptor($usuarioId), true);
     }
@@ -46,10 +49,12 @@ function justif_puede_justificar(array $alumno, $usuarioId)
     return !api_rol_es("Preceptor") || in_array((int) $alumno["curso_id"], api_cursos_del_preceptor($usuarioId), true);
 }
 
-/** Puede ver motivo y adjunto: quien justifica en su alcance o el propio alumno. */
+/** Puede ver motivo y adjunto: quien justifica en su alcance, el propio alumno o su tutor. */
 function justif_ve_detalle(array $alumno, $usuarioId)
 {
-    return justif_puede_justificar($alumno, $usuarioId) || (api_rol_es("Alumno") && (int) $alumno["usuario_id"] === $usuarioId);
+    return justif_puede_justificar($alumno, $usuarioId)
+        || (api_rol_es("Alumno") && (int) $alumno["usuario_id"] === $usuarioId)
+        || (api_rol_es("Tutor") && in_array((int) $alumno["id_alumno"], api_alumnos_del_tutor($usuarioId), true));
 }
 
 if ($method === "GET") {
@@ -110,7 +115,7 @@ if ($method === "GET") {
     $stmt->execute([$alumnoId ?? $cursoId]);
     $respuesta = [];
     foreach ($stmt->fetchAll() as $fila) {
-        $alumno = ["curso_id" => $fila["curso_id"], "usuario_id" => $fila["usuario_id"]];
+        $alumno = ["id_alumno" => $fila["alumnoId"], "curso_id" => $fila["curso_id"], "usuario_id" => $fila["usuario_id"]];
         if (!justif_puede_ver($alumno, $usuarioId)) {
             continue;
         }
@@ -155,6 +160,9 @@ if ($method === "DELETE") {
             $pdo->rollBack();
             api_json(["ok" => false, "error" => "el alumno no pertenece a uno de tus cursos"], 403);
         }
+        $fechas = $pdo->prepare("SELECT DISTINCT fecha FROM asistencias WHERE justificacion_id = ?");
+        $fechas->execute([$id]);
+        $fechasAfectadas = $fechas->fetchAll(PDO::FETCH_COLUMN);
         $revertir = $pdo->prepare("UPDATE asistencias SET estado = 'ausente', justificacion_id = NULL WHERE justificacion_id = ?");
         $revertir->execute([$id]);
         $revertidas = $revertir->rowCount();
@@ -166,6 +174,9 @@ if ($method === "DELETE") {
             $pdo->rollBack();
         }
         throw $e;
+    }
+    foreach ($fechasAfectadas as $fechaAfectada) {
+        notif_inasistencias((int) $fila["alumno_id"], $fechaAfectada);
     }
     api_json(["ok" => true, "ausenciasRevertidas" => $revertidas]);
 }
@@ -262,6 +273,13 @@ try {
         $pdo->rollBack();
     }
     throw $e;
+}
+
+// Las ausencias justificadas ya no se avisan a la familia.
+$fechas = $pdo->prepare("SELECT DISTINCT fecha FROM asistencias WHERE justificacion_id = ?");
+$fechas->execute([$id]);
+foreach ($fechas->fetchAll(PDO::FETCH_COLUMN) as $fechaAfectada) {
+    notif_inasistencias($alumnoId, $fechaAfectada);
 }
 
 api_json(["ok" => true, "justificacion" => [

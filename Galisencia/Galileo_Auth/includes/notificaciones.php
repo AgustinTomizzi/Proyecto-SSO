@@ -17,7 +17,17 @@ function notif_tipos()
         "reserva_modificada" => "Reserva modificada",
         "reserva_cancelada" => "Reserva cancelada",
         "reserva_recordatorio" => "Recordatorio antes de una reserva",
+        "inasistencia" => "Aviso diario de inasistencias",
     ];
+}
+
+/** Tipos que corresponden a un rol: las familias reciben inasistencias; el resto, avisos de reservas. */
+function notif_tipos_del_rol($rol)
+{
+    $tipos = notif_tipos();
+    return strcasecmp((string) $rol, "Tutor") === 0
+        ? array_intersect_key($tipos, ["inasistencia" => true])
+        : array_diff_key($tipos, ["inasistencia" => true]);
 }
 
 function notif_fecha_texto($fecha)
@@ -42,6 +52,23 @@ function notif_plantilla($tipo, array $d)
             return ["Reserva modificada: {$d["recurso"]} el " . notif_fecha_texto($d["fecha"]), "Hola {$d["nombre"]}:\n\nTu reserva cambió. Así queda:\n\n$detalle$pie"];
         case "reserva_cancelada":
             return ["Reserva cancelada: {$d["recurso"]} el " . notif_fecha_texto($d["fecha"]), "Hola {$d["nombre"]}:\n\nTu reserva fue cancelada.\n\n$detalle$pie"];
+        case "inasistencia":
+            $lista = implode("", array_map(fn ($m) => "- $m
+", $d["materias"]));
+            $cantidad = count($d["materias"]);
+            return [
+                "Inasistencia de {$d["alumno"]} el " . notif_fecha_texto($d["fecha"]),
+                "Hola {$d["nombre"]}:
+
+{$d["alumno"]} tiene " . ($cantidad === 1 ? "una inasistencia" : "$cantidad inasistencias") . " el " . notif_fecha_texto($d["fecha"]) . " en:
+
+$lista
+"
+                    . "Si corresponde, acercá el justificativo a preceptoría. Podés ver el detalle en Galisencia.
+"
+                    . "Para dejar de recibir este aviso, desactivalo en Galisencia > Familia.
+",
+            ];
         case "reserva_recordatorio":
             return ["Recordatorio: {$d["recurso"]} el " . notif_fecha_texto($d["fecha"]) . " a las " . substr($d["inicio"], 0, 5), "Hola {$d["nombre"]}:\n\nTe recordamos tu reserva.\n\n$detalle$pie"];
     }
@@ -115,5 +142,57 @@ function notif_reserva($reservaId, $evento)
         notif_encolar((int) $d["user_id"], "reserva_recordatorio", $d["email"], $datos, $cuando->format("Y-m-d H:i:s"), $referencia);
     } catch (Throwable $e) {
         error_log("notificaciones: no se pudo encolar ($evento, reserva $reservaId): " . $e->getMessage());
+    }
+}
+
+/**
+ * Aviso de inasistencias a los tutores del alumno para una fecha: uno por
+ * tutor, alumno y día (no uno por materia), programado a la hora de resumen.
+ * Se recalcula en cada cambio: si ya no hay ausencias sin justificar, se borra.
+ * Solo para fechas de los últimos 7 días (una carga atrasada de meses no avisa).
+ * No lanza excepciones.
+ */
+function notif_inasistencias($alumnoId, $fecha)
+{
+    global $pdo;
+    try {
+        $hoy = date("Y-m-d");
+        if ($fecha > $hoy || $fecha < date("Y-m-d", strtotime("-7 days"))) {
+            return;
+        }
+        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.email FROM tutor_alumno ta JOIN usuarios u ON u.id_usuario = ta.tutor_id WHERE ta.alumno_id = ?");
+        $stmt->execute([$alumnoId]);
+        $tutores = $stmt->fetchAll();
+        if (!$tutores) {
+            return;
+        }
+        $stmt = $pdo->prepare("SELECT CONCAT(a.nombre, ' ', a.apellido) FROM alumnos a WHERE a.id_alumno = ?");
+        $stmt->execute([$alumnoId]);
+        $alumno = (string) $stmt->fetchColumn();
+        $stmt = $pdo->prepare("SELECT m.nombre FROM asistencias asi JOIN materias m ON m.id_materia = asi.materia_id WHERE asi.alumno_id = ? AND asi.fecha = ? AND asi.estado = 'ausente' ORDER BY m.nombre");
+        $stmt->execute([$alumnoId, $fecha]);
+        $materias = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $hora = (string) (config_institucion()["notificaciones.hora_resumen_inasistencias"] ?? "18:00");
+        $programada = max("$fecha $hora:00", date("Y-m-d H:i:s"));
+        foreach ($tutores as $t) {
+            $referencia = "inasistencia:{$t["id_usuario"]}:$alumnoId:$fecha";
+            if (!$materias || !notif_habilitada((int) $t["id_usuario"], "inasistencia")) {
+                $pdo->prepare("DELETE FROM notificaciones WHERE referencia = ? AND estado = 'pendiente'")->execute([$referencia]);
+                continue;
+            }
+            [$asunto, $cuerpo] = notif_plantilla("inasistencia", ["nombre" => $t["nombre"], "alumno" => $alumno, "fecha" => $fecha, "materias" => $materias]);
+            $actualizar = $pdo->prepare("UPDATE notificaciones SET asunto = ?, cuerpo = ? WHERE referencia = ? AND estado = 'pendiente'");
+            $actualizar->execute([mb_substr($asunto, 0, 200), $cuerpo, $referencia]);
+            if ($actualizar->rowCount() === 0) {
+                $existe = $pdo->prepare("SELECT 1 FROM notificaciones WHERE referencia = ?");
+                $existe->execute([$referencia]);
+                if (!$existe->fetchColumn()) {
+                    notif_encolar((int) $t["id_usuario"], "inasistencia", $t["email"], ["nombre" => $t["nombre"], "alumno" => $alumno, "fecha" => $fecha, "materias" => $materias], $programada, $referencia);
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        error_log("notificaciones: no se pudo armar el aviso de inasistencias (alumno $alumnoId, $fecha): " . $e->getMessage());
     }
 }

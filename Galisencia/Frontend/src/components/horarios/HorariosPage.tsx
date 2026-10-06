@@ -28,7 +28,7 @@ import { useImpresionGrilla } from "./useImpresionGrilla";
 import "./horarios.css";
 
 /** gestion: edita la grilla · alumno: su curso · docente: sus clases · lectura: elige curso, sin editar. */
-type Modo = "gestion" | "alumno" | "docente" | "lectura";
+type Modo = "gestion" | "alumno" | "docente" | "lectura" | "familia";
 
 interface CursosResponse { cursos: { id: string | number; anio: string | number; division: string | number; turno: string }[] }
 interface MateriasResponse { materias: { id: string | number; nombre: string }[] }
@@ -44,6 +44,7 @@ const TEXTOS: Record<Modo, { titulo: string; sub: string }> = {
   alumno: { titulo: "Mi horario", sub: "Las clases de tu curso, día por día." },
   docente: { titulo: "Mis clases", sub: "Tus módulos de la semana en todos los cursos." },
   lectura: { titulo: "Horarios por curso", sub: "Consultá la grilla semanal de cada curso." },
+  familia: { titulo: "Horarios", sub: "La grilla semanal del curso de cada uno de tus hijos." },
 };
 
 function mensajeDe(cause: unknown, porDefecto: string) {
@@ -61,10 +62,12 @@ export default function HorariosPage() {
     ? "gestion"
     : usuario?.rol === "alumno"
       ? "alumno"
+      : usuario?.rol === "tutor"
+        ? "familia"
       : usuario?.rolBackend === "Docente"
         ? "docente"
         : "lectura";
-  const conSelector = modo === "gestion" || modo === "lectura";
+  const conSelector = modo === "gestion" || modo === "lectura" || modo === "familia";
 
   const [fecha, setFecha] = useState(() => hoyLocal());
   const [cursos, setCursos] = useState<CursoOpcion[]>([]);
@@ -97,6 +100,18 @@ export default function HorariosPage() {
   // Cursos para el selector.
   useEffect(() => {
     if (!conSelector) return;
+    if (modo === "familia") {
+      // El tutor no lista cursos: el selector son los cursos de sus hijos.
+      const vistos = new Map<string, CursoOpcion>();
+      for (const hijo of usuario?.alumnos ?? []) {
+        if (!hijo.cursoId || !hijo.curso || vistos.has(hijo.cursoId)) continue;
+        const [anio = "", division = ""] = hijo.curso.trim().split(/\s+/);
+        vistos.set(hijo.cursoId, { id: hijo.cursoId, anio, division, turno: "" });
+      }
+      setCursos(ordenarCursos([...vistos.values()]));
+      setCursosCargando(false);
+      return;
+    }
     let vigente = true;
     apiGet<CursosResponse>("/cursos.php")
       .then((data) => {
@@ -106,7 +121,7 @@ export default function HorariosPage() {
       .catch((cause) => vigente && setCursosError(mensajeDe(cause, "No se pudieron cargar los cursos")))
       .finally(() => vigente && setCursosCargando(false));
     return () => { vigente = false; };
-  }, [conSelector]);
+  }, [conSelector, modo, usuario?.alumnos]);
 
   // Catálogos del editor (solo gestión).
   useEffect(() => {

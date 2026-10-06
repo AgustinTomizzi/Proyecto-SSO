@@ -1109,6 +1109,85 @@ async function main() {
     expectStatus(await preceptor.json("/justificaciones.php", "DELETE", { id: idAdjunto }), 200, "quita la justificación con adjunto");
   }
 
+  // ---- Portal de familias: rol Tutor, alcance, gestión y aviso de inasistencias ----
+  {
+    const familia = await login("familia@galileo.edu.ar", "tutor");
+    const sesionFamilia = await familia.request("/sesion.php");
+    expectStatus(sesionFamilia, 200, "sesión del tutor");
+    const hijos = sesionFamilia.body.usuario.alumnos;
+    assert.equal(hijos.length, 2, "la tutora demo tiene dos alumnos vinculados");
+    const idsHijos = new Set(hijos.map((h) => String(h.id)));
+    const sofia = hijos.find((h) => h.nombre === "Sofia");
+
+    // Alcance: solo lo de sus alumnos; nada de escritura ni listados generales.
+    const asistenciasFamilia = await familia.request("/asistencias.php?limit=500");
+    expectStatus(asistenciasFamilia, 200, "asistencias del tutor");
+    assert.ok(asistenciasFamilia.body.registros.length > 0 && asistenciasFamilia.body.registros.every((r) => idsHijos.has(String(r.alumnoId))), "solo ve la asistencia de sus hijos");
+    const notasFamilia = await familia.request("/notas.php");
+    expectStatus(notasFamilia, 200, "notas del tutor");
+    assert.ok(notasFamilia.body.notas.every((n) => idsHijos.has(String(n.alumnoId))), "solo ve las notas de sus hijos");
+    expectStatus(await familia.request(`/historial_alumno.php?id=${sofia.id}`), 200, "historial de un hijo");
+    const ajeno = (await academica.request("/alumnos.php")).body.alumnos.find((a) => !idsHijos.has(String(a.id)));
+    expectStatus(await familia.request(`/historial_alumno.php?id=${ajeno.id}`), 403, "historial de un alumno ajeno");
+    expectStatus(await familia.request(`/justificaciones.php?alumnoId=${ajeno.id}`), 403, "justificaciones de un alumno ajeno");
+    expectStatus(await familia.request("/alumnos.php"), 403, "el tutor no lista alumnos");
+    expectStatus(await familia.request("/reportes.php"), 403, "el tutor no ve reportes");
+    expectStatus(await familia.request("/cursos.php"), 403, "el tutor no lista cursos");
+    expectStatus(await familia.request("/horario_grilla.php"), 200, "horario del curso de su hijo");
+    expectStatus(await familia.request("/horario_grilla.php?cursoId=6"), 403, "horario de otro curso");
+    const materiaF = (await familia.request("/materias.php")).body.materias[0];
+    expectStatus(await familia.json("/asistencias.php", "POST", { alumnoId: sofia.id, materiaId: materiaF.id, fecha: "2026-03-02", estado: "presente" }), 403, "el tutor no carga asistencia");
+
+    // Gestión de tutores (Administración Académica y Administrador).
+    expectStatus(await preceptor.request("/tutores.php"), 403, "el preceptor no gestiona tutores");
+    const listado = await academica.request("/tutores.php");
+    expectStatus(listado, 200, "listado de tutores");
+    assert.ok(listado.body.tutores.some((t) => t.email === "familia@galileo.edu.ar" && t.alumnos.length === 2));
+    const emailNuevo = `tutor.${Date.now()}@familias.test`;
+    const nuevo = await academica.json("/tutores.php", "POST", { alumnoId: ajeno.id, email: emailNuevo, nombre: "Rosa", apellido: "Prueba", passwordInicial: "Inicial-2026!", parentesco: "Madre" });
+    expectStatus(nuevo, 201, "crea la cuenta del tutor y la vincula");
+    assert.equal(nuevo.body.cuentaCreada, true);
+    expectStatus(await academica.json("/tutores.php", "POST", { alumnoId: ajeno.id, email: emailNuevo }), 409, "vínculo repetido");
+    expectStatus(await academica.json("/tutores.php", "POST", { alumnoId: ajeno.id, email: "preceptor@galileo.edu.ar" }), 409, "email de una cuenta que no es de tutor");
+    expectStatus(await academica.json("/tutores.php", "POST", { alumnoId: ajeno.id, email: `otro.${Date.now()}@familias.test`, nombre: "Sin", apellido: "Clave" }), 400, "cuenta nueva sin contraseña inicial");
+    expectStatus(await academica.json("/tutores.php", "POST", { alumnoId: ajeno.id, email: emailNuevo, parentesco: "Vecino" }), 400, "parentesco inválido");
+    const sesionNueva = new PhpSession();
+    const loginNuevo = await sesionNueva.login(emailNuevo, "Inicial-2026!");
+    expectStatus(loginNuevo, 200, "el tutor nuevo entra");
+    assert.equal(loginNuevo.body.usuario.rol, "tutor");
+    assert.equal(loginNuevo.body.usuario.debeCambiarPassword, true);
+    assert.deepEqual(loginNuevo.body.usuario.alumnos.map((a) => String(a.id)), [String(ajeno.id)]);
+    const tutorNuevoId = nuevo.body.tutor.tutorId;
+    expectStatus(await academica.json("/tutores.php", "DELETE", { tutorId: tutorNuevoId, alumnoId: ajeno.id }), 200, "desvincula");
+    expectStatus(await academica.json("/tutores.php", "DELETE", { tutorId: tutorNuevoId, alumnoId: ajeno.id }), 404, "vínculo inexistente");
+    expectStatus(await sesionNueva.request(`/historial_alumno.php?id=${ajeno.id}`), 403, "sin vínculo ya no ve al alumno");
+    const auditoriaTutores = await admin.request("/auditoria.php?accion=tutores.vincular&limit=5");
+    assert.ok(auditoriaTutores.body.registros.some((r) => r.detalle?.cuenta_creada === true), "vínculo auditado");
+
+    // Aviso diario de inasistencias: uno por tutor, alumno y día, recalculado.
+    const prefsFamilia = await familia.request("/notificaciones.php");
+    assert.deepEqual(prefsFamilia.body.preferencias.map((p) => p.tipo), ["inasistencia"], "la familia solo ve el aviso de inasistencias");
+    const hoyF = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
+    const materiasF = (await preceptor.request("/materias.php")).body.materias;
+    const marcar = (materia, estado) => preceptor.json("/asistencias.php", "POST", { alumnoId: sofia.id, materiaId: materia.id, fecha: hoyF, estado });
+    const avisos = async () => (await familia.request("/notificaciones.php")).body.notificaciones.filter((n) => n.tipo === "inasistencia" && n.estado === "pendiente" && n.asunto.includes("Sofia"));
+    expectStatus(await marcar(materiasF[0], "ausente"), 200, "ausencia de Sofia hoy");
+    expectStatus(await marcar(materiasF[1], "ausente"), 200, "segunda ausencia del día");
+    const conAusencias = await avisos();
+    assert.equal(conAusencias.length, 1, "un solo aviso por día aunque falte a dos materias");
+    expectStatus(await preceptor.json("/justificaciones.php", "POST", { alumnoId: sofia.id, desde: hoyF, hasta: hoyF, motivo: "Turno médico" }), 201, "justifica el día");
+    assert.equal((await avisos()).length, 0, "las ausencias justificadas no se avisan");
+    const justif = (await preceptor.request(`/justificaciones.php?alumnoId=${sofia.id}`)).body.justificaciones.find((j) => j.desde === hoyF);
+    expectStatus(await preceptor.json("/justificaciones.php", "DELETE", { id: justif.id }), 200, "quita la justificación");
+    assert.equal((await avisos()).length, 1, "el aviso vuelve al quitar la justificación");
+    const detalleFamilia = await familia.request(`/justificaciones.php?alumnoId=${sofia.id}`);
+    expectStatus(detalleFamilia, 200, "la familia ve las justificaciones de su hija");
+    expectStatus(await marcar(materiasF[0], "presente"), 200, "corrige a presente");
+    expectStatus(await marcar(materiasF[1], "presente"), 200, "corrige a presente");
+    assert.equal((await avisos()).length, 0, "sin ausencias no queda aviso");
+    expectStatus(await familia.json("/notificaciones.php", "PUT", { preferencias: { reserva_creada: false } }), 400, "la familia no tiene avisos de reservas");
+  }
+
   expectStatus(await admin.request("/logout.php", { method: "POST" }), 200, "logout del admin");
   expectStatus(await admin.request("/usuarios.php"), 401, "sesion destruida tras logout");
 

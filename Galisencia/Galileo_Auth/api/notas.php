@@ -27,6 +27,10 @@ if ($method === "GET") {
     if (api_rol_es("Alumno")) {
         $where[] = "a.usuario_id = ?";
         $params[] = usuarioActual();
+    } elseif (api_rol_es("Tutor")) {
+        [$condicion, $extra] = api_sql_alumno_del_tutor(usuarioActual(), "a.id_alumno");
+        $where[] = $condicion;
+        array_push($params, ...$extra);
     } elseif (api_rol_es("Preceptor")) {
         [$condicion, $extra] = api_sql_curso_del_preceptor(usuarioActual(), "a.curso_id");
         $where[] = $condicion;

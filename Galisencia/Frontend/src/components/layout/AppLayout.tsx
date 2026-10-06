@@ -56,6 +56,10 @@ const NAV: Record<Rol, NavItem[]> = {
     { to: "/auditoria", label: "Auditoría", icon: <IconShield /> },
     { to: "/usuarios", label: "Usuarios", icon: <IconPeople /> },
   ],
+  tutor: [
+    { to: "/familia", label: "Familia", icon: <IconPeople /> },
+    { to: "/horarios", label: "Horarios", icon: <IconCalendar /> },
+  ],
 };
 
 const HOME: Record<Rol, string> = {
@@ -63,6 +67,7 @@ const HOME: Record<Rol, string> = {
   preceptor: "/preceptor",
   directivo: "/directivo",
   admin: "/admin",
+  tutor: "/familia",
 };
 
 const SIDEBAR_KEY = "galisencia.sidebar-collapsed";

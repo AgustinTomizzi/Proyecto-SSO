@@ -11,11 +11,12 @@ $usuarioId = (int) usuarioActual();
 function notif_preferencias($usuarioId)
 {
     global $pdo;
+    $rol = (string) (api_rol_actual() ?? "");
     $stmt = $pdo->prepare("SELECT tipo, habilitada FROM notificacion_preferencias WHERE usuario_id = ?");
     $stmt->execute([$usuarioId]);
     $guardadas = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     $respuesta = [];
-    foreach (notif_tipos() as $tipo => $etiqueta) {
+    foreach (notif_tipos_del_rol($rol) as $tipo => $etiqueta) {
         $respuesta[] = ["tipo" => $tipo, "etiqueta" => $etiqueta, "habilitada" => !isset($guardadas[$tipo]) || (int) $guardadas[$tipo] === 1];
     }
     return $respuesta;
@@ -44,7 +45,7 @@ $preferencias = $d["preferencias"] ?? null;
 if (!is_array($preferencias) || !$preferencias || array_is_list($preferencias)) {
     api_json(["ok" => false, "error" => "preferencias debe ser un objeto {tipo: true|false}"], 400);
 }
-$tipos = notif_tipos();
+$tipos = notif_tipos_del_rol((string) (api_rol_actual() ?? ""));
 foreach ($preferencias as $tipo => $valor) {
     if (!isset($tipos[$tipo]) || !is_bool($valor)) {
         api_json(["ok" => false, "error" => "tipo de notificación inválido o valor no booleano: $tipo"], 400);
@@ -55,6 +56,9 @@ foreach ($preferencias as $tipo => $valor) {
     $guardar->execute([$usuarioId, $tipo, $valor ? 1 : 0]);
 }
 // Apagar los recordatorios quita los pendientes del usuario.
+if (($preferencias["inasistencia"] ?? true) === false) {
+    $pdo->prepare("DELETE FROM notificaciones WHERE usuario_id = ? AND tipo = 'inasistencia' AND estado = 'pendiente'")->execute([$usuarioId]);
+}
 if (($preferencias["reserva_recordatorio"] ?? true) === false) {
     $pdo->prepare("DELETE FROM notificaciones WHERE usuario_id = ? AND tipo = 'reserva_recordatorio' AND estado = 'pendiente'")->execute([$usuarioId]);
 }

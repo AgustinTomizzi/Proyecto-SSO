@@ -9,6 +9,7 @@ const HOME = {
   preceptor: "/preceptor",
   directivo: "/directivo",
   admin: "/admin",
+  tutor: "/familia",
 } as const;
 
 function EyeIcon({ open }: { open: boolean }) {

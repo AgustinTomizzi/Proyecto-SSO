@@ -221,6 +221,14 @@ if ($method === "GET") {
             api_json(["ok" => false, "error" => "solo podés ver el horario de tu curso"], 403);
         }
         $filtros = ["hc.curso_id" => $propio ?? 0];
+    } elseif (api_rol_es("Tutor")) {
+        // Solo los cursos de sus alumnos vinculados; sin filtro, el del primero.
+        $cursosTutor = api_cursos_del_tutor(usuarioActual());
+        $pedido = $filtros["hc.curso_id"] ?? ($cursosTutor[0] ?? 0);
+        if (!in_array($pedido, $cursosTutor, true)) {
+            api_json(["ok" => false, "error" => "solo podés ver el horario del curso de tus alumnos"], 403);
+        }
+        $filtros = ["hc.curso_id" => $pedido];
     }
     if (!$filtros) {
         api_json(["ok" => false, "error" => "indicá cursoId, docenteId o aulaId"], 400);
