@@ -11,6 +11,7 @@ Idioma de la UI, mensajes de error y docs: español rioplatense.
 - `db/`: SQL en orden numérico. Docker los aplica solos en `initdb`
 - `tests/api.test.mjs`: pruebas de integración contra el stack Docker
 - `docs/`: documentación. Debe quedar siempre sincronizada con el código
+- `.claude/`: hooks (bloquean `down -v` del stack principal, ediciones a `.env` y a migraciones commiteadas; lint al editar), skills `/cerrar-tarea` y `/nueva-migracion`, agentes `revisor-rbac` y `sincronizador-docs`
 
 ## Comandos
 ```
@@ -35,5 +36,6 @@ cd Galiservas/Frontend && npm ci && npm run lint && npm run build
 ## Forma de trabajar
 - Una tarea a la vez, siguiendo `PLAN_CAMBIOS.md`. Commits chicos con mensajes claros.
 - Antes de borrar un archivo, buscar referencias con `grep -r`.
-- Después de cada tarea: lint, build de ambos frontends y tests de integración. Si algo no se pudo ejecutar, decirlo explícitamente.
+- Después de cada tarea: lint, build de ambos frontends y tests de integración (`/cerrar-tarea`; el stack de pruebas aislado es el proyecto `pruebas` en `:3100`). Si algo no se pudo ejecutar, decirlo explícitamente.
+- Cambios de esquema con `/nueva-migracion`.
 - No inventar endpoints ni columnas: leer primero el código y `db/`.

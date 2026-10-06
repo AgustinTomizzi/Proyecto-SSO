@@ -1,0 +1,20 @@
+# Override del stack de pruebas aislado (proyecto "pruebas" por defecto): sin
+# container_name fijos y con puertos propios, para no chocar con el stack
+# principal (3000/8025). Lo usa stack-pruebas.sh.
+services:
+  mysql:
+    container_name: !reset null
+  backend:
+    container_name: !reset null
+    ports: !reset []
+  frontend:
+    container_name: !reset null
+  galiservas:
+    container_name: !reset null
+  mailpit:
+    ports: !override
+      - "127.0.0.1:${PRUEBAS_MAILPIT:-8125}:8025"
+  proxy:
+    container_name: !reset null
+    ports: !override
+      - "${PRUEBAS_PUERTO:-3100}:80"

@@ -48,6 +48,14 @@ cd ../../Galiservas/Frontend && npm run lint && npm run build
 cd ../.. && node tests/api.test.mjs
 ```
 
+Atajo con scripts (los mismos que usa Claude Code en `/cerrar-tarea`): verificación estática y tests contra un stack aislado (proyecto Docker `pruebas`, puerto 3100), que no toca tu stack principal:
+
+```bash
+bash .claude/skills/cerrar-tarea/scripts/verificar.sh
+bash .claude/skills/cerrar-tarea/scripts/stack-pruebas.sh up
+bash .claude/skills/cerrar-tarea/scripts/stack-pruebas.sh test
+```
+
 Si algo no lo pudiste correr, aclaralo en el PR.
 
 ## 4. Subir la rama y abrir el PR

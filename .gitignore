@@ -12,3 +12,7 @@ Thumbs.db
 
 # Logs generales
 *.log
+
+# Claude Code: estado local (los hooks, skills y agentes de .claude/ sí se versionan)
+.claude/worktrees/
+.claude/settings.local.json
