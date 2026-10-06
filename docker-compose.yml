@@ -75,35 +75,52 @@ services:
     networks:
       - galisencia-network
 
-  # Frontend React (build estático servido por nginx) en el puerto 3000
+  # Frontend Galisencia (build estático servido por nginx). Sin puerto propio:
+  # se accede por el proxy en /.
   frontend:
     build:
       context: ./Galisencia/Frontend
       dockerfile: Dockerfile
     container_name: galisencia-frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      backend:
-        condition: service_healthy
     networks:
       - galisencia-network
     restart: unless-stopped
 
-  # Frontend Galiservas (React, build estático servido por nginx) en el puerto 5174
+  # Frontend Galiservas, compilado con base /galiservas/. Sin puerto propio:
+  # se accede por el proxy en /galiservas/.
   galiservas:
     build:
       context: ./Galiservas/Frontend
       dockerfile: Dockerfile
       args:
         VITE_API_URL: /api
-        VITE_GALISENCIA_URL: http://localhost:3000
+        VITE_GALISENCIA_URL: /
     container_name: galiservas-frontend
+    networks:
+      - galisencia-network
+    restart: unless-stopped
+
+  # Único punto de entrada: / -> Galisencia, /galiservas/ -> Galiservas,
+  # /api/ -> backend. Mismo origen para las dos apps, así la cookie de sesión
+  # se comparte sin CORS. PROXY_MODO=https usa proxy/https.conf y los
+  # certificados de TLS_CERT_DIR (fullchain.pem y privkey.pem).
+  proxy:
+    image: nginx:alpine
+    container_name: galisencia-proxy
     ports:
-      - "5174:80"
+      - "${PROXY_PUERTO:-3000}:80"
+      - "${PROXY_PUERTO_HTTPS:-3443}:443"
+    volumes:
+      - ./proxy/${PROXY_MODO:-http}.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./proxy/rutas.inc:/etc/nginx/rutas.inc:ro
+      - ${TLS_CERT_DIR:-./proxy/certs}:/etc/nginx/certs:ro
     depends_on:
       backend:
         condition: service_healthy
+      frontend:
+        condition: service_started
+      galiservas:
+        condition: service_started
     networks:
       - galisencia-network
     restart: unless-stopped

@@ -41,7 +41,7 @@ El catálogo demo de Galiservas incluye las aulas 208/209/210 y, en el Pañol, 3
 
 ## Inicio rápido con Docker
 
-`docker-compose.yml` levanta MySQL `ProyectoEstela`, el backend PHP (Galileo_Auth), Galisencia en <http://localhost:3000> y Galiservas en <http://localhost:5174>. Las contraseñas salen de `.env`, que no se versiona:
+`docker-compose.yml` levanta MySQL `ProyectoEstela`, el backend PHP (Galileo_Auth), y un proxy nginx que es el único punto de entrada: Galisencia en <http://localhost:3000/>, Galiservas en <http://localhost:3000/galiservas/> y la API en <http://localhost:3000/api/>. Al ser el mismo origen, las dos apps comparten la sesión sin CORS. Las contraseñas salen de `.env`, que no se versiona:
 
 ```bash
 cp .env.example .env   # y cambiar las contraseñas
@@ -52,7 +52,7 @@ docker compose up --build -d
 docker compose down
 ```
 
-El volumen conserva datos; `docker compose down -v` los elimina (pide confirmación antes de usarlo). El backend no publica puertos: la API se usa por `/api` de cada frontend. El enlace lateral "Galiservas" de Galisencia abre `http://localhost:5174` (configurable con `VITE_GALISERVAS_URL`). Detalles, variables y solución de problemas en [DOCKER_INSTRUCTIONS.md](DOCKER_INSTRUCTIONS.md).
+El volumen conserva datos; `docker compose down -v` los elimina (pide confirmación antes de usarlo). Solo el proxy publica puertos (`PROXY_PUERTO`, 3000 por defecto); para HTTPS ver [DOCKER_INSTRUCTIONS.md](DOCKER_INSTRUCTIONS.md). Los enlaces entre apps son relativos (`/galiservas/` y `/`). Detalles, variables y solución de problemas en [DOCKER_INSTRUCTIONS.md](DOCKER_INSTRUCTIONS.md).
 
 Pruebas de integración (con el stack levantado sobre una base recién creada):
 
@@ -71,10 +71,10 @@ npm run dev
 ```bash
 cd Galiservas/Frontend
 npm ci
-npm run dev -- --port 5174
+npm run dev
 ```
 
-Galisencia corre en `:5173` y su Vite proxifica `/api` a `http://localhost:80`. Galiservas llama a `http://localhost:8080/api` salvo que definas `VITE_API_URL`; para eso levantá el backend con `docker compose --profile dev up --build -d`.
+Galisencia corre en `:5173` y Galiservas en `:5174/galiservas/`. Los dos Vite reenvían `/api` a `http://localhost:8080` (o a `VITE_PROXY_API`): levantá el backend con `docker compose --profile dev up --build -d`. En desarrollo los enlaces entre apps se configuran con `VITE_GALISERVAS_URL` y `VITE_GALISENCIA_URL` (ver los `.env.example` de cada frontend).
 
 Antes de subir cambios: `npm run lint` y `npm run build` en ambos frontends, más `node tests/api.test.mjs`.
 

@@ -28,7 +28,7 @@ Estado demostrable hoy:
 
 ## Galisencia React por rol
 
-URL con Docker: `http://localhost:3000` (con `npm run dev`, `http://localhost:5173`).
+URL con Docker: `http://localhost:3000/` (con `npm run dev`, `http://localhost:5173`).
 
 | Rol UI | Inicio | Navegación visible | Función |
 |---|---|---|---|
@@ -49,7 +49,7 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 - **Administrador Académico y Administrador:** además editan: un módulo libre abre "Nueva clase" (materia, docente, aula, grupo, duración y vigencia) y una clase abre "Editar clase" o "Quitar clase". Los choques que detecta la API (docente o aula ocupados, celda tomada) se muestran en el editor.
 - **Exportación:** "Imprimir / PDF" (A4 apaisado, blanco y negro), "Excel" del curso y, para quien edita, "Excel de todos los cursos" (una hoja por curso).
 
-El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre la aplicación independiente en `http://localhost:5174`.
+El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre Galiservas en `/galiservas/`, en el mismo origen: no hace falta volver a iniciar sesión.
 
 ## Galiservas React por alcance
 
@@ -71,7 +71,7 @@ Al cargar, Galiservas llama `GET sesion.php`; si la cookie es válida recupera u
 6. Al cambiar de sistema bajo el mismo host/instancia PHP, la cookie puede identificar la misma sesión; cada sistema debe volver a validar su permiso.
 7. `api/logout.php` destruye sesión/cookie y ambos frontends lo utilizan. Galiservas redirige después a Galisencia.
 
-Con Docker, el nginx de cada frontend (`:3000` y `:5174`) reenvía `/api` al backend, así que la cookie se comparte sin CORS. En desarrollo, el Vite de Galisencia reenvía `/api` a `http://localhost:80` y Galiservas llama directo a `http://localhost:8080/api` (`docker compose --profile dev up`; con `APP_ENV=dev` el backend acepta CORS desde `localhost`). `localStorage` nunca concede permisos.
+Con Docker hay un solo origen: el proxy de entrada sirve Galisencia en `/`, Galiservas en `/galiservas/` y la API en `/api/`, así que la cookie se comparte sin CORS. En desarrollo, los Vite de las dos apps reenvían `/api` al backend del perfil `dev` (`docker compose --profile dev up`, `:8080`). `localStorage` nunca concede permisos.
 
 ## Guion de exposición (8 minutos)
 
@@ -107,7 +107,7 @@ Mostrar el Mermaid de `DATABASE.md`: usuario-rol-permiso, curso-alumno-asistenci
 
 ### 6:40-7:20 - Galiservas
 
-Abrir `http://localhost:5174`, restaurar/iniciar sesión, crear una reserva y explicar capacidad/solapamiento. Como Administrador, mostrar todas las reservas y sus estados.
+Abrir `http://localhost:3000/galiservas/` (la sesión de Galisencia ya vale), crear una reserva y explicar capacidad/solapamiento. Como Administrador, mostrar todas las reservas y sus estados.
 
 ### 7:20-8:00 - Cierre y seguridad
 

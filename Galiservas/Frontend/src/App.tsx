@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useState, type FormEvent, type ReactNode } from 'react'
 import {
+  API_URL,
   ApiError, cancelReservation, createReservation, createResource, getReservationReport, getReservations, getResources,
   logout, restoreSession, setReservationStatus, updateReservation, updateResource,
 } from './api'
@@ -665,7 +666,7 @@ function App() {
   if (authState === 'loading') return <SplashScreen/>
   if (authState === 'offline') return <StatusScreen kicker="Sin conexión" title="No pudimos llegar al servidor" tone="danger" actions={<>
     <button type="button" className="login__submit" onClick={() => void restore()}>Reintentar conexión</button>
-    <code className="status-screen__code">API: {import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}</code>
+    <code className="status-screen__code">API: {API_URL}</code>
   </>}><p>{authError}</p></StatusScreen>
   if (authState === 'forbidden') return <StatusScreen kicker="Acceso restringido" title="Tu rol no puede ingresar" actions={<a className="login__submit" href={GALISENCIA_URL}>Volver a Galisencia</a>}>
     <p>Galiservas está disponible únicamente para Preceptores, Docentes y Administradores.</p>

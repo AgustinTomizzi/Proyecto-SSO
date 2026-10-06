@@ -2,11 +2,10 @@
 
 ## Alcance y convención
 
-La API JSON está en `Galisencia/Galileo_Auth/api`. En Docker se accede por el nginx de cada frontend, en el mismo origen que la app:
+La API JSON está en `Galisencia/Galileo_Auth/api`. En Docker se accede por el proxy de entrada, en el mismo origen que las dos apps:
 
 ```text
-http://localhost:3000/api      (Galisencia)
-http://localhost:5174/api      (Galiservas)
+http://localhost:3000/api      (Galisencia en /, Galiservas en /galiservas/)
 http://127.0.0.1:8080/api      (solo con docker compose --profile dev)
 ```
 

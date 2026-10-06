@@ -4,13 +4,13 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Proxy al backend (PHP/Apache). En dev asume Apache en :80; ajustá el
-  // target si tu PHP corre en otro puerto. En Docker esto lo hace nginx.
-  // También podés setear VITE_API_URL al backend directamente.
+  // En desarrollo, /api se reenvía al backend del perfil dev de Docker
+  // (docker compose --profile dev up -> :8080) o a VITE_PROXY_API. En Docker
+  // lo hace el proxy de entrada (proxy/).
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:80',
+        target: process.env.VITE_PROXY_API ?? 'http://localhost:8080',
         changeOrigin: true,
       },
     },

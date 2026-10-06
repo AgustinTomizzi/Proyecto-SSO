@@ -7,8 +7,9 @@
 | `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` en orden (00-usuario-app → 01-schema → 02-seed → 03 → … → 12) |
 | `backend` | `Galisencia/Galileo_Auth` | interno | API JSON PHP + sesión compartida. Se conecta con el usuario `DB_APP_USER`, no con root |
 | `backend-dev-port` | imagen `nginx:alpine` | `127.0.0.1:8080` | Solo con `--profile dev`: expone la API para desarrollo local |
-| `frontend` | `Galisencia/Frontend` | `3000:80` | React de Galisencia servido por nginx (proxy `/api` → `backend`) |
-| `galiservas` | `Galiservas/Frontend` | `5174:80` | React de Galiservas servido por nginx (proxy `/api` → `backend`) |
+| `frontend` | `Galisencia/Frontend` | interno | React de Galisencia servido por nginx |
+| `galiservas` | `Galiservas/Frontend` | interno | React de Galiservas (base `/galiservas/`) servido por nginx |
+| `proxy` | imagen `nginx:alpine` + `proxy/` | `${PROXY_PUERTO:-3000}` (y `${PROXY_PUERTO_HTTPS:-3443}`) | Único punto de entrada: `/` → Galisencia, `/galiservas/` → Galiservas, `/api/` → backend |
 
 ## Uso
 
@@ -56,12 +57,20 @@ docker compose up --build -d
 
 ## URLs
 
-- Galisencia: <http://localhost:3000>
-- Galiservas: <http://localhost:5174>
-- API vía nginx de cada frontend: <http://localhost:3000/api> y <http://localhost:5174/api>
+- Galisencia: <http://localhost:3000/>
+- Galiservas: <http://localhost:3000/galiservas/>
+- API: <http://localhost:3000/api/>
 - Backend directo: <http://localhost:8080> solo con `--profile dev`
 
-El enlace lateral "Galiservas" dentro de Galisencia abre `VITE_GALISERVAS_URL`, por defecto `http://localhost:5174` (ver `Galisencia/Frontend/.env.example`).
+Las dos apps están en el mismo origen, así que comparten la cookie de sesión. El enlace lateral "Galiservas" abre `/galiservas/` y "Volver a Galisencia" abre `/`.
+
+## HTTPS
+
+1. Copiar el certificado y la clave como `fullchain.pem` y `privkey.pem` en una carpeta (por defecto `proxy/certs/`, que no se versiona) o indicar otra con `TLS_CERT_DIR`.
+2. En `.env`: `PROXY_MODO=https`, `PROXY_PUERTO=80`, `PROXY_PUERTO_HTTPS=443` y `APP_ENV=prod` (cookie `Secure`).
+3. `docker compose up -d proxy backend`.
+
+El proxy redirige HTTP a HTTPS y agrega HSTS (`proxy/https.conf`). La redirección asume el puerto 443 estándar.
 
 ## Zona horaria
 
@@ -71,12 +80,12 @@ Todo el sistema usa `America/Argentina/Buenos_Aires`: PHP (`date.timezone` en `d
 
 Se inyectan como `args` en el service `galiservas` del compose:
 
-- `VITE_API_URL=/api` → la SPA llama a `/api/...` y nginx lo proxya a `backend:80`.
-- `VITE_GALISENCIA_URL=http://localhost:3000` → botón "Volver a Galisencia".
+- `VITE_API_URL=/api` → la SPA llama a `/api/...` en el mismo origen y el proxy lo envía a `backend:80`.
+- `VITE_GALISENCIA_URL=/` → "Volver a Galisencia".
 
 ## Solución de problemas
 
-- **Aparece "Sin conexión con el servidor":** el frontend no llega a la API. Comprobar `docker compose ps` (`mysql`, `backend`, `frontend` y `galiservas` deben estar `running`/`healthy`) y `docker compose logs backend`.
+- **Aparece "Sin conexión con el servidor":** el frontend no llega a la API. Comprobar `docker compose ps` (`mysql`, `backend`, `frontend`, `galiservas` y `proxy` deben estar `running`/`healthy`) y `docker compose logs backend`.
 - **Cambios en el código no se reflejan:** reconstruir con `docker compose build` y reiniciar con `docker compose up -d`.
 - **Base corrupta o con datos inválidos:** usar `down -v` para reaplicar el seed (destructivo).
 - **Volumen creado antes de esta versión (el backend no conecta):** los scripts de `db/` solo corren al crear el volumen, así que falta el usuario de la app, la migración 05 y, si el volumen es anterior a los horarios, también la 04. Sin borrar datos:

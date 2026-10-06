@@ -86,7 +86,7 @@ export default function AppLayout() {
 
   if (!usuario) return null;
 
-  const galiservasUrl = (import.meta as any).env?.VITE_GALISERVAS_URL ?? "http://localhost:5174";
+  const galiservasUrl = (import.meta as any).env?.VITE_GALISERVAS_URL ?? "/galiservas/";
   const items = NAV[usuario.rol];
   const activeItem = items.find((item) => item.to === location.pathname) ?? items[0];
   const puedeAbrirGaliservas = usuario.permisos.includes("galiservas.acceder") && usuario.sistemas.includes("Galiservas");

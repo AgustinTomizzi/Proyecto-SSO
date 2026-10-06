@@ -14,10 +14,10 @@ docker compose up --build -d
 node tests/api.test.mjs
 ```
 
-Por defecto usa `http://localhost:3000/api`. Para otra URL (por ejemplo Galiservas):
+Por defecto usa `http://localhost:3000/api` (el proxy de entrada). Para otra URL:
 
 ```powershell
-$env:API_URL = "http://localhost:5174/api"
+$env:API_URL = "http://localhost:8080/api"   # backend del perfil dev
 node tests/api.test.mjs
 ```
 

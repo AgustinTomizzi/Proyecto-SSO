@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 
 # URLs inyectadas en tiempo de build (ver docker-compose.yml)
 ARG VITE_API_URL=/api
-ARG VITE_GALISENCIA_URL=http://localhost:3000
+ARG VITE_GALISENCIA_URL=/
 
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_GALISENCIA_URL=$VITE_GALISENCIA_URL

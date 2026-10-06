@@ -7,7 +7,7 @@ import { Icon } from './Icon'
 // Pantalla de ingreso con el mismo diseño que Galisencia (panel institucional
 // + tarjeta de acceso), conservando la validación y el control de acceso de Galiservas.
 
-const LOGO = '/logo-galiservas-sinfondo.png'
+const LOGO = `${import.meta.env.BASE_URL}logo-galiservas-sinfondo.png`
 const LOGO_ALT = 'Escudo de Galiservas — E.E.S.T. N.º 5 Galileo Galilei'
 const PILLS = ['Aulas', 'Pañol', 'Reservas']
 

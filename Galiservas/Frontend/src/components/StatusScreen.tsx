@@ -9,7 +9,7 @@ export function SplashScreen() {
     <div className="login status-screen">
       <CircuitPattern />
       <main className="status-screen__splash" aria-busy="true">
-        <img className="status-screen__splash-logo" src="/logo-galiservas-sinfondo.png" alt="Logotipo de Galiservas" />
+        <img className="status-screen__splash-logo" src={`${import.meta.env.BASE_URL}logo-galiservas-sinfondo.png`} alt="Logotipo de Galiservas" />
         <span className="login__spinner status-screen__spinner" />
         <p role="status">Conectando con Galileo Auth</p>
       </main>
@@ -27,7 +27,7 @@ export function StatusScreen({ kicker, title, tone = 'warning', children, action
         <div className="login__card status-screen__card">
           <div className="login__card-accent" />
           <div className="status-screen__head">
-            <img className="status-screen__logo" src="/logo-galiservas-sinfondo.png" alt="Logotipo de Galiservas" />
+            <img className="status-screen__logo" src={`${import.meta.env.BASE_URL}logo-galiservas-sinfondo.png`} alt="Logotipo de Galiservas" />
             <span className={`status-screen__mark status-screen__mark--${tone}`} aria-hidden="true">!</span>
           </div>
           <div className="login__card-header">

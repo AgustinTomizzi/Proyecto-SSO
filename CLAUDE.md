@@ -4,8 +4,9 @@ Monorepo escolar con dos SPA React y una API PHP/MySQL compartida (login y RBAC 
 Idioma de la UI, mensajes de error y docs: español rioplatense.
 
 ## Estructura
-- `Galisencia/Frontend`: React 19 + TypeScript + Vite (dev 5173, Docker 3000)
-- `Galiservas/Frontend`: React 19 + TypeScript + Vite (dev y Docker 5174)
+- `Galisencia/Frontend`: React 19 + TypeScript + Vite (dev 5173; Docker en `/` del proxy, puerto 3000)
+- `Galiservas/Frontend`: React 19 + TypeScript + Vite (dev 5174; Docker en `/galiservas/` del proxy)
+- `proxy/`: nginx de entrada único (`/`, `/galiservas/`, `/api/`), HTTP o HTTPS
 - `Galisencia/Galileo_Auth`: PHP 8.2 + PDO. API JSON en `api/*.php`; helpers en `includes/` (auth, permisos, auditoria); `config/database.php`
 - `db/`: SQL en orden numérico. Docker los aplica solos en `initdb`
 - `tests/api.test.mjs`: pruebas de integración contra el stack Docker

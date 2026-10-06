@@ -1,7 +1,7 @@
 import type { Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session, User } from './types'
 
 const configuredUrl = import.meta.env.VITE_API_URL?.trim()
-export const API_URL = (configuredUrl || 'http://localhost:8080/api').replace(/\/+$/, '')
+export const API_URL = (configuredUrl || '/api').replace(/\/+$/, '')
 
 type JsonRecord = Record<string, unknown>
 

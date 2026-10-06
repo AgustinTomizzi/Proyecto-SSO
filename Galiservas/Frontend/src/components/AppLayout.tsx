@@ -43,7 +43,7 @@ export function AppLayout({ session, nav, page, onNavigate, theme, onToggleTheme
       <aside className={`app__sidebar${drawer ? ' open' : ''}`}>
         <div className="app__sidebar-accent" />
         <div className="app__brand">
-          {!collapsed && <img className="app__brand-logo" src="/logo-galiservas-sinfondo.png" alt="Escudo de Galiservas" />}
+          {!collapsed && <img className="app__brand-logo" src={`${import.meta.env.BASE_URL}logo-galiservas-sinfondo.png`} alt="Escudo de Galiservas" />}
           {!collapsed && <div className="app__brand-copy"><div className="app__brand-name">Galiservas</div><div className="app__brand-sub">Sistema de Reservas</div></div>}
           <button type="button" className="app__collapse" onClick={toggleCollapsed} aria-label={collapsed ? 'Expandir menú' : 'Contraer menú'} aria-expanded={!collapsed}>
             <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} size={14} />
@@ -77,7 +77,7 @@ export function AppLayout({ session, nav, page, onNavigate, theme, onToggleTheme
       <div className="app__main">
         <header className="app__topbar">
           <button type="button" className="app__menu-btn" onClick={() => setDrawer(true)} aria-label="Abrir menú" aria-expanded={drawer}><Icon name="menu" size={19} /></button>
-          <div className="app__topbar-brand"><img src="/logo-galiservas-sinfondo.png" alt="" /><span><strong>Galiservas</strong><small>E.E.S.T. N.º 5</small></span></div>
+          <div className="app__topbar-brand"><img src={`${import.meta.env.BASE_URL}logo-galiservas-sinfondo.png`} alt="" /><span><strong>Galiservas</strong><small>E.E.S.T. N.º 5</small></span></div>
           <div className="app__topbar-separator" />
           <div className="app__breadcrumb"><span>Sistema</span><Icon name="chevron-right" size={12} /><strong aria-current="page">{activeItem.label}</strong></div>
           <div className="app__topbar-actions">

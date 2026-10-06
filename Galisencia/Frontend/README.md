@@ -6,7 +6,7 @@ Para info general del proyecto (roles, estado de módulos, cómo contribuir), mi
 
 ## Levantar en local
 
-La forma soportada es Docker Compose desde la raíz del repo: Galisencia queda en `http://localhost:3000` y nginx reenvía `/api` al backend.
+La forma soportada es Docker Compose desde la raíz del repo: Galisencia queda en `http://localhost:3000/` detrás del proxy de entrada, que también sirve Galiservas en `/galiservas/` y la API en `/api/`.
 
 Para desarrollar con recarga en caliente:
 
@@ -46,5 +46,5 @@ src/
 
 - Los datos salen de la API a través de `data/apiClient.ts` y `data/StoreContext.tsx`. Con sesión iniciada no hay datos mock: si la API falla, se muestra el aviso "Sin conexión con el servidor" con el botón Reintentar.
 - `data/mock.ts` solo aporta tipos, helpers y datos en memoria para cuando no hay sesión. No se guardan datos de alumnos en `localStorage`.
-- El enlace a Galiservas usa `VITE_GALISERVAS_URL` (por defecto `http://localhost:5174`) y solo aparece si el rol tiene acceso.
+- El enlace a Galiservas usa `VITE_GALISERVAS_URL` (por defecto `/galiservas/`, mismo origen) y solo aparece si el rol tiene acceso.
 - El menú de cada rol está definido en `NAV` de `components/layout/AppLayout.tsx`.

@@ -12,7 +12,7 @@ Mostrar también el límite conocido: el ciclo se deriva del año de cada fecha 
 - PHP + PDO: sesiones, validación, autorización RBAC y API JSON.
 - MySQL `ProyectoEstela`: identidad compartida, dominio académico y auditoría.
 - Cookie `PHPSESSID`: identidad de servidor; `localStorage` solo conserva estado visual (tema, menú), nunca datos de alumnos.
-- Docker Compose: MySQL, backend PHP, Galisencia en `http://localhost:3000` y Galiservas en `http://localhost:5174`. El backend no publica puerto (solo con `--profile dev`, en `http://127.0.0.1:8080/api`).
+- Docker Compose: MySQL, backend PHP, Galisencia en `http://localhost:3000/` y Galiservas en `http://localhost:3000/galiservas/`, detrás de un único proxy (mismo origen, misma sesión). El backend no publica puerto (solo con `--profile dev`, en `http://127.0.0.1:8080/api`).
 - Seguridad base: límite de intentos de login (429 tras 5 fallos en 15 min), header CSRF `X-Requested-With: galileo` en escrituras, headers de seguridad y sesión que vence a los 30 min de inactividad.
 
 ## Entidades que hay que saber explicar
@@ -60,7 +60,7 @@ Mostrar también el límite conocido: el ciclo se deriva del año de cada fecha 
 3. Login preceptor; mostrar curso y registrar un estado.
 4. Login directivo; mostrar promedio y alumnos en riesgo.
 5. Login `admin@...`; mostrar usuarios y auditoría.
-6. Abrir Galiservas `:5174`, elegir Aulas o Pañol, crear una reserva automática y mostrar la disponibilidad de la franja.
+6. Abrir Galiservas en `/galiservas/` (sin volver a iniciar sesión), elegir Aulas o Pañol, crear una reserva automática y mostrar la disponibilidad de la franja.
 7. Abrir el ER para conectar la demo con PK, FK y reglas.
 8. Cerrar con SSO, RBAC, trazabilidad y portabilidad.
 

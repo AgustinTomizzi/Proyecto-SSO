@@ -1,0 +1,3 @@
+# Certificados TLS para PROXY_MODO=https (fullchain.pem y privkey.pem). No se versionan.
+*
+!.gitignore
