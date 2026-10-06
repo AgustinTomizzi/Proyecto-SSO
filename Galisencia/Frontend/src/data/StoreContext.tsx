@@ -66,6 +66,25 @@ function normalizarAlumno(a: Partial<Alumno> & { id: string | number }): Alumno 
   };
 }
 
+interface PaginaAsistencias {
+  ok: true;
+  registros: RegistroAsistencia[];
+  total?: number;
+}
+
+// La API pagina las asistencias (máximo 500 por página): se recorren todas.
+async function cargarAsistencias(filtro = ""): Promise<RegistroAsistencia[]> {
+  const LIMITE = 500;
+  const todas: RegistroAsistencia[] = [];
+  for (let pagina = 1; pagina <= 200; pagina++) {
+    const separador = filtro ? "&" : "";
+    const data = await apiGet<PaginaAsistencias>(`/asistencias.php?${filtro}${separador}limit=${LIMITE}&page=${pagina}`);
+    todas.push(...data.registros);
+    if (data.registros.length < LIMITE || (data.total !== undefined && todas.length >= data.total)) break;
+  }
+  return todas;
+}
+
 // Los datos de demostración se generan en memoria y nunca se persisten en el
 // navegador: los datos reales de alumnos no deben quedar en localStorage.
 function datosDemo(): DatosDemo {
@@ -142,9 +161,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       try {
         if (usuario.rol === "alumno") {
           const [as, ma] = await Promise.all([
-            apiGet<{ ok: true; registros: RegistroAsistencia[] }>(
-              `/asistencias.php?alumnoId=${encodeURIComponent(usuario.id)}`
-            ),
+            cargarAsistencias(`alumnoId=${encodeURIComponent(usuario.id)}`),
             apiGet<{ ok: true; materias: Materia[] }>("/materias.php"),
           ]);
           if (cancelled) return;
@@ -160,19 +177,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           };
           setAlumnos([miAlumno]);
           setCursos([]);
-          setRegistros(normalizarRegistros(as.registros));
+          setRegistros(normalizarRegistros(as));
           setMaterias(normalizarMaterias(ma.materias));
         } else {
           const [al, cu, as, ma] = await Promise.all([
             apiGet<{ ok: true; alumnos: Alumno[] }>("/alumnos.php"),
             apiGet<{ ok: true; cursos: Curso[] }>("/cursos.php"),
-            apiGet<{ ok: true; registros: RegistroAsistencia[] }>("/asistencias.php"),
+            cargarAsistencias(),
             apiGet<{ ok: true; materias: Materia[] }>("/materias.php"),
           ]);
           if (cancelled) return;
           setAlumnos(al.alumnos.map(normalizarAlumno));
           setCursos(cu.cursos.map((c) => ({ ...c, id: String(c.id) })));
-          setRegistros(normalizarRegistros(as.registros));
+          setRegistros(normalizarRegistros(as));
           setMaterias(normalizarMaterias(ma.materias));
         }
         setErrorConexion(null);

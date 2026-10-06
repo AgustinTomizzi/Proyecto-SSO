@@ -63,10 +63,23 @@ if ($method === "GET") {
         array_push($params, ...$extra);
     }
 
-    $sql = "SELECT asi.id_asistencia AS id, asi.alumno_id AS alumnoId, asi.materia_id AS materiaId, m.nombre AS materia, asi.fecha, asi.estado FROM asistencias asi INNER JOIN alumnos a ON a.id_alumno = asi.alumno_id INNER JOIN materias m ON m.id_materia = asi.materia_id LEFT JOIN cursos c ON c.id_cursos = a.curso_id WHERE " . implode(" AND ", $where) . " ORDER BY asi.fecha, asi.id_asistencia";
-    $stmt = $pdo->prepare($sql);
+    // Paginación: limit 1..500 (500 por defecto) y page desde 1.
+    $limite = filter_var($_GET["limit"] ?? 500, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1, "max_range" => 500]]);
+    $pagina = filter_var($_GET["page"] ?? 1, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
+    if ($limite === false || $pagina === false) {
+        api_json(["ok" => false, "error" => "limit debe estar entre 1 y 500 y page ser un entero positivo"], 400);
+    }
+
+    $desde = " FROM asistencias asi INNER JOIN alumnos a ON a.id_alumno = asi.alumno_id INNER JOIN materias m ON m.id_materia = asi.materia_id LEFT JOIN cursos c ON c.id_cursos = a.curso_id WHERE " . implode(" AND ", $where);
+    $stmt = $pdo->prepare("SELECT COUNT(*)" . $desde);
     $stmt->execute($params);
-    api_json(["ok" => true, "registros" => $stmt->fetchAll()]);
+    $total = (int) $stmt->fetchColumn();
+
+    // limit y offset son enteros validados: se interpolan para evitar que el
+    // driver los envíe como texto.
+    $stmt = $pdo->prepare("SELECT asi.id_asistencia AS id, asi.alumno_id AS alumnoId, asi.materia_id AS materiaId, m.nombre AS materia, asi.fecha, asi.estado" . $desde . " ORDER BY asi.fecha, asi.id_asistencia LIMIT " . (int) $limite . " OFFSET " . (int) (($pagina - 1) * $limite));
+    $stmt->execute($params);
+    api_json(["ok" => true, "registros" => $stmt->fetchAll(), "total" => $total, "page" => $pagina, "limit" => $limite]);
 }
 
 api_requerir_permiso("asistencia.registrar");

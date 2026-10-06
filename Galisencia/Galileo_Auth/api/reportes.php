@@ -79,33 +79,35 @@ if ($ids) {
         $asistenciaWhere[] = $condicion;
         array_push($asistenciaParams, ...$extra);
     }
-    $stmt = $pdo->prepare("SELECT asi.alumno_id, m.nombre AS materia, asi.estado FROM asistencias asi JOIN materias m ON m.id_materia = asi.materia_id JOIN alumnos al ON al.id_alumno = asi.alumno_id WHERE " . implode(" AND ", $asistenciaWhere));
+    // Totales por alumno y materia calculados en la base (presente 1, tarde 0,5).
+    $stmt = $pdo->prepare("
+        SELECT asi.alumno_id, m.nombre AS materia, COUNT(*) AS total,
+               SUM(asi.estado = 'presente') AS presentes, SUM(asi.estado = 'tarde') AS tardes,
+               SUM(asi.estado = 'ausente') AS ausencias,
+               SUM(CASE asi.estado WHEN 'presente' THEN 1 WHEN 'tarde' THEN 0.5 ELSE 0 END) AS puntos
+        FROM asistencias asi
+        JOIN materias m ON m.id_materia = asi.materia_id
+        JOIN alumnos al ON al.id_alumno = asi.alumno_id
+        WHERE " . implode(" AND ", $asistenciaWhere) . "
+        GROUP BY asi.alumno_id, m.id_materia, m.nombre
+    ");
     $stmt->execute($asistenciaParams);
     $asistencias = $stmt->fetchAll();
 }
 
 $acumulados = [];
-foreach ($asistencias as $registro) {
-    $alumnoId = (int) $registro["alumno_id"];
-    $nombreMateria = $registro["materia"];
-    if (!isset($acumulados[$alumnoId])) {
-        $acumulados[$alumnoId] = ["total" => 0, "puntos" => 0, "materias" => []];
-    }
-    if (!isset($acumulados[$alumnoId]["materias"][$nombreMateria])) {
-        $acumulados[$alumnoId]["materias"][$nombreMateria] = ["total" => 0, "puntos" => 0, "presentes" => 0, "tardes" => 0, "ausencias" => 0];
-    }
-    $puntos = $registro["estado"] === "presente" ? 1 : ($registro["estado"] === "tarde" ? 0.5 : 0);
-    $acumulados[$alumnoId]["total"]++;
-    $acumulados[$alumnoId]["puntos"] += $puntos;
-    $acumulados[$alumnoId]["materias"][$nombreMateria]["total"]++;
-    $acumulados[$alumnoId]["materias"][$nombreMateria]["puntos"] += $puntos;
-    if ($registro["estado"] === "presente") {
-        $acumulados[$alumnoId]["materias"][$nombreMateria]["presentes"]++;
-    } elseif ($registro["estado"] === "tarde") {
-        $acumulados[$alumnoId]["materias"][$nombreMateria]["tardes"]++;
-    } else {
-        $acumulados[$alumnoId]["materias"][$nombreMateria]["ausencias"]++;
-    }
+foreach ($asistencias as $fila) {
+    $alumnoId = (int) $fila["alumno_id"];
+    $acumulados[$alumnoId] ??= ["total" => 0, "puntos" => 0, "materias" => []];
+    $acumulados[$alumnoId]["total"] += (int) $fila["total"];
+    $acumulados[$alumnoId]["puntos"] += (float) $fila["puntos"];
+    $acumulados[$alumnoId]["materias"][$fila["materia"]] = [
+        "total" => (int) $fila["total"],
+        "puntos" => (float) $fila["puntos"],
+        "presentes" => (int) $fila["presentes"],
+        "tardes" => (int) $fila["tardes"],
+        "ausencias" => (int) $fila["ausencias"],
+    ];
 }
 
 $umbral = 75;

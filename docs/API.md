@@ -162,8 +162,10 @@ Todos los filtros son opcionales, combinables y validados (`400` si son inválid
 **Alcance:** el Alumno ve solo sus registros, el Preceptor solo los de sus cursos y el Docente solo los de las materias que dicta en cada curso según la grilla vigente (un filtro fuera de alcance devuelve lista vacía). Directivo, Administrador Académico y Administrador ven todo.
 
 ```json
-{"ok":true,"registros":[{"id":"1","alumnoId":"1","materiaId":"1","materia":"Matemática","fecha":"2026-06-09","estado":"presente"}]}
+{"ok":true,"registros":[{"id":"1","alumnoId":"1","materiaId":"1","materia":"Matemática","fecha":"2026-06-09","estado":"presente"}],"total":1,"page":1,"limit":500}
 ```
+
+**Paginación:** `limit` (1 a 500, por defecto 500) y `page` (desde 1). `total` es la cantidad de registros que cumplen los filtros; para traer todo, pedir páginas hasta reunir `total`. Valores fuera de rango: `400`.
 
 ### Registrar o corregir: **Implementada**
 
@@ -341,7 +343,7 @@ Los usuarios se crean solo por esta API (el formulario PHP legado se eliminó).
 }
 ```
 
-Regla: porcentaje = `(presentes + 0,5 * tardes) / registros * 100`, redondeado. Riesgo es `< 75`. Un alumno sin registros tiene porcentaje `null` y no entra al promedio; sin datos, `promedio` es `null`. Otro método: `405`.
+Regla: porcentaje = `(presentes + 0,5 * tardes) / registros * 100`, redondeado. Los totales por alumno y materia se calculan en la base (`COUNT` y `SUM(CASE …)`), no fila por fila en PHP. Riesgo es `< 75`. Un alumno sin registros tiene porcentaje `null` y no entra al promedio; sin datos, `promedio` es `null`. Otro método: `405`.
 
 ## Auditoría
 

@@ -629,6 +629,17 @@ async function main() {
   assert.equal(asistenciasCiclo.body.registros.length, 48);
   assert.ok(asistenciasCiclo.body.registros.every((r) => String(r.fecha).startsWith("2026-")));
 
+  // Paginación de asistencias (limit máximo 500).
+  const pagina1 = await preceptor.request("/asistencias.php?ciclo=2026&limit=5&page=1");
+  const pagina2 = await preceptor.request("/asistencias.php?ciclo=2026&limit=5&page=2");
+  expectStatus(pagina2, 200, "segunda página de asistencias");
+  assert.equal(pagina1.body.registros.length, 5);
+  assert.equal(pagina1.body.total, asistenciasCiclo.body.total, "total independiente de la página");
+  assert.equal(pagina1.body.total, asistenciasCiclo.body.registros.length);
+  assert.ok(!pagina2.body.registros.some((r) => pagina1.body.registros.some((q) => q.id === r.id)), "páginas sin repetidos");
+  expectStatus(await preceptor.request("/asistencias.php?limit=501"), 400, "limit mayor a 500");
+  expectStatus(await preceptor.request("/asistencias.php?page=0"), 400, "page inválida");
+
   const reporteMateria = await preceptor.request("/reportes.php?materia=Matematica");
   expectStatus(reporteMateria, 200, "reporte filtrado por materia");
   assert.equal(reporteMateria.body.resumen.totalAlumnos, 12);
