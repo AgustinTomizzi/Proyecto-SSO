@@ -1,0 +1,11 @@
+/* Suplencias: usa los tokens y clases del tema (card, field, table, badge). */
+.suplencias { display: grid; gap: 18px; }
+.suplencias__form h3 { margin-bottom: 4px; }
+.suplencias__ayuda { margin: 0 0 14px; }
+.suplencias__motivo { grid-column: 1 / -1; }
+.suplencias__lista-head { margin-bottom: 14px; }
+.suplencias__periodo { white-space: nowrap; }
+.suplencias__error { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.suplencias-seccion { margin-top: 28px; }
+.suplencias-seccion > .page-head { margin-bottom: 14px; }
+.suplencias-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }

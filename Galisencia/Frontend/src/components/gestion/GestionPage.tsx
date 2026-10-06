@@ -4,9 +4,19 @@ import EmptyState from "../ui/EmptyState";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import type { Alumno } from "../../data/types";
 import { useToast } from "../ui/Toast";
+import { useAuth } from "../../auth/AuthContext";
+import SuplenciasPanel from "../suplencias/SuplenciasPanel";
+
+type Vista = "alumnos" | "suplencias";
 
 export default function GestionPage() {
-  const { alumnos, cursos, agregarAlumno, editarAlumno, borrarAlumno } = useStore();
+  const { alumnos, cursos, agregarAlumno, editarAlumno, borrarAlumno, reintentarCarga } = useStore();
+  const { usuario } = useAuth();
+  const puedeSuplencias =
+    (usuario?.permisos.includes("suplencias.crear") ?? false) &&
+    (usuario?.permisos.includes("cursos.asignar") ?? false);
+  const [vista, setVista] = useState<Vista>("alumnos");
+  const vistaActual: Vista = puedeSuplencias ? vista : "alumnos";
   const [form, setForm] = useState<Partial<Alumno>>({});
   const [editId, setEditId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -91,129 +101,164 @@ export default function GestionPage() {
       <div className="page-head">
         <div>
           <h1>Gestión académica</h1>
-          <p className="sub">Administrá altas, bajas y cambios de curso.</p>
+          <p className="sub">
+            {vistaActual === "suplencias"
+              ? "Asigná preceptores suplentes a cursos por un período."
+              : "Administrá altas, bajas y cambios de curso."}
+          </p>
         </div>
-        <span className="badge badge-brand">{alumnos.length} alumnos</span>
+        {vistaActual === "alumnos" && <span className="badge badge-brand">{alumnos.length} alumnos</span>}
       </div>
 
-      <div className="card card-pad-lg" style={{ marginBottom: 18 }}>
-        <h3 style={{ marginBottom: 14 }}>{editId ? "Editar alumno" : "Nuevo alumno"}</h3>
-        <div className="grid grid-2">
-          <div className="field" style={{ margin: 0 }}>
-            <label>Nombre</label>
-            <input
-              className="input"
-              value={form.nombre ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-              placeholder="Ej. María"
-            />
-          </div>
-          <div className="field" style={{ margin: 0 }}>
-            <label>Apellido</label>
-            <input
-              className="input"
-              value={form.apellido ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, apellido: e.target.value }))}
-              placeholder="Ej. Pérez"
-            />
-          </div>
-          <div className="field" style={{ margin: 0 }}>
-            <label>Curso</label>
-            <select
-              className="select"
-              value={form.curso ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, curso: e.target.value }))}
+      {puedeSuplencias && (
+        <div className="suplencias-tabs" role="tablist" aria-label="Secciones de gestión académica">
+          {([
+            ["alumnos", "Alumnos"],
+            ["suplencias", "Suplencias"],
+          ] as const).map(([clave, texto]) => (
+            <button
+              key={clave}
+              type="button"
+              role="tab"
+              id={`gestion-tab-${clave}`}
+              aria-selected={vistaActual === clave}
+              aria-controls={`gestion-panel-${clave}`}
+              className={`btn btn-sm ${vistaActual === clave ? "btn-soft" : "btn-ghost"}`}
+              onClick={() => setVista(clave)}
             >
-              <option value="">Seleccionar…</option>
-              {CURSO_OPCIONES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+              {texto}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {vistaActual === "suplencias" ? (
+        <div role="tabpanel" id="gestion-panel-suplencias" aria-labelledby="gestion-tab-suplencias">
+          <SuplenciasPanel onCambio={reintentarCarga} />
+        </div>
+      ) : (
+        <div role={puedeSuplencias ? "tabpanel" : undefined} id="gestion-panel-alumnos" aria-labelledby={puedeSuplencias ? "gestion-tab-alumnos" : undefined}>
+
+        <div className="card card-pad-lg" style={{ marginBottom: 18 }}>
+          <h3 style={{ marginBottom: 14 }}>{editId ? "Editar alumno" : "Nuevo alumno"}</h3>
+          <div className="grid grid-2">
+            <div className="field" style={{ margin: 0 }}>
+              <label>Nombre</label>
+              <input
+                className="input"
+                value={form.nombre ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+                placeholder="Ej. María"
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Apellido</label>
+              <input
+                className="input"
+                value={form.apellido ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, apellido: e.target.value }))}
+                placeholder="Ej. Pérez"
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Curso</label>
+              <select
+                className="select"
+                value={form.curso ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, curso: e.target.value }))}
+              >
+                <option value="">Seleccionar…</option>
+                {CURSO_OPCIONES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Email</label>
+              <input
+                className="input"
+                type="email"
+                value={form.email ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="opcional"
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>DNI</label>
+              <input
+                className="input"
+                inputMode="numeric"
+                value={form.dni ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, dni: e.target.value }))}
+                placeholder="Solo números (opcional)"
+              />
+            </div>
           </div>
-          <div className="field" style={{ margin: 0 }}>
-            <label>Email</label>
-            <input
-              className="input"
-              type="email"
-              value={form.email ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              placeholder="opcional"
-            />
-          </div>
-          <div className="field" style={{ margin: 0 }}>
-            <label>DNI</label>
-            <input
-              className="input"
-              inputMode="numeric"
-              value={form.dni ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, dni: e.target.value }))}
-              placeholder="Solo números (opcional)"
-            />
+          {error && <p className="asistencia-dashboard__error" role="alert" style={{ marginTop: 14 }}>{error}</p>}
+          <div className="row" style={{ marginTop: 14 }}>
+            <button
+              className="btn btn-primary"
+              onClick={guardar}
+              disabled={guardando}
+            >
+              {guardando ? "Guardando..." : editId ? "Guardar cambios" : "Agregar alumno"}
+            </button>
+            {editId && (
+              <button
+                className="btn btn-ghost"
+                onClick={() => {
+                  setForm({});
+                  setEditId(null);
+                }}
+              >
+                Cancelar
+              </button>
+            )}
           </div>
         </div>
-        {error && <p className="asistencia-dashboard__error" role="alert" style={{ marginTop: 14 }}>{error}</p>}
-        <div className="row" style={{ marginTop: 14 }}>
-          <button
-            className="btn btn-primary"
-            onClick={guardar}
-            disabled={guardando}
-          >
-            {guardando ? "Guardando..." : editId ? "Guardar cambios" : "Agregar alumno"}
-          </button>
-          {editId && (
-            <button
-              className="btn btn-ghost"
-              onClick={() => {
-                setForm({});
-                setEditId(null);
-              }}
-            >
-              Cancelar
-            </button>
+
+        <div className="card card-pad-lg">
+          {alumnos.length === 0 ? (
+            <EmptyState icon="👥" title="No hay alumnos" description="Agregá un alumno con el formulario de arriba para empezar." />
+          ) : (
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Alumno</th>
+                    <th>Curso</th>
+                    <th>Email</th>
+                    <th style={{ width: 150 }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alumnos.map((a) => (
+                    <tr key={a.id}>
+                      <td style={{ fontWeight: 600 }}>{`${a.nombre} ${a.apellido}`.trim()}</td>
+                      <td>{a.curso}</td>
+                      <td className="muted text-sm">{a.email}</td>
+                      <td>
+                        <div className="row" style={{ gap: 8 }}>
+                          <button className="btn btn-soft btn-sm" onClick={() => editar(a)}>
+                            Editar
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => setConfirmId(a.id)}
+                          >
+                            Borrar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-      </div>
-
-      <div className="card card-pad-lg">
-        {alumnos.length === 0 ? (
-          <EmptyState icon="👥" title="No hay alumnos" description="Agregá un alumno con el formulario de arriba para empezar." />
-        ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Alumno</th>
-                  <th>Curso</th>
-                  <th>Email</th>
-                  <th style={{ width: 150 }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {alumnos.map((a) => (
-                  <tr key={a.id}>
-                    <td style={{ fontWeight: 600 }}>{`${a.nombre} ${a.apellido}`.trim()}</td>
-                    <td>{a.curso}</td>
-                    <td className="muted text-sm">{a.email}</td>
-                    <td>
-                      <div className="row" style={{ gap: 8 }}>
-                        <button className="btn btn-soft btn-sm" onClick={() => editar(a)}>
-                          Editar
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => setConfirmId(a.id)}
-                        >
-                          Borrar
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <ConfirmDialog
         open={confirmId !== null}

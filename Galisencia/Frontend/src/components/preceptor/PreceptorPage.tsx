@@ -5,6 +5,8 @@ import { esMismaMateria } from "../../data/types";
 import type { Alumno, EstadoAsistencia } from "../../data/types";
 import { apiGet } from "../../data/apiClient";
 import { hoyLocal } from "../../data/fecha";
+import { useAuth } from "../../auth/AuthContext";
+import SuplenciasPanel from "../suplencias/SuplenciasPanel";
 import "./PreceptorPage.css";
 
 const ESTADOS: { key: EstadoAsistencia; label: string; cls: string }[] = [
@@ -53,7 +55,9 @@ function mensajeError(error: unknown): string {
 }
 
 export default function PreceptorPage() {
-  const { cursos, alumnos, registros, materias, marcarAsistencia, editarAlumno, borrarAlumno } = useStore();
+  const { cursos, alumnos, registros, materias, marcarAsistencia, editarAlumno, borrarAlumno, reintentarCarga } = useStore();
+  const { usuario } = useAuth();
+  const puedeSuplir = usuario?.permisos.includes("suplencias.crear") ?? false;
   const { push } = useToast();
   const opcionesCurso = useMemo(() => cursos.map((c) => ({ ...c, label: `${c.anio} ${c.division}` })), [cursos]);
   const [curso, setCurso] = useState("");
@@ -274,6 +278,18 @@ export default function PreceptorPage() {
           <button className={`btn ${guardado ? "btn-success" : "btn-primary"}`} onClick={guardar} disabled={guardando || guardado || !materia}>{guardando ? "Guardando..." : guardado ? "Guardado" : "Guardar registro"}</button>
         </div>
       </div>
+
+      {puedeSuplir && (
+        <section className="suplencias-seccion" aria-labelledby="mis-suplencias-titulo">
+          <div className="page-head">
+            <div>
+              <h2 id="mis-suplencias-titulo">Mis suplencias</h2>
+              <p className="sub">Cubrí temporalmente otro curso cuando falta su preceptor.</p>
+            </div>
+          </div>
+          <SuplenciasPanel onCambio={reintentarCarga} />
+        </section>
+      )}
 
       {accion && <div className="modal-overlay" onClick={cerrarModal}>
         <div className="modal" role="dialog" aria-modal="true" aria-label={accion.tipo === "curso" ? "Cambiar curso" : "Dar de baja"} onClick={(e) => e.stopPropagation()}>

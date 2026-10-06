@@ -49,6 +49,11 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 - **Administrador Académico y Administrador:** además editan: un módulo libre abre "Nueva clase" (materia, docente, aula, grupo, duración y vigencia) y una clase abre "Editar clase" o "Quitar clase". Los choques que detecta la API (docente o aula ocupados, celda tomada) se muestran en el editor.
 - **Exportación:** "Imprimir / PDF" (A4 apaisado, blanco y negro), "Excel" del curso y, para quien edita, "Excel de todos los cursos" (una hoja por curso).
 
+### Suplencias
+
+- **Preceptor:** al pie de "Registrar asistencia", la sección "Mis suplencias" permite cubrir un curso ajeno (desde hoy, hasta 30 días, motivo opcional) y quitar las propias. Mientras la suplencia está vigente, el curso aparece en el selector de asistencia.
+- **Administrador Académico y Administrador:** en "Gestión académica", la pestaña "Suplencias" asigna cualquier preceptor a cualquier curso y lista todas las suplencias con su estado (Vigente, Próxima, Finalizada).
+
 El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre Galiservas en `/galiservas/`, en el mismo origen: no hace falta volver a iniciar sesión.
 
 ## Galiservas React por alcance
