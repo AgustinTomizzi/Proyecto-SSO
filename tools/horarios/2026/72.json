@@ -1,0 +1,27 @@
+{
+  "curso": "72",
+  "titulo": "7mo 2da",
+  "clases": [
+    {"dia": 1, "desde": "14:00", "hasta": "15:00", "grupo": 0, "materia": "Bases de Datos", "aula": "201", "docente": "Gallegos"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Eval. Proyectos.", "aula": "203", "docente": "Iriso"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Proy. Dis. Imp. Sistemas Comput.", "aula": "205", "docente": "DiazA"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Proy. Dis. Imp. Sistemas Comput.", "aula": null, "docente": "Bogado"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Proy. Dis. Imp. Sistemas Comput.", "aula": null, "docente": "Bogado"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Proy. Dis. Imp. Sistemas Comput.", "aula": null, "docente": "DiazA"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Inst. Mant. Rep. Sist. Comput.", "aula": "207", "docente": "MartinezD"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Inst. Mant. Rep. Sist. Comput.", "aula": "208", "docente": "Gallegos"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Inst. Mant. Rep. Sist. Comput.", "aula": "208", "docente": "Gallegos"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Inst. Mant. Rep. Sist. Comput.", "aula": "203", "docente": "MartinezD"},
+    {"dia": 2, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Inst. Mant. Rep. Redes", "aula": "203", "docente": "MartinezD"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Bases de Datos", "aula": "208", "docente": "Gallegos"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Modelos y Sistemas.", "aula": null, "docente": "Reynoso"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Inst. Mant. Rep. Redes", "aula": "208", "docente": "Salgado"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Empren. Productivos.", "aula": "7", "docente": "Vandevoorde"},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Inst. Mant. Rep. Redes", "aula": "108", "docente": "RodriguezH"},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Inst. Mant. Rep. Redes", "aula": "202", "docente": "Fusaro"}
+  ],
+  "dudas": [
+    "Sin aula visible en: Lunes 17:30-19:30 grupo 2 (Proy. Dis. Imp. Sistemas Comput., Bogado), Lunes 19:40-21:40 ambos grupos (Bogado / DiazA) y Miércoles 17:30-19:30 Modelos y Sistemas. (Reynoso); se puso null.",
+    "Este curso no tiene recuadros con formas irregulares: todos coinciden con los módulos."
+  ]
+}

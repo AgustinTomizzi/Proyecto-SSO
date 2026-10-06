@@ -1,0 +1,34 @@
+{
+  "curso": "42",
+  "titulo": "4to 2da Mult.",
+  "clases": [
+    {"dia": 1, "desde": "08:40", "hasta": "09:40", "grupo": 0, "materia": "Física", "aula": "302", "docente": "MartinezH"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Física", "aula": "302", "docente": "MartinezH"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Inglés", "aula": "12", "docente": "Scuderi"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Salud y Adolescencia", "aula": "12", "docente": "Abate, J."},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Química", "aula": "5", "docente": "Capul"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Matemática", "aula": "5", "docente": "Rivarola, J."},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Educación Física", "aula": null, "docente": "Balverdi"},
+    {"dia": 3, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Literatura", "aula": "302", "docente": "Fabregas"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Historia", "aula": "302", "docente": "Pereira"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Guión", "aula": "302", "docente": "Fabregas"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Morfología Visual", "aula": "201", "docente": "Chiarore"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Morfología Visual", "aula": "201", "docente": "Chiarore"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Geografía", "aula": "7", "docente": "Braian"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Morfología Visual", "aula": "201", "docente": "Chiarore"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Guión", "aula": "302", "docente": "Fabregas"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Morfología Sonora", "aula": "301", "docente": "Bergna / Ramirez"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Morfología Visual", "aula": "201", "docente": "Chiarore"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Morfología Sonora", "aula": "301", "docente": "Bergna / Ramirez"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Matemática", "aula": "4", "docente": "Arrieta"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Lenguajes Artísticos/Música", "aula": "4", "docente": "Bergna"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Morfología Sonora", "aula": "4", "docente": "Bergna"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Introducción a los Multimedios", "aula": "210", "docente": "Rubio"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Introducción a los Multimedios", "aula": "210", "docente": "Rubio"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Morfología Sonora", "aula": "205", "docente": "Bergna"}
+  ],
+  "dudas": [
+    "Martes 13:00-15:00 Educación Física: el recuadro no muestra aula; se dejó null.",
+    "Docente \"Bergna / Ramirez\" (Jueves 15:15-17:15 grupo 1 y Jueves 17:30-19:30 grupo 2): son dos docentes en un mismo recuadro; se copió tal cual."
+  ]
+}

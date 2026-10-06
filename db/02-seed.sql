@@ -87,17 +87,50 @@ INSERT INTO usuarios (nombre, apellido, email, contrasena, rol_id) VALUES
 -- quedan marcadas para que su primer ingreso exija elegir una contrasena propia.
 UPDATE usuarios SET debe_cambiar_password = 1;
 
+-- Los 39 cursos del colegio (horarios.galileo.edu.ar): 1º A-H, 2º y 3º A-F,
+-- 4º a 6º divisiones 1-5 y 7º 1-4. Los diez primeros conservan los ids de la
+-- demo anterior para que alumnos y preceptores sigan en sus cursos. turno es el
+-- turno principal; la grilla puede usar varios turnos.
 INSERT INTO cursos (anio, division, turno, preceptor, preceptor_id) VALUES
   ('1', 'A', 'Mañana', 'Carlos Ramirez', (SELECT id_usuario FROM usuarios WHERE email = 'preceptor@galileo.edu.ar')),
   ('1', 'B', 'Mañana', 'Laura Lagos', (SELECT id_usuario FROM usuarios WHERE email = 'preceptora.lagos@galileo.edu.ar')),
   ('2', 'A', 'Mañana', 'Carlos Ramirez', (SELECT id_usuario FROM usuarios WHERE email = 'preceptor@galileo.edu.ar')),
-  ('2', 'B', 'Tarde', 'Laura Lagos', (SELECT id_usuario FROM usuarios WHERE email = 'preceptora.lagos@galileo.edu.ar')),
+  ('2', 'B', 'Mañana', 'Laura Lagos', (SELECT id_usuario FROM usuarios WHERE email = 'preceptora.lagos@galileo.edu.ar')),
   ('3', 'A', 'Mañana', 'Carlos Ramirez', (SELECT id_usuario FROM usuarios WHERE email = 'preceptor@galileo.edu.ar')),
-  ('3', 'B', 'Tarde', 'Laura Lagos', (SELECT id_usuario FROM usuarios WHERE email = 'preceptora.lagos@galileo.edu.ar')),
-  ('4', 'A', 'Mañana', NULL, NULL),
-  ('4', 'B', 'Tarde', NULL, NULL),
-  ('5', 'A', 'Mañana', NULL, NULL),
-  ('6', 'A', 'Tarde', NULL, NULL);
+  ('3', 'B', 'Mañana', 'Laura Lagos', (SELECT id_usuario FROM usuarios WHERE email = 'preceptora.lagos@galileo.edu.ar')),
+  ('4', '1', 'Mañana', NULL, NULL),
+  ('4', '2', 'Mañana', NULL, NULL),
+  ('5', '1', 'Mañana', NULL, NULL),
+  ('6', '1', 'Mañana', NULL, NULL),
+  ('1', 'C', 'Mañana', NULL, NULL),
+  ('1', 'D', 'Mañana', NULL, NULL),
+  ('1', 'E', 'Mañana', NULL, NULL),
+  ('1', 'F', 'Mañana', NULL, NULL),
+  ('1', 'G', 'Mañana', NULL, NULL),
+  ('1', 'H', 'Mañana', NULL, NULL),
+  ('2', 'C', 'Mañana', NULL, NULL),
+  ('2', 'D', 'Mañana', NULL, NULL),
+  ('2', 'E', 'Mañana', NULL, NULL),
+  ('2', 'F', 'Mañana', NULL, NULL),
+  ('3', 'C', 'Mañana', NULL, NULL),
+  ('3', 'D', 'Mañana', NULL, NULL),
+  ('3', 'E', 'Mañana', NULL, NULL),
+  ('3', 'F', 'Mañana', NULL, NULL),
+  ('4', '3', 'Mañana', NULL, NULL),
+  ('4', '4', 'Mañana', NULL, NULL),
+  ('4', '5', 'Mañana', NULL, NULL),
+  ('5', '2', 'Mañana', NULL, NULL),
+  ('5', '3', 'Mañana', NULL, NULL),
+  ('5', '4', 'Mañana', NULL, NULL),
+  ('5', '5', 'Mañana', NULL, NULL),
+  ('6', '2', 'Mañana', NULL, NULL),
+  ('6', '3', 'Mañana', NULL, NULL),
+  ('6', '4', 'Mañana', NULL, NULL),
+  ('6', '5', 'Mañana', NULL, NULL),
+  ('7', '1', 'Tarde', NULL, NULL),
+  ('7', '2', 'Tarde', NULL, NULL),
+  ('7', '3', 'Tarde', NULL, NULL),
+  ('7', '4', 'Tarde', NULL, NULL);
 
 INSERT INTO alumnos (nombre, apellido, dni, direccion, email, curso_id, estado) VALUES
   ('Sofia','Gutierrez','46000001','Belgrano 101','alumno@galileo.edu.ar',1,1),
@@ -139,14 +172,6 @@ INSERT INTO alumnos (nombre, apellido, dni, direccion, email, curso_id, estado) 
 INSERT INTO materias (nombre) VALUES
   ('Matemática'),('Lengua'),('Historia'),('Biología'),('Inglés'),('Física'),('Ed. Técnica'),('Geografía'),('Química'),('Ciudadanía');
 
--- Modulos de 40 minutos por turno; los recreos ocupan una franja propia.
-INSERT INTO franjas_horarias (turno, orden, hora_inicio, hora_fin, es_recreo) VALUES
-  ('Mañana', 1, '07:30', '08:10', 0), ('Mañana', 2, '08:10', '08:50', 0), ('Mañana', 3, '08:50', '09:00', 1),
-  ('Mañana', 4, '09:00', '09:40', 0), ('Mañana', 5, '09:40', '10:20', 0), ('Mañana', 6, '10:20', '10:30', 1),
-  ('Mañana', 7, '10:30', '11:10', 0), ('Mañana', 8, '11:10', '11:50', 0),
-  ('Tarde', 1, '13:00', '13:40', 0), ('Tarde', 2, '13:40', '14:20', 0), ('Tarde', 3, '14:20', '14:30', 1),
-  ('Tarde', 4, '14:30', '15:10', 0), ('Tarde', 5, '15:10', '15:50', 0), ('Tarde', 6, '15:50', '16:00', 1),
-  ('Tarde', 7, '16:00', '16:40', 0), ('Tarde', 8, '16:40', '17:20', 0);
 
 DELIMITER $$
 CREATE PROCEDURE seed_datos_academicos()

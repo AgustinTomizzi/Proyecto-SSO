@@ -1,0 +1,191 @@
+{
+  "curso": "2F",
+  "titulo": "2do. \"F\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "Marquez"
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "9",
+      "docente": "Giordan"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "9",
+      "docente": "Arrieta"
+    },
+    {
+      "dia": 1,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "9",
+      "docente": "Ybarra"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "9",
+      "docente": "Pereira"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "9",
+      "docente": "Scuderi"
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "9",
+      "docente": "Orefice"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "9",
+      "docente": "Giordan"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "9",
+      "docente": "Vazza"
+    },
+    {
+      "dia": 3,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "9",
+      "docente": "Pujol"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR3",
+      "docente": "Massimino"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "207",
+      "docente": "Villa"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR4",
+      "docente": null
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR2",
+      "docente": "Barreiro"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "9",
+      "docente": "Keller"
+    },
+    {
+      "dia": 4,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "TR5",
+      "docente": "Crocitta"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR4",
+      "docente": "Loto, D."
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR3",
+      "docente": "Barreiro"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": null,
+      "docente": "Balverdi"
+    },
+    {
+      "dia": 5,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "3",
+      "docente": "Arrieta"
+    }
+  ],
+  "dudas": [
+    "Martes 13:00-15:00 y Miércoles 13:00-15:00: la imagen dice \"Biologìa\" y \"Geografìa\" con acento grave (ì); se copió tal cual.",
+    "Jueves 09:55-11:55 grupo 1 (Procedimientos Técnicos, TR4): no figura docente.",
+    "Viernes 09:55-11:55 (Educación Física, Balverdi): no figura aula."
+  ]
+}

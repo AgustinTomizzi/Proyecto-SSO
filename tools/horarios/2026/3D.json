@@ -1,0 +1,191 @@
+{
+  "curso": "3D",
+  "titulo": "3ro. \"D\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "203",
+      "docente": "Coone"
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "11",
+      "docente": "Kladusan"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "11",
+      "docente": "Ferraguti"
+    },
+    {
+      "dia": 1,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR2",
+      "docente": "Coone"
+    },
+    {
+      "dia": 1,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR3",
+      "docente": "Capul"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "205",
+      "docente": "Parol"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR4",
+      "docente": "La Rocca"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "7",
+      "docente": "Kladusan"
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": null,
+      "docente": "Mosto"
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "205",
+      "docente": "Lezcano"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "4",
+      "docente": "Vazza"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "4",
+      "docente": "Sisti"
+    },
+    {
+      "dia": 3,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "6",
+      "docente": "Chazarreta"
+    },
+    {
+      "dia": 3,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": "Playón",
+      "docente": "VeraS"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "5",
+      "docente": "Valenzuela"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "5",
+      "docente": "Ferraguti"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "AT5",
+      "docente": "MartinezM"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "302",
+      "docente": "Braian"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "302",
+      "docente": "Susmel"
+    },
+    {
+      "dia": 5,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR1",
+      "docente": "Yannace"
+    }
+  ],
+  "dudas": [
+    "Viernes 07:40-09:40 y Miércoles 13:00-15:00: la imagen dice \"Geografìa\" y \"Biologìa\" con acento grave (ì); se copió tal cual.",
+    "Martes 13:00-15:00 grupo 1 (Sistemas Tecnológicos, Mosto): no figura aula.",
+    "Lunes 07:40-09:40 grupo 2: Procedimientos Técnicos en aula \"203\" (aula común, no taller); se copió tal cual."
+  ]
+}

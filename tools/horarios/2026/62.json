@@ -1,0 +1,36 @@
+{
+  "curso": "62",
+  "titulo": "6to 2da",
+  "clases": [
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Sistemas Digitales", "aula": "F/Q", "docente": "Coone"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Literatura", "aula": "AT4", "docente": "Fabregas"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "208", "docente": "Gallegos"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": null, "docente": "Schluzar"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "207", "docente": "Vallone"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Aplicaciones", "aula": "204", "docente": "Lerzundi"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Laboratorio de Aplicaciones", "aula": "201", "docente": "Vallone"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Filosofía", "aula": "2", "docente": "SciartinoM"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "108", "docente": "Schluzar"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Seguridad Informática", "aula": "208", "docente": "Yapura"},
+    {"dia": 3, "desde": "13:00", "hasta": "14:00", "grupo": 0, "materia": "Investigación Operativa", "aula": "208", "docente": "Reynoso"},
+    {"dia": 3, "desde": "14:00", "hasta": "15:00", "grupo": 0, "materia": "Sistemas Digitales", "aula": "208", "docente": "Coone"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Matemática Aplicada", "aula": "2", "docente": "DiLisio"},
+    {"dia": 3, "desde": "17:30", "hasta": "18:30", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "208", "docente": "Gallegos"},
+    {"dia": 3, "desde": "18:30", "hasta": "19:30", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "208", "docente": "Gallegos"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Laboratorio de Programación", "aula": "108", "docente": "Fusaro"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "208", "docente": "YolyE"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Física", "aula": "Campo", "docente": "Bonifaci"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Investigación Operativa", "aula": "AT2", "docente": "Reynoso"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Arte", "aula": "AT2", "docente": "Cortesi, C."},
+    {"dia": 4, "desde": "17:30", "hasta": "18:30", "grupo": 0, "materia": "Seguridad Informática", "aula": "2", "docente": "Yapura"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "208", "docente": "Gallegos"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Inglés", "aula": "3", "docente": "Brandi"},
+    {"dia": 5, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "108", "docente": "Salgado"},
+    {"dia": 5, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "209", "docente": "Minujen"},
+    {"dia": 5, "desde": "19:40", "hasta": "21:40", "grupo": 0, "materia": "Derechos Trabajo", "aula": "3", "docente": "TorresM"}
+  ],
+  "dudas": [
+    "Lunes 17:30-19:30 grupo 2 (Laboratorio de Sistemas Operativos, Schluzar): el recuadro no muestra aula; se puso null.",
+    "Miércoles 17:30-18:30 y 18:30-19:30 grupo 1: aparecen como dos recuadros separados de 1 módulo con el mismo contenido (Laboratorio de Sistemas Operativos, 208, Gallegos); se registraron por separado."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "curso": "74",
+  "titulo": "7mo 4ta Prog.",
+  "clases": [
+    {"dia": 1, "desde": "16:15", "hasta": "17:15", "grupo": 0, "materia": "Modelos y Sistemas.", "aula": "302", "docente": "Sanczyk"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Proyecto Diseño e Implementación de Sistemas Computacionales", "aula": "204", "docente": "Sanczyk"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Proyecto de Desarrollo de Software para Plataformas Móviles", "aula": "108", "docente": "Estela"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Proyecto Diseño e Implementación de Sistemas Computacionales", "aula": "204", "docente": "Sanczyk"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Proyecto de Desarrollo de Software para Plataformas Móviles", "aula": "108", "docente": "Estela"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Eval. Proyectos.", "aula": "12", "docente": "Bolañez"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Modelos y Sistemas.", "aula": "12", "docente": "Sanczyk"},
+    {"dia": 2, "desde": "19:40", "hasta": "21:40", "grupo": 0, "materia": "Organización y Métodos", "aula": "12", "docente": "Ocampo"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Proyecto de Desarrollo de Software para Plataformas Móviles", "aula": "205", "docente": "Sanczyk"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Proyecto de Implementación se Sitios Web Dinámicos", "aula": "203", "docente": "Estela"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Proyecto de Desarrollo de Software para Plataformas Móviles", "aula": "205", "docente": "Sanczyk"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Proyecto de Implementación se Sitios Web Dinámicos", "aula": "203", "docente": "Estela"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Empren. Productivos.", "aula": "6", "docente": "Vandevoorde"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Proyecto de Implementación se Sitios Web Dinámicos", "aula": "210", "docente": "Sanczyk"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Proyecto Diseño e Implementación de Sistemas Computacionales", "aula": "205", "docente": "Estela"},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Proyecto de Implementación se Sitios Web Dinámicos", "aula": "210", "docente": "Sanczyk"},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Proyecto Diseño e Implementación de Sistemas Computacionales", "aula": "205", "docente": "Estela"}
+  ],
+  "dudas": [
+    "\"Proyecto de Implementación se Sitios Web Dinámicos\" (Mi y Ju, 17:30-21:40): la imagen dice \"se\" (probable errata de \"de\"); se copió tal cual.",
+    "\"Proyecto Diseño e Implementación de Sistemas Computacionales\" (Lu grupo 1 y Ju grupo 2): en la imagen la palabra está cortada en dos renglones (\"Computacionale\" / \"s\"); se unió como \"Computacionales\".",
+    "Los recuadros de este curso coinciden con los módulos (los textos largos se superponen con el aula/docente, pero los bordes son regulares)."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "curso": "1A",
+  "titulo": "1ro. \"A\"",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Naturales", "aula": "AT5", "docente": "Raffo, Y."},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "P. del Lenguaje", "aula": "AT1", "docente": "SantaCruz"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Inglés", "aula": "AT5", "docente": "Susi"},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Naturales", "aula": "AT5", "docente": "Raffo, Y."},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Matemática", "aula": "AT5", "docente": "Petrof"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Sistemas Tecnológicos", "aula": "TR2", "docente": "DiDonato"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Procedimientos Técnicos", "aula": "TR3", "docente": "Abelaira"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Educación Artística", "aula": "AT5", "docente": "Reinhold"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "C. Ciudadanía", "aula": "AT5", "docente": "Keller"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Procedimientos Técnicos", "aula": "TR4", "docente": "Frazzeto"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Lenguajes Tecnológicos", "aula": "AT1", "docente": "Villa"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Sociales", "aula": "AT5", "docente": "Andrés"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Matemática", "aula": "AT5", "docente": "Petrof"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "P. del Lenguaje", "aula": "AT1", "docente": "SantaCruz"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Física", "aula": "Playón", "docente": "Balverdi"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Ciencias Sociales", "aula": "AT5", "docente": "Andrés"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Lenguajes Tecnológicos", "aula": "ATN", "docente": "GonzalezA"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Sistemas Tecnológicos", "aula": "TR2", "docente": "Barreiro"}
+  ],
+  "dudas": []
+}

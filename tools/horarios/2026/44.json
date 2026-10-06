@@ -1,0 +1,31 @@
+{
+  "curso": "44",
+  "titulo": "4to 4ta",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Geografía", "aula": "3", "docente": "Arrascayta"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Matemática", "aula": "3", "docente": "Bruno"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Historia", "aula": "205", "docente": "Aimone"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "108", "docente": "Choque"},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "204", "docente": "Ivanoff"},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "207", "docente": "SalcedoM"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Salud y Adolescencia", "aula": "AT1", "docente": "GimenezK"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Inglés", "aula": "8", "docente": "MartinezM"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Literatura", "aula": "8", "docente": "Fabregas"},
+    {"dia": 3, "desde": "07:40", "hasta": "09:40", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "210", "docente": "SalcedoM"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Química", "aula": "F/Q", "docente": "VelazquezM"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Tecnologías Electrónicas", "aula": "8", "docente": "SosaP"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "207", "docente": "BenitezM"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "210", "docente": "Ivanoff"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Aplicaciones", "aula": "301", "docente": "Vallone"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Programación", "aula": "108", "docente": "Chiarore"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Física", "aula": "12", "docente": "SosaP"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Educación Física", "aula": "Campo", "docente": "Balverdi"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Matemática", "aula": "11", "docente": "Bruno"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "108", "docente": "MartinezD"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "209", "docente": "SalcedoM"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "202", "docente": "MartinezD"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Laboratorio de Aplicaciones", "aula": "108", "docente": "Vallone"},
+    {"dia": 5, "desde": "15:15", "hasta": "16:15", "grupo": 0, "materia": "Física", "aula": "AT5", "docente": "SosaP"}
+  ],
+  "dudas": []
+}

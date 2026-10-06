@@ -1,0 +1,25 @@
+{
+  "curso": "1C",
+  "titulo": "1ro. \"C\"",
+  "clases": [
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Educación Artística", "aula": "2", "docente": "Aguilo"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Educación Física", "aula": "Patio", "docente": "GomezH"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "C. Ciudadanía", "aula": "2", "docente": "Keller"},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Matemática", "aula": "2", "docente": "FernandezF"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "P. del Lenguaje", "aula": "2", "docente": "SantaCruz"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Lenguajes Tecnológicos", "aula": "TR4", "docente": "Vandevoorde"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Procedimientos Técnicos", "aula": "TR1", "docente": "Bronimann"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Procedimientos Técnicos", "aula": "TR4", "docente": "Mosto"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Sistemas Tecnológicos", "aula": null, "docente": "Loaiza W"},
+    {"dia": 3, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Inglés", "aula": "2", "docente": "Scuderi"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Ciencias Sociales", "aula": "2", "docente": "Ibarra G."},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Ciencias Naturales", "aula": "2", "docente": "Vazza"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Sociales", "aula": "2", "docente": "Ibarra G."},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Matemática", "aula": "2", "docente": "FernandezF"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Sistemas Tecnológicos", "aula": "TR4", "docente": "Loto, D."},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Lenguajes Tecnológicos", "aula": "108", "docente": "Barneche"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Naturales", "aula": "2", "docente": "Vazza"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "P. del Lenguaje", "aula": "2", "docente": "SantaCruz"}
+  ],
+  "dudas": ["Martes 15:15-17:15 grupo 2 Sistemas Tecnológicos (Loaiza W): el recuadro no tiene aula, se dejó null"]
+}

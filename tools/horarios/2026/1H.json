@@ -1,0 +1,29 @@
+{
+  "curso": "1H",
+  "titulo": "1ro. \"H\"",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Artística", "aula": "7", "docente": "Rodriguez, L."},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Inglés", "aula": "7", "docente": "Susi"},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "P. del Lenguaje", "aula": "11", "docente": "Giordan"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Matemática", "aula": "11", "docente": "VázquezS"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Ciencias Naturales", "aula": "11", "docente": "Gerez"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Ciencias Sociales", "aula": "11", "docente": "SciartinoS"},
+    {"dia": 3, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Naturales", "aula": null, "docente": "Gerez"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Lenguajes Tecnológicos", "aula": "205", "docente": "Choque"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Lenguajes Tecnológicos", "aula": null, "docente": "Villa"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Procedimientos Técnicos", "aula": null, "docente": null},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Procedimientos Técnicos", "aula": "TR4", "docente": "Mosto"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Sociales", "aula": "ATN", "docente": "SciartinoS"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "P. del Lenguaje", "aula": "ATN", "docente": "Giordan"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Física", "aula": "Patio", "docente": "Masot E."},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "C. Ciudadanía", "aula": "6", "docente": "Paz M"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Sistemas Tecnológicos", "aula": "TR3", "docente": "DeBelis"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Sistemas Tecnológicos", "aula": "TR4", "docente": "CanterosM"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Matemática", "aula": "10", "docente": "VázquezS"}
+  ],
+  "dudas": [
+    "Miércoles 07:40-09:40 Ciencias Naturales (Gerez): el recuadro no tiene aula, se dejó null",
+    "Miércoles 09:55-11:55 grupo 2 Lenguajes Tecnológicos (Villa): el recuadro no tiene aula, se dejó null",
+    "Miércoles 13:00-15:00 grupo 1 Procedimientos Técnicos: el recuadro no tiene aula ni docente, se dejaron null"
+  ]
+}

@@ -355,7 +355,9 @@ async function main() {
     expectStatus(await admin.json("/cursos.php", "PUT", { id: 2, preceptorId: preceptorOriginalCurso2 }), 200, "restaura preceptor del curso 2");
   }
 
-  // ---- Grilla de horarios (horario_grilla.php) ----
+  // ---- Grilla de horarios (horario_grilla.php), formato del colegio ----
+  // El seed trae los horarios reales: las pruebas usan el vespertino (módulos
+  // 9 a 12), libre en 1º y 2º año, y un aula libre en esos módulos.
   {
     const docenteA = await crearUsuario("docente.a", "Docente");
     const docenteB = await crearUsuario("docente.b", "Docente");
@@ -366,76 +368,95 @@ async function main() {
     expectStatus(catalogosGrilla, 200, "catálogos para editar la grilla");
     assert.ok(catalogosGrilla.body.docentes.some((d) => Number(d.id) === docenteA.id), "docentes con rol Docente");
     assert.ok(!catalogosGrilla.body.docentes.some((d) => Number(d.id) === 3), "un preceptor no aparece como docente");
-    assert.ok(catalogosGrilla.body.aulas.some((a) => a.nombre === "Aula 208"), "aulas disponibles");
+    assert.ok(catalogosGrilla.body.aulas.some((a) => a.nombre === "Playón" && a.compartida), "aulas compartidas");
     expectStatus(await alumno.request("/horario_grilla.php?catalogos=1"), 403, "alumno no ve los catálogos de edición");
-    const grillaCurso1 = await academica.request("/horario_grilla.php?cursoId=1&fecha=2026-04-06");
-    expectStatus(grillaCurso1, 200, "grilla del curso 1");
-    const franjas = grillaCurso1.body.franjas;
-    assert.ok(franjas.length === 8 && franjas.every((f) => f.turno === "Mañana"), "franjas del turno del curso");
-    const modulo1 = franjas.find((f) => f.orden === 1);
-    const recreo = franjas.find((f) => f.esRecreo);
-    const franjaTarde = (await academica.request("/horario_grilla.php?cursoId=4")).body.franjas.find((f) => f.orden === 1);
-    const AULA_208 = 3;
-    const base = { cursoId: 1, dia: 1, franjaId: modulo1.id, materiaId: idMateria("Matemática"), docenteId: docenteA.id, aulaId: AULA_208, vigenteDesde: "2026-03-01" };
 
-    const creada = await academica.json("/horario_grilla.php", "POST", base);
-    expectStatus(creada, 201, "alta de clase en la grilla");
-    assert.equal(creada.body.clase.materia, "Matemática");
-    assert.equal(creada.body.clase.horaInicio, modulo1.horaInicio);
-    const claseId = creada.body.clase.id;
-    const creadas = [claseId];
+    const grillaReal = await academica.request("/horario_grilla.php?cursoId=1&fecha=2026-04-06");
+    expectStatus(grillaReal, 200, "grilla real del curso 1º A");
+    assert.equal(grillaReal.body.franjas.length, 12, "doce módulos de 07:40 a 21:40");
+    assert.equal(grillaReal.body.franjas[0].horaInicio, "07:40");
+    assert.equal(grillaReal.body.franjas[11].horaFin, "21:40");
+    assert.ok(grillaReal.body.clases.length >= 30, "el seed carga el horario real de 1º A");
+    assert.ok(grillaReal.body.clases.some((c) => c.grupo === 1) && grillaReal.body.clases.some((c) => c.grupo === 2), "celdas partidas en grupos");
+    assert.equal(grillaReal.body.curso.division, "A");
+    const franja = (orden) => grillaReal.body.franjas.find((f) => f.orden === orden);
+
+    // Un aula no compartida libre el viernes en el vespertino.
+    let aulaLibre = null;
+    for (const aula of catalogosGrilla.body.aulas.filter((a) => !a.compartida)) {
+      const ocupacion = await academica.request(`/horario_grilla.php?aulaId=${aula.id}&fecha=2026-04-06`);
+      if (!ocupacion.body.clases.some((c) => c.dia === 5 && c.orden >= 9)) { aulaLibre = aula; break; }
+    }
+    assert.ok(aulaLibre, "hay un aula libre para la prueba");
+    const playon = catalogosGrilla.body.aulas.find((a) => a.nombre === "Playón");
+
+    const base = { cursoId: 1, dia: 5, franjaId: franja(9).id, grupo: 0, materiaId: idMateria("Matemática"), docenteId: docenteA.id, aulaId: aulaLibre.id, vigenteDesde: "2026-03-01" };
+    const creadas = [];
     try {
-      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, materiaId: idMateria("Lengua"), docenteId: docenteB.id, aulaId: null }), 409, "misma celda del curso");
+      const bloque = await academica.json("/horario_grilla.php", "POST", { ...base, franjaHastaId: franja(10).id });
+      expectStatus(bloque, 201, "alta de un bloque de dos módulos");
+      assert.equal(bloque.body.clases.length, 2);
+      assert.deepEqual(bloque.body.clases.map((c) => c.orden), [9, 10]);
+      creadas.push(...bloque.body.clases.map((c) => c.id));
+
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, grupo: 1, docenteId: docenteB.id, aulaId: null }), 409, "un grupo no entra donde cursa el curso completo");
       const choqueDocente = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, aulaId: null });
       expectStatus(choqueDocente, 409, "docente en dos cursos a la vez");
       assert.match(choqueDocente.body.error, /docente/);
       const choqueAula = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, docenteId: docenteB.id });
-      expectStatus(choqueAula, 409, "aula ocupada por dos clases");
+      expectStatus(choqueAula, 409, "aula ocupada por dos cursos");
       assert.match(choqueAula.body.error, /aula/);
-      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, franjaId: recreo.id }), 400, "clase en un recreo");
-      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, franjaId: franjaTarde.id }), 400, "franja de otro turno");
+      // El aula de la clase 1º A se cambia al Playón (compartida) y otro curso la usa a la vez.
+      expectStatus(await academica.json("/horario_grilla.php", "PUT", { ids: bloque.body.clases.map((c) => c.id), aulaId: playon.id }), 200, "pasar el bloque al Playón");
+      const compartida = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, docenteId: null, aulaId: playon.id });
+      expectStatus(compartida, 201, "aula compartida admite otra clase a la vez");
+      creadas.push(...compartida.body.clases.map((c) => c.id));
+      expectStatus(await academica.json("/horario_grilla.php", "PUT", { ids: bloque.body.clases.map((c) => c.id), aulaId: aulaLibre.id }), 200, "volver al aula original");
+
+      // Celda partida: grupos 1 y 2 conviven en el mismo módulo.
+      const grupo1 = await academica.json("/horario_grilla.php", "POST", { ...base, franjaId: franja(11).id, grupo: 1, docenteId: docenteB.id, aulaId: null });
+      expectStatus(grupo1, 201, "grupo 1");
+      creadas.push(grupo1.body.clase.id);
+      const grupo2 = await academica.json("/horario_grilla.php", "POST", { ...base, franjaId: franja(11).id, grupo: 2, materiaId: idMateria("Lengua"), docenteId: null, aulaId: null });
+      expectStatus(grupo2, 201, "grupo 2 en paralelo");
+      creadas.push(grupo2.body.clase.id);
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, franjaId: franja(11).id, grupo: 2, docenteId: null, aulaId: null }), 409, "el mismo grupo dos veces");
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, franjaId: franja(11).id, grupo: 0, docenteId: null, aulaId: null }), 409, "curso completo sobre grupos");
+
       expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, dia: 6 }), 400, "día fuera de lunes a viernes");
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, grupo: 3 }), 400, "grupo inválido");
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, franjaId: franja(10).id, franjaHastaId: franja(9).id }), 400, "bloque hacia arriba");
       expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, docenteId: 3, aulaId: null }), 400, "docente sin rol Docente");
-      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, docenteId: null, aulaId: 4 }), 400, "recurso que no es un aula");
 
-      // Otro curso en otro módulo con el mismo docente y aula: no hay choque.
-      const modulo2 = franjas.find((f) => f.orden === 2);
-      const otraClase = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, franjaId: modulo2.id });
-      expectStatus(otraClase, 201, "mismo docente y aula en otro módulo");
-      creadas.push(otraClase.body.clase.id);
-
-      // Cerrar la vigencia libera el horario para el ciclo siguiente.
-      const cerrada = await academica.json("/horario_grilla.php", "PUT", { id: claseId, vigenteHasta: "2026-12-31" });
-      expectStatus(cerrada, 200, "cerrar la vigencia de una clase");
-      assert.equal(cerrada.body.clase.vigenteHasta, "2026-12-31");
-      const siguiente = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, aulaId: null, vigenteDesde: "2027-03-01" });
-      expectStatus(siguiente, 201, "mismo docente en otro curso con vigencia posterior");
+      // Editar el bloque entero y cerrar su vigencia libera el horario.
+      const editado = await academica.json("/horario_grilla.php", "PUT", { ids: bloque.body.clases.map((c) => c.id), materiaId: idMateria("Historia"), vigenteHasta: "2026-12-31" });
+      expectStatus(editado, 200, "editar un bloque completo");
+      assert.ok(editado.body.clases.every((c) => c.materia === "Historia" && c.vigenteHasta === "2026-12-31"));
+      expectStatus(await academica.json("/horario_grilla.php", "PUT", { ids: bloque.body.clases.map((c) => c.id), dia: 4 }), 400, "mover un bloque de a varias clases");
+      const siguiente = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 2, vigenteDesde: "2027-03-01" });
+      expectStatus(siguiente, 201, "mismo docente y aula en otro curso con vigencia posterior");
       creadas.push(siguiente.body.clase.id);
-      expectStatus(await academica.json("/horario_grilla.php", "PUT", { id: claseId, vigenteHasta: "2026-01-01" }), 400, "vigencia hasta anterior a desde");
 
       const porDocente = await academica.request(`/horario_grilla.php?docenteId=${docenteA.id}&fecha=2026-04-06`);
       expectStatus(porDocente, 200, "grilla por docente");
-      assert.deepEqual(porDocente.body.clases.map((c) => c.cursoId).sort(), ["1", "3"]);
-      const porAula = await academica.request(`/horario_grilla.php?aulaId=${AULA_208}&fecha=2026-04-06`);
-      expectStatus(porAula, 200, "grilla por aula");
-      assert.equal(porAula.body.clases.length, 2);
+      assert.ok(porDocente.body.clases.every((c) => c.cursoId === "1"));
 
-      // Alumno: solo su curso (seed: 1 A).
+      // Alumno: solo su curso (seed: 1º A).
       expectStatus(await alumno.request("/horario_grilla.php?cursoId=3"), 403, "alumno pide la grilla de otro curso");
       const grillaAlumno = await alumno.request("/horario_grilla.php?fecha=2026-04-06");
       expectStatus(grillaAlumno, 200, "alumno ve la grilla de su curso");
       assert.ok(grillaAlumno.body.clases.length > 0 && grillaAlumno.body.clases.every((c) => c.cursoId === "1"));
-      expectStatus(await alumno.json("/horario_grilla.php", "POST", { ...base, cursoId: 1, dia: 2 }), 403, "alumno no gestiona la grilla");
+      expectStatus(await alumno.json("/horario_grilla.php", "POST", { ...base, dia: 2 }), 403, "alumno no gestiona la grilla");
 
-      const auditoriaGrilla = await admin.request("/auditoria.php?accion=horarios.gestionar&entidad=horario_clase&limit=20");
+      const auditoriaGrilla = await admin.request("/auditoria.php?accion=horarios.gestionar&entidad=horario_clase&limit=40");
       expectStatus(auditoriaGrilla, 200, "auditoría de la grilla");
-      assert.ok(auditoriaGrilla.body.registros.some((r) => r.entidadId === String(claseId) && r.detalle?.accion === "editar"));
+      assert.ok(auditoriaGrilla.body.registros.some((r) => r.entidadId === String(bloque.body.clases[0].id) && r.detalle?.accion === "editar"));
     } finally {
-      for (const id of creadas) {
-        expectStatus(await academica.json("/horario_grilla.php", "DELETE", { id }), 200, `borra la clase ${id}`);
+      if (creadas.length) {
+        expectStatus(await academica.json("/horario_grilla.php", "DELETE", { ids: creadas }), 200, "borra las clases de prueba");
       }
     }
-    expectStatus(await academica.json("/horario_grilla.php", "DELETE", { id: claseId }), 404, "clase ya borrada");
+    expectStatus(await academica.json("/horario_grilla.php", "DELETE", { id: creadas[0] }), 404, "clase ya borrada");
   }
 
   // ---- Alcance del Docente según la grilla (cursos y materias que dicta) ----
@@ -443,7 +464,7 @@ async function main() {
     const docenteId = Number((await docente.request("/sesion.php")).body.usuario.id);
     const materiasCat = (await academica.request("/materias.php")).body.materias;
     const idMat = (nombre) => materiasCat.find((m) => m.nombre === nombre).id;
-    const modulo = (await academica.request("/horario_grilla.php?cursoId=1")).body.franjas.find((f) => f.orden === 4);
+    const modulo = (await academica.request("/horario_grilla.php?cursoId=1")).body.franjas.find((f) => f.orden === 12);
     const clase = await academica.json("/horario_grilla.php", "POST", {
       cursoId: 1, dia: 3, franjaId: modulo.id, materiaId: idMat("Matemática"), docenteId, vigenteDesde: "2026-01-01",
     });

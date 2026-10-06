@@ -258,29 +258,31 @@ Exige alumno activo, `materiaId` (o `materia`) del catálogo y `nota` numérica 
 
 ## Grilla de horarios
 
-Cada celda (`horario_clases`) es curso + día (1 = lunes … 5 = viernes) + franja, con materia, docente y aula opcionales y una vigencia.
+Formato del colegio: 12 módulos de 60 minutos (mañana, tarde y vespertino) compartidos por todos los cursos. Cada fila de `horario_clases` es curso + día (1 = lunes … 5 = viernes) + módulo + grupo (0 = curso completo; 1 y 2 = mitades en paralelo), con materia, docente y aula opcionales y una vigencia. Una clase de varios módulos son varias filas; la API permite operar el bloque entero.
 
 ### Consultar: **Implementada**
 
-`GET /horario_grilla.php?cursoId=1[&fecha=2026-04-06]`, permiso `horarios.ver`. También acepta `docenteId` o `aulaId` en lugar de `cursoId` (al menos uno es obligatorio, `400`). Devuelve las clases vigentes a `fecha` (por defecto hoy, en hora argentina) y las franjas del turno del curso (o de todos los turnos si se filtra por docente o aula). El Alumno solo ve su curso: sin filtro recibe el suyo y otro curso da `403`.
+`GET /horario_grilla.php?cursoId=1[&fecha=2026-04-06]`, permiso `horarios.ver`. También acepta `docenteId` o `aulaId` en lugar de `cursoId` (al menos uno, `400`). Devuelve los 12 módulos, el curso (si se filtró por curso) y las clases vigentes a `fecha` (por defecto hoy, en hora argentina). El Alumno solo ve su curso: sin filtro recibe el suyo y otro curso da `403`. El Docente puede pedir sus propias clases con `docenteId`.
 
 ```json
-{"ok":true,"fecha":"2026-04-06",
- "franjas":[{"id":"1","turno":"Mañana","orden":1,"horaInicio":"07:30","horaFin":"08:10","esRecreo":false}],
- "clases":[{"id":"12","cursoId":"1","curso":"1 A","dia":1,"franjaId":"1","horaInicio":"07:30","horaFin":"08:10","materiaId":"1","materia":"Matemática","docenteId":"6","docente":"Diego Medina","aulaId":"3","aula":"Aula 208","vigenteDesde":"2026-03-01","vigenteHasta":null}]}
+{"ok":true,"fecha":"2026-04-06","curso":{"id":"1","anio":"1","division":"A","turno":"Mañana"},
+ "franjas":[{"id":"1","orden":1,"turno":"Mañana","horaInicio":"07:40","horaFin":"08:40"}],
+ "clases":[{"id":"12","cursoId":"1","curso":"1 A","dia":1,"franjaId":"1","orden":1,"turno":"Mañana","horaInicio":"07:40","horaFin":"08:40","grupo":0,"materiaId":"14","materia":"Ciencias Naturales","docenteId":"40","docente":"Raffo, Y.","aulaId":"7","aula":"AT5","vigenteDesde":"2026-03-02","vigenteHasta":null}]}
 ```
 
-### Crear, editar y eliminar celdas: **Implementada**
+`GET /horario_grilla.php?catalogos=1` (permiso `horarios.gestionar`): `docentes` (usuarios con rol Docente) y `aulas` activas (`{id, nombre, compartida}`) para el editor.
+
+### Crear, editar y eliminar: **Implementada**
 
 Permiso `horarios.gestionar` (Administrador Académico y Administrador).
 
-- `POST /horario_grilla.php` con `{"cursoId":1,"dia":1,"franjaId":1,"materiaId":1,"docenteId":6,"aulaId":3,"vigenteDesde":"2026-03-01","vigenteHasta":null}`. `docenteId`, `aulaId` y `vigenteHasta` son opcionales; `vigenteDesde` por defecto es hoy. Responde `201` con la `clase`.
-- `PUT /horario_grilla.php` con `id` y los campos a cambiar (los omitidos se conservan; `null` borra docente, aula o fin de vigencia). Por ejemplo, cerrar una clase al fin del ciclo: `{"id":12,"vigenteHasta":"2026-12-31"}`.
-- `DELETE /horario_grilla.php` con `{"id":12}`.
+- `POST /horario_grilla.php` con `{"cursoId":1,"dia":1,"franjaId":1,"franjaHastaId":2,"grupo":0,"materiaId":14,"docenteId":40,"aulaId":7,"vigenteDesde":"2026-03-02","vigenteHasta":null}`. `franjaHastaId` (último módulo del bloque, hasta 4 módulos), `grupo`, `docenteId`, `aulaId` y `vigenteHasta` son opcionales; `vigenteDesde` por defecto es hoy. Crea una fila por módulo y responde `201` con `clases` (y `clase`, la primera).
+- `PUT /horario_grilla.php` con `id` (una clase) o `ids` (un bloque, hasta 12) y los campos a cambiar: `materiaId`, `docenteId`, `aulaId`, `grupo`, `vigenteDesde`, `vigenteHasta` (`null` borra docente, aula o fin de vigencia). `cursoId`, `dia` y `franjaId` solo se pueden cambiar editando una clase sola (`400` con varias). Todo el bloque se valida y guarda en una transacción.
+- `DELETE /horario_grilla.php` con `{"id":12}` o `{"ids":[12,13]}`.
 
-Validaciones (`400`): día 1 a 5, franja del turno del curso y que no sea recreo, materia del catálogo, docente con rol Docente, aula que sea un recurso tipo aula activo, vigencia con `hasta >= desde`. Curso, franja, docente, aula o clase inexistentes: `404`.
+Validaciones (`400`): día 1 a 5, grupo 0 a 2, bloque hacia abajo y de hasta 4 módulos, materia del catálogo, docente con rol Docente, aula activa, vigencia con `hasta >= desde`. Curso, módulo, docente, aula o clase inexistentes: `404`.
 
-Choques (`409`), considerando solo vigencias superpuestas: la celda del curso ya tiene clase; el docente ya tiene clase en otro curso a la misma hora; el aula ya está ocupada a la misma hora. Para docente y aula se comparan los horarios reales, así que también se detectan choques entre turnos distintos. Cada alta, edición o baja se audita como `horarios.gestionar` sobre la entidad `horario_clase` con antes/después.
+Choques (`409`), solo con vigencias superpuestas: el curso completo choca con cualquier grupo del mismo módulo (y viceversa) y un grupo no puede repetirse; un docente no puede estar en dos clases en el mismo día y módulo; un aula no compartida tampoco (Playón, Campo y Patio sí admiten varias). Cada alta, edición o baja se audita como `horarios.gestionar` sobre `horario_clase` con antes/después.
 
 ## Usuarios y roles
 

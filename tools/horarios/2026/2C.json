@@ -1,0 +1,181 @@
+{
+  "curso": "2C",
+  "titulo": "2do. \"C\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "11",
+      "docente": "GomezMe"
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "ATN",
+      "docente": "DiDonato"
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR1",
+      "docente": "Barreiro"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "F/Q",
+      "docente": "Kirschner"
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "10",
+      "docente": "Pujol"
+    },
+    {
+      "dia": 2,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR2",
+      "docente": "Huertas"
+    },
+    {
+      "dia": 2,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR1",
+      "docente": "Abelaira"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "11",
+      "docente": "Cardona"
+    },
+    {
+      "dia": 3,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR5",
+      "docente": "Greskow"
+    },
+    {
+      "dia": 3,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "TE",
+      "docente": "Crocitta"
+    },
+    {
+      "dia": 3,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR3",
+      "docente": null
+    },
+    {
+      "dia": 3,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "Parol"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "11",
+      "docente": "Torino"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "11",
+      "docente": "GomezMe"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": "Playón",
+      "docente": "VeraL"
+    },
+    {
+      "dia": 4,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "F/Q",
+      "docente": "Mesa"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "11",
+      "docente": "Valenzuela"
+    },
+    {
+      "dia": 5,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "11",
+      "docente": "Ortiz"
+    },
+    {
+      "dia": 5,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "11",
+      "docente": "Flores"
+    }
+  ],
+  "dudas": [
+    "Martes 09:55-11:55 y Viernes 13:00-15:00: la imagen dice \"Biologìa\" y \"Geografìa\" con acento grave (ì); se copió tal cual.",
+    "Miércoles 15:15-17:15 grupo 1 (Procedimientos Técnicos, TR3): no figura docente."
+  ]
+}

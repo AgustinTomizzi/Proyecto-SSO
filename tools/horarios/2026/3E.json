@@ -1,0 +1,192 @@
+{
+  "curso": "3E",
+  "titulo": "3ro. \"E\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "5",
+      "docente": "Reynoso"
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "AT5",
+      "docente": "Pereira"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "AT3",
+      "docente": "Romero, Cr"
+    },
+    {
+      "dia": 1,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR1",
+      "docente": "Parol"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "8",
+      "docente": "Azzi"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR3",
+      "docente": "Capul"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR4",
+      "docente": "Frazzeto"
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "4",
+      "docente": "Reynoso"
+    },
+    {
+      "dia": 2,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "4",
+      "docente": "Retore"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "5",
+      "docente": "Mesa"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "5",
+      "docente": "Pujol"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "4",
+      "docente": "Ferraguti"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": "Patio",
+      "docente": "3E"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": null,
+      "docente": "Anichino"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "202",
+      "docente": "Borrelli"
+    },
+    {
+      "dia": 4,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "9",
+      "docente": "Simón"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "5",
+      "docente": "Ferraguti"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "203",
+      "docente": "Coone"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "Rios"
+    },
+    {
+      "dia": 5,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "205",
+      "docente": "Lopez J."
+    }
+  ],
+  "dudas": [
+    "Lunes 13:00-15:00 y Martes 07:40-09:40: la imagen dice \"Biologìa\" y \"Geografìa\" con acento grave (ì); se copió tal cual.",
+    "Jueves 09:55-11:55 (Educación Física, Patio): en el lugar del docente aparece en letra diminuta \"3E\" (parece el nombre del curso/grupo, no un docente); se cargó \"3E\" como docente, revisar.",
+    "Jueves 13:00-15:00 grupo 1 (Lenguajes Tecnológicos, Anichino): no figura aula.",
+    "Lunes 13:00-15:00: docente \"Romero, Cr\" (parece abreviado); se copió tal cual."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "curso": "51",
+  "titulo": "5to 1ra",
+  "clases": [
+    {"dia": 1, "desde": "08:40", "hasta": "09:40", "grupo": 0, "materia": "Sistemas Digitales", "aula": "202", "docente": "SosaP"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Sistemas Digitales", "aula": "202", "docente": "SosaP"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Política y Ciudadanía", "aula": "2", "docente": "Bayone"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Geografía", "aula": "6", "docente": "Pujol"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Teleinformática", "aula": "2", "docente": "Minujen"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "209", "docente": "AquinoA"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "209", "docente": "Salgado"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Laboratorio de Programación", "aula": "301", "docente": "Fusaro"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "209", "docente": "Salgado"},
+    {"dia": 3, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Física", "aula": null, "docente": "VeraS"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Historia", "aula": "3", "docente": "Sisti"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Análisis Matemático", "aula": "3", "docente": "Reynoso"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Inglés", "aula": "12", "docente": "Scuderi"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "209", "docente": "Salgado"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "207", "docente": "MartinezD"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "204", "docente": "Fusaro"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "207", "docente": "MartinezD"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Análisis Matemático", "aula": "11", "docente": "Reynoso"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Literatura", "aula": "11", "docente": "Fabregas"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Aplicaciones", "aula": "201", "docente": "Bolañez"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "210", "docente": "AquinoA"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "204", "docente": "Salgado"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Laboratorio de Aplicaciones", "aula": "201", "docente": "Dasso"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Teleinformática", "aula": "4", "docente": "Minujen"}
+  ],
+  "dudas": [
+    "Miércoles 07:40-09:40 Educación Física (VeraS): el recuadro no muestra aula; se dejó null."
+  ]
+}

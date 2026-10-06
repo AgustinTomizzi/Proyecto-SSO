@@ -1,0 +1,34 @@
+{
+  "curso": "64",
+  "titulo": "6to 4ta Prog.",
+  "clases": [
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Seguridad Informática", "aula": "208", "docente": "Iriso"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Laboratorio de Aplicaciones Web estáticas", "aula": "202", "docente": "YolyE"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Laboratorio de Programación", "aula": "208", "docente": "Fusaro"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "202", "docente": "Fusaro"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Laboratorio de Aplicaciones Web Dinámicas", "aula": "301", "docente": "YolyE"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "202", "docente": "Fusaro"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Laboratorio de Aplicaciones Web Dinámicas", "aula": "301", "docente": "YolyE"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Matemática Discreta", "aula": "5", "docente": "Reynoso"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Sistemas de Gestión y Autogestión", "aula": "5", "docente": "Maitta"},
+    {"dia": 2, "desde": "19:40", "hasta": "20:40", "grupo": 0, "materia": "Sistemas de Gestión y Autogestión", "aula": "5", "docente": "Maitta"},
+    {"dia": 3, "desde": "14:00", "hasta": "15:00", "grupo": 0, "materia": "Seguridad Informática", "aula": "202", "docente": "Iriso"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Laboratorio de Procesos Industriales", "aula": "108", "docente": "Coone"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Laboratorio de Aplicaciones Web estáticas", "aula": "301", "docente": "YolyE"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Filosofía", "aula": "4", "docente": "SciartinoM"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Laboratorio de Aplicaciones Web Dinámicas", "aula": "201", "docente": "Chiarore"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Laboratorio de Programación", "aula": "301", "docente": "Fusaro"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Física", "aula": null, "docente": "GarcíaM"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Derechos Trabajo", "aula": "5", "docente": "Torrado"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Laboratorio de Aplicaciones Web Dinámicas", "aula": "201", "docente": "Chiarore"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Laboratorio de Procesos Industriales", "aula": "208", "docente": "Coone"},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 0, "materia": "Arte", "aula": "2", "docente": "Urquiza"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Literatura", "aula": "5", "docente": "Giordan"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Sistemas Digitales", "aula": "5", "docente": "Coone"},
+    {"dia": 5, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Inglés", "aula": "5", "docente": "Brandi"},
+    {"dia": 5, "desde": "19:40", "hasta": "20:40", "grupo": 0, "materia": "Matemática Discreta", "aula": "5", "docente": "Reynoso"}
+  ],
+  "dudas": [
+    "Jueves 07:40-09:40 Educación Física (GarcíaM): el recuadro no muestra aula; se puso null."
+  ]
+}

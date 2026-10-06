@@ -1,0 +1,190 @@
+{
+  "curso": "3B",
+  "titulo": "3ro. \"B\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "2",
+      "docente": "Sanchez, M."
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "TE",
+      "docente": "Bessone J"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR2",
+      "docente": "Capul"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR5",
+      "docente": "Bronimann"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "12",
+      "docente": "Reynoso"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "12",
+      "docente": "RojasW"
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "12",
+      "docente": "Giordan"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "108",
+      "docente": "Espin"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "204",
+      "docente": "Capul"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "204",
+      "docente": "Ivanoff"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "108",
+      "docente": "Espin"
+    },
+    {
+      "dia": 3,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": "Campo",
+      "docente": "VeraS"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "AT3",
+      "docente": "DiPaolo"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "AT3",
+      "docente": "Reynoso"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "AT3",
+      "docente": "Ortiz"
+    },
+    {
+      "dia": 4,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "205",
+      "docente": "GonzalezA"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "AT3",
+      "docente": "Romero, Cr"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "AT3",
+      "docente": "Giordan"
+    },
+    {
+      "dia": 5,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "AT3",
+      "docente": "Keller"
+    },
+    {
+      "dia": 5,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "108",
+      "docente": "GonzalezA"
+    }
+  ],
+  "dudas": [
+    "Viernes 07:40-09:40 y Jueves 13:00-15:00: la imagen dice \"Biologìa\" y \"Geografìa\" con acento grave (ì); se copió tal cual.",
+    "Viernes 07:40-09:40: docente \"Romero, Cr\" (parece abreviado); se copió tal cual."
+  ]
+}

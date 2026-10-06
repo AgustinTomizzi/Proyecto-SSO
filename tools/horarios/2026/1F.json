@@ -1,0 +1,25 @@
+{
+  "curso": "1F",
+  "titulo": "1ro. \"F\"",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "C. Ciudadanía", "aula": "AT4", "docente": "Pujol"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Procedimientos Técnicos", "aula": "TR3", "docente": "RodriguezF"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Sistemas Tecnológicos", "aula": "TR5", "docente": "Huertas"},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "P. del Lenguaje", "aula": null, "docente": "SantaCruz"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Sistemas Tecnológicos", "aula": "TR2", "docente": "RodriguezF"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Lenguajes Tecnológicos", "aula": "ATN", "docente": "Huertas"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Ciencias Naturales", "aula": "7", "docente": "DiazV"},
+    {"dia": 3, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Naturales", "aula": "7", "docente": "DiazV"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "P. del Lenguaje", "aula": "7", "docente": "SantaCruz"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Matemática", "aula": "7", "docente": "VázquezS"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Ciencias Sociales", "aula": "F/Q", "docente": "Arrascayta"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Matemática", "aula": "7", "docente": "VázquezS"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Educación Artística", "aula": "7", "docente": "Suarez, M."},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Sociales", "aula": "7", "docente": "Arrascayta"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Inglés", "aula": "7", "docente": "Muñoz"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Educación Física", "aula": "Patio", "docente": "GomezH"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Lenguajes Tecnológicos", "aula": "301", "docente": "Villa"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Procedimientos Técnicos", "aula": "TE", "docente": "Coronel C"}
+  ],
+  "dudas": ["Martes 07:40-09:40 P. del Lenguaje (SantaCruz): el recuadro no tiene aula, se dejó null"]
+}

@@ -1,0 +1,23 @@
+{
+  "curso": "73",
+  "titulo": "7mo 3ra Mult.",
+  "clases": [
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Empren. Productivos.", "aula": "5", "docente": "Deuz"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Ética y Deontología Profesional", "aula": "5", "docente": "RuizDiaz"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 0, "materia": "Teorías de la Comunicación", "aula": "5", "docente": "RuizDiaz"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Arte Digital y Diseño Web", "aula": "210", "docente": "Chiarore"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Arte Digital y Diseño Web", "aula": "201", "docente": "LuminiL"},
+    {"dia": 2, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Arte Digital y Diseño Web", "aula": "201", "docente": "LuminiL"},
+    {"dia": 2, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Arte Digital y Diseño Web", "aula": "210", "docente": "Chiarore"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Realización Audiovisual", "aula": "201", "docente": "Robertazzi, M."},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Realización Audiovisual", "aula": "5", "docente": "Rubio"},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Realización Audiovisual", "aula": "5", "docente": "Sol, L."},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Realización Audiovisual", "aula": "201", "docente": "Rubio"},
+    {"dia": 5, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Marketing de Servicios", "aula": "205", "docente": "Acosta C"},
+    {"dia": 5, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Tecnología y Producción Gráfica", "aula": "210", "docente": "Lanzavechia"},
+    {"dia": 5, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Tecnología y Producción Gráfica", "aula": "205", "docente": "Rebuffo"}
+  ],
+  "dudas": [
+    "Este curso no tiene recuadros con formas irregulares: todos coinciden con los módulos."
+  ]
+}

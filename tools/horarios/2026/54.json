@@ -1,0 +1,32 @@
+{
+  "curso": "54",
+  "titulo": "5to 4ta Mult.",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Física", "aula": null, "docente": "Britez P."},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Comunicación", "aula": "202", "docente": "Fabregas"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Gráfica Editorial", "aula": "205", "docente": "Cantuni"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Gráfica Editorial", "aula": "209", "docente": "Rebuffo"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Tecnología del Sonido", "aula": "6", "docente": "CarlosM"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Inglés", "aula": "202", "docente": "Scuderi"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Tecnología del Sonido", "aula": "210", "docente": "CarlosM"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Gráfica Editorial", "aula": "204", "docente": "Rebuffo"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Gráfica Editorial", "aula": "204", "docente": "Cantuni"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Análisis Matemático", "aula": "12", "docente": "DiLisio"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Geografía", "aula": "12", "docente": "CanterosMM"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Metodología de la Investigación", "aula": "12", "docente": "Pujol"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Historia", "aula": "3", "docente": "Arnaudo"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Análisis Matemático", "aula": "3", "docente": "DiLisio"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Lenguajes Artísticos/Plástica", "aula": "3", "docente": "Fankhouser"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Literatura", "aula": "3", "docente": "Fabregas"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 1, "materia": "Sistemas Multimediales", "aula": "201", "docente": "CordobésE"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 2, "materia": "Sistemas Multimediales", "aula": "210", "docente": "LuminiL"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Política y Ciudadanía", "aula": "202", "docente": "Martearena"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Tecnología del Sonido", "aula": "302", "docente": "CarlosM"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Guión", "aula": "AT2", "docente": "Garbarino"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Guión", "aula": "AT2", "docente": "TorresL"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Tecnología del Sonido", "aula": "302", "docente": "CarlosM"}
+  ],
+  "dudas": [
+    "Lunes 07:40-09:40 Educación Física (Britez P.): el recuadro no muestra aula; se dejó null."
+  ]
+}

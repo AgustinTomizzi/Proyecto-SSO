@@ -10,11 +10,13 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 3. `db/03-migracion-rbac-auditoria.sql`: migración incremental para instalaciones anteriores. En una instalación nueva es redundante pero segura; Docker la ejecuta igual porque monta todo `db/` en `docker-entrypoint-initdb.d`.
 4. `db/04-horarios.sql`: imágenes de horario por curso y permisos `horarios.*`.
 5. `db/05-seguridad.sql`: tabla `login_intentos` (límite de intentos de autenticación) y columna `usuarios.debe_cambiar_password` (al crearla marca las cuentas demo). Idempotente.
-6. `db/06-horarios-grilla.sql`: grilla de horarios (`franjas_horarias` con sus módulos por turno y `horario_clases`). Idempotente.
+6. `db/06-horarios-grilla.sql`: grilla de horarios con el formato del colegio: `franjas_horarias` (12 módulos), `aulas` y `horario_clases` (con grupos). Idempotente.
 7. `db/07-materias-fk.sql`: `asistencias` y `notas` pasan de `materia` (texto) a `materia_id` (FK a `materias`). Pasa al catálogo cualquier nombre suelto, hace el backfill sin distinguir tildes ni mayúsculas, deduplica las asistencias que chocan en la clave nueva (queda la más reciente), cambia la clave única a (`alumno_id`, `materia_id`, `fecha`) y corrige los nombres del catálogo a su forma con tildes. Idempotente.
 8. `db/08-alcance-docente.sql`: `horarios.ver` para Preceptor, Docente y Directivo. Idempotente.
+9. `db/09-cursos-reales.sql`: clave única (`anio`, `division`) y los 39 cursos del colegio (1º A-H, 2º y 3º A-F, 4º a 6º 1-5, 7º 1-4). En una base anterior agrega los que falten. Idempotente.
+10. `db/10-horarios-reales.sql`: horarios reales publicados en horarios.galileo.edu.ar (aSc Horarios, 11/03/2026), generados desde las imágenes: materias, aulas, docentes (usuarios con rol Docente, `demo1234` y cambio obligatorio, emails ficticios) y 1531 módulos-clase de 38 cursos (5º 5ª Prog. está vacío en la fuente). Idempotente (`INSERT IGNORE`).
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `09-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `11-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -45,7 +47,8 @@ erDiagram
     FRANJAS_HORARIAS ||--o{ HORARIO_CLASES : ubica
     MATERIAS ||--o{ HORARIO_CLASES : dicta
     USUARIOS o|--o{ HORARIO_CLASES : docente
-    RESOURCES o|--o{ HORARIO_CLASES : aula
+    AULAS o|--o{ HORARIO_CLASES : aula
+    RESOURCES o|--o| AULAS : reservable
 
     ROLES {
       int id_rol PK
@@ -186,11 +189,18 @@ erDiagram
     }
     FRANJAS_HORARIAS {
       int id_franja PK
-      varchar turno
       tinyint orden
+      varchar turno
       time hora_inicio
       time hora_fin
-      boolean es_recreo
+    }
+    AULAS {
+      int id_aula PK
+      varchar codigo UK
+      varchar nombre
+      int resource_id FK
+      boolean compartida
+      boolean activa
     }
     HORARIO_CLASES {
       int id_clase PK
@@ -199,7 +209,8 @@ erDiagram
       int franja_id FK
       int materia_id FK
       int docente_id FK
-      int aula_resource_id FK
+      tinyint grupo
+      int aula_id FK
       date vigente_desde
       date vigente_hasta
     }
@@ -379,19 +390,32 @@ Propósito: imagen del horario publicado para cada curso (`db/04-horarios.sql`).
 
 ### `franjas_horarias`
 
-Propósito: módulos horarios de cada turno (`db/06-horarios-grilla.sql`). El seed carga ocho franjas por turno: seis módulos de 40 minutos y dos recreos de 10.
+Propósito: los 12 módulos de 60 minutos del colegio, compartidos por todos los cursos (`db/06-horarios-grilla.sql`). Entre módulos hay recreos y entre la mañana y la tarde el cambio de turno; no son filas.
+
+| Orden | Turno | Horario |
+|---|---|---|
+| 1–4 | Mañana | 07:40–08:40, 08:40–09:40, 09:55–10:55, 10:55–11:55 |
+| 5–8 | Tarde | 13:00–14:00, 14:00–15:00, 15:15–16:15, 16:15–17:15 |
+| 9–12 | Vespertino | 17:30–18:30, 18:30–19:30, 19:40–20:40, 20:40–21:40 |
+
+Campos: `id_franja` (PK), `orden` (UNIQUE), `turno`, `hora_inicio`, `hora_fin` (CHECK inicio < fin).
+
+### `aulas`
+
+Propósito: espacios donde se dicta cada clase, por su código del horario (`AT5`, `TR2`, `204`, `F/Q`, `Playón`…).
 
 | Campo | Tipo y nulabilidad | Clave | Significado |
 |---|---|---|---|
-| `id_franja` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
-| `turno` | `VARCHAR(20) NOT NULL` | UNIQUE (`turno`, `orden`) | Igual que `cursos.turno` (`Mañana`, `Tarde`). |
-| `orden` | `TINYINT UNSIGNED NOT NULL` | | Posición dentro del turno. |
-| `hora_inicio`, `hora_fin` | `TIME NOT NULL` | CHECK inicio < fin | Horario del módulo. |
-| `es_recreo` | `TINYINT(1) NOT NULL DEFAULT 0` | | `1` si es recreo: no admite clases. |
+| `id_aula` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
+| `codigo` | `VARCHAR(30) NOT NULL` | UNIQUE | Código impreso en el horario. |
+| `nombre` | `VARCHAR(100) NULL` | | Nombre descriptivo. |
+| `resource_id` | `INT UNSIGNED NULL` | UNIQUE, FK a `resources` (SET NULL) | Recurso de Galiservas si el aula también se reserva (208, 209, 210). |
+| `compartida` | `TINYINT(1) NOT NULL DEFAULT 0` | | `1` = admite varias clases a la vez (Playón, Campo, Patio): no cuenta como choque. |
+| `activa` | `TINYINT(1) NOT NULL DEFAULT 1` | | Solo las activas se ofrecen al editar. |
 
 ### `horario_clases`
 
-Propósito: cada celda de la grilla de un curso, con vigencia. Reemplaza a `horarios_curso`.
+Propósito: la grilla. Una fila por curso, día, módulo y grupo, con vigencia. Una clase de 2 módulos son 2 filas consecutivas (la interfaz las une). Reemplaza a `horarios_curso`.
 
 | Campo | Tipo y nulabilidad | Clave | Significado |
 |---|---|---|---|
@@ -399,13 +423,14 @@ Propósito: cada celda de la grilla de un curso, con vigencia. Reemplaza a `hora
 | `curso_id` | `INT UNSIGNED NOT NULL` | FK a `cursos` (CASCADE) | Curso. |
 | `dia_semana` | `TINYINT UNSIGNED NOT NULL` | CHECK 1..5 | 1 = lunes … 5 = viernes. |
 | `franja_id` | `INT UNSIGNED NOT NULL` | FK a `franjas_horarias` (RESTRICT) | Módulo. |
-| `materia_id` | `INT UNSIGNED NOT NULL` | FK a `materias` (RESTRICT) | Materia dictada. |
+| `grupo` | `TINYINT UNSIGNED NOT NULL DEFAULT 0` | CHECK 0..2 | 0 = curso completo; 1 y 2 = mitades que cursan en paralelo (celda partida). |
+| `materia_id` | `INT UNSIGNED NOT NULL` | FK a `materias` (RESTRICT) | Materia. |
 | `docente_id` | `INT UNSIGNED NULL` | FK a `usuarios` (SET NULL) | Docente a cargo, si está asignado. |
-| `aula_resource_id` | `INT UNSIGNED NULL` | FK a `resources` (SET NULL) | Aula, si se asignó. |
+| `aula_id` | `INT UNSIGNED NULL` | FK a `aulas` (SET NULL) | Aula, si se asignó. |
 | `vigente_desde` | `DATE NOT NULL` | | Desde cuándo rige. |
 | `vigente_hasta` | `DATE NULL` | CHECK ≥ desde | Hasta cuándo; `NULL` = vigente. |
 
-Únicos e índices: (`curso_id`, `dia_semana`, `franja_id`, `vigente_desde`) evita dos clases en la misma celda con igual vigencia; `idx_clase_docente` e `idx_clase_aula` sirven para detectar que un docente o un aula estén en dos lugares a la vez (lo valida la API, porque depende de las vigencias superpuestas).
+Únicos e índices: (`curso_id`, `dia_semana`, `franja_id`, `grupo`, `vigente_desde`); `idx_clase_docente` e `idx_clase_aula`. La API valida lo que la base no puede expresar: con vigencias superpuestas, el curso completo choca con cualquier grupo del mismo módulo, y un docente o un aula no compartida no pueden estar en dos clases en el mismo día y módulo. El horario real del colegio ya trae un caso (aula 201, jueves 17:30–19:30, 6º 4ª y 7º 3ª): se cargó tal cual y la API lo marcaría al editar esas celdas.
 
 ## Auditoría
 

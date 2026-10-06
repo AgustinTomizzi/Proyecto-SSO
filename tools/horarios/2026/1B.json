@@ -1,0 +1,25 @@
+{
+  "curso": "1B",
+  "titulo": "1ro. \"B\"",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "C. Ciudadanía", "aula": "AT2", "docente": "Uncos"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Matemática", "aula": "AT2", "docente": "VázquezS"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Sistemas Tecnológicos", "aula": "TR1", "docente": "DiDonato"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Lenguajes Tecnológicos", "aula": "207", "docente": "Barneche"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Educación Física", "aula": "Playón", "docente": "Garcìa, D."},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Inglés", "aula": "AT2", "docente": "Banich"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Educación Artística", "aula": "AT2", "docente": "Alladio, D."},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Ciencias Naturales", "aula": "2", "docente": "Abate, J."},
+    {"dia": 3, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Matemática", "aula": "AT2", "docente": "VázquezS"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Ciencias Naturales", "aula": "AT2", "docente": "Abate, J."},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Lenguajes Tecnológicos", "aula": "108", "docente": "Choque"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Procedimientos Técnicos", "aula": "TR2", "docente": "CanterosM"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Procedimientos Técnicos", "aula": "TR2", "docente": "DiDonato"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Sistemas Tecnológicos", "aula": "TR1", "docente": "Barreiro"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "P. del Lenguaje", "aula": "AT2", "docente": "SantaCruz"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Ciencias Sociales", "aula": "AT2", "docente": "Ibarra G"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "P. del Lenguaje", "aula": "AT2", "docente": "SantaCruz"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Ciencias Sociales", "aula": "AT2", "docente": "Ibarra G"}
+  ],
+  "dudas": ["Lunes 15:15-17:15 Educación Física: el docente aparece escrito \"Garcìa, D.\" con acento grave (ì); se copió tal cual, probablemente sea \"García, D.\""]
+}

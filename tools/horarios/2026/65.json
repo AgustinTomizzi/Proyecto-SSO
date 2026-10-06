@@ -1,0 +1,29 @@
+{
+  "curso": "65",
+  "titulo": "6to 5ta Prog.",
+  "clases": [
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Sistemas Digitales", "aula": "203", "docente": "Cruz, D."},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Derechos Trabajo", "aula": "AT3", "docente": "Gimenez M."},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Literatura", "aula": "7", "docente": "Dmitruck"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Laboratorio de Aplicaciones Web estáticas", "aula": "205", "docente": "Benitez D."},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Educación Física", "aula": "Campo", "docente": "GutierrezG"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Inglés", "aula": "7", "docente": "Brandi, L."},
+    {"dia": 2, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Laboratorio de Aplicaciones Web Dinámicas", "aula": "205", "docente": "YolyE"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Procesos Industriales", "aula": "210", "docente": "GHIO"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Arte", "aula": "7", "docente": "65 P"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Sistemas de Gestión y Autogestión", "aula": "7", "docente": "Massano M."},
+    {"dia": 3, "desde": "19:40", "hasta": "20:40", "grupo": 0, "materia": "Sistemas de Gestión y Autogestión", "aula": "7", "docente": "Massano M."},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Aplicaciones Web Dinámicas", "aula": "205", "docente": "YolyE"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Filosofía", "aula": "2", "docente": "Callozo C."},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "203", "docente": "Salgado"},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "203", "docente": "Salgado"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Seguridad Informática", "aula": "7", "docente": "Yapura"},
+    {"dia": 5, "desde": "17:30", "hasta": "18:30", "grupo": 0, "materia": "Seguridad Informática", "aula": "7", "docente": "Yapura"},
+    {"dia": 5, "desde": "18:30", "hasta": "19:30", "grupo": 0, "materia": "Matemática Discreta", "aula": "7", "docente": "Mesa"},
+    {"dia": 5, "desde": "19:40", "hasta": "21:40", "grupo": 0, "materia": "Matemática Discreta", "aula": "7", "docente": "Mesa"}
+  ],
+  "dudas": [
+    "Miércoles 15:15-17:15 Arte: en lugar de docente figura en letra diminuta \"65 P\" (parece un marcador de docente sin asignar, no un nombre); se copió tal cual.",
+    "Este curso solo tiene clases del grupo 1 en las mitades (Mi 13:00, Ju 13:00/17:30/19:40, Lu y Ma 19:40); la mitad derecha está vacía en esos bloques."
+  ]
+}

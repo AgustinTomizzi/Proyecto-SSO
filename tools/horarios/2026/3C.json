@@ -1,0 +1,181 @@
+{
+  "curso": "3C",
+  "titulo": "3ro. \"C\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR3",
+      "docente": "Capul"
+    },
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "205",
+      "docente": "GonzalezA"
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "4",
+      "docente": "Antuña"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "4",
+      "docente": "Quispe, L."
+    },
+    {
+      "dia": 1,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "4",
+      "docente": "Sisti"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "4",
+      "docente": "Scuderi"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "4",
+      "docente": "Mesa"
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "AT5",
+      "docente": "Ortiz"
+    },
+    {
+      "dia": 2,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "TE",
+      "docente": "Borrelli"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR3",
+      "docente": "Parol"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "203",
+      "docente": "Garcia"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "203",
+      "docente": "Capul"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR1",
+      "docente": "Parol"
+    },
+    {
+      "dia": 3,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "4",
+      "docente": "Mesa"
+    },
+    {
+      "dia": 3,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "4",
+      "docente": "Pujol"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "4",
+      "docente": "Antuña"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "6",
+      "docente": "Chazarreta"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": null,
+      "docente": "VázquezS"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": "Playón",
+      "docente": "Bonifaci"
+    }
+  ],
+  "dudas": [
+    "Martes 13:00-15:00 y Jueves 13:00-15:00: la imagen dice \"Geografìa\" y \"Biologìa\" con acento grave (ì); se copió tal cual.",
+    "Viernes 07:40-09:40 (Matemática, VázquezS): no figura aula."
+  ]
+}

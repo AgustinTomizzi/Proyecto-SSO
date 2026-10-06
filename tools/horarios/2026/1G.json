@@ -1,0 +1,25 @@
+{
+  "curso": "1G",
+  "titulo": "1ro. \"G\"",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Inglés", "aula": "AT1", "docente": "Scuderi"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Educación Artística", "aula": "203", "docente": "Silva M."},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Matemática", "aula": "AT1", "docente": "VázquezS"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Lenguajes Tecnológicos", "aula": "301", "docente": "Barneche"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Sistemas Tecnológicos", "aula": "TR1", "docente": "Loto, D."},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "P. del Lenguaje", "aula": "ATN", "docente": "Ferraguti"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Educación Física", "aula": "Playón", "docente": "GutierrezG"},
+    {"dia": 3, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "P. del Lenguaje", "aula": "AT1", "docente": "Ferraguti"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Ciencias Sociales", "aula": "AT1", "docente": "CanterosMM"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Ciencias Naturales", "aula": "AT1", "docente": "Abate, J."},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 1, "materia": "Procedimientos Técnicos", "aula": "TR1", "docente": "Barreiro"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 2, "materia": "Procedimientos Técnicos", "aula": "TR5", "docente": null},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Sistemas Tecnológicos", "aula": "TR3", "docente": "Villa"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Lenguajes Tecnológicos", "aula": "203", "docente": "Barneche"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Sociales", "aula": "AT1", "docente": "CanterosMM"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Matemática", "aula": "AT1", "docente": "VázquezS"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Ciencias Naturales", "aula": "AT1", "docente": "Abate, J."},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "C. Ciudadanía", "aula": "AT1", "docente": "Keller"}
+  ],
+  "dudas": ["Jueves 07:40-09:40 grupo 2 Procedimientos Técnicos (TR5): el recuadro no tiene docente, se dejó null"]
+}

@@ -1,0 +1,30 @@
+{
+  "curso": "2A",
+  "titulo": "2do. \"A\"",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Sociales (Historia)", "aula": "6", "docente": "Pereira"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Matemática", "aula": "6", "docente": "GomezMe"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "P. del Lenguaje", "aula": "6", "docente": "Peña"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Educación Física", "aula": "Patio", "docente": "VeraS"},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Ciencias Naturales (Biologìa)", "aula": "6", "docente": "Orefice, C."},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Ciencias Sociales (Geografìa)", "aula": "6", "docente": "Pujol"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "P. del Lenguaje", "aula": "5", "docente": "Peña"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Matemática", "aula": "5", "docente": "GomezMe"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "C. Ciudadanía", "aula": "AT1", "docente": "Arrascayta"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Inglés", "aula": "AT1", "docente": "DiPaolo"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Sistemas Tecnológicos", "aula": "TE", "docente": "Mule"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Procedimientos Técnicos", "aula": "TR5", "docente": "Crocitta"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Procedimientos Técnicos", "aula": "TR3", "docente": "Barreiro"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Sistemas Tecnológicos", "aula": "TE", "docente": "Parol"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Artística", "aula": "9", "docente": "Ybarra"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Ciencias Naturales (Físico-Química)", "aula": "F/Q", "docente": "Vazza"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Lenguajes Tecnológicos", "aula": "203", "docente": "Villa"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Procedimientos Técnicos", "aula": "TR5", "docente": "Crocitta"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Procedimientos Técnicos", "aula": "TR3", "docente": "Barreiro"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Lenguajes Tecnológicos", "aula": "203", "docente": "Crocitta"}
+  ],
+  "dudas": [
+    "Martes 07:40-09:40: la materia aparece escrita \"Ciencias Naturales (Biologìa)\" con acento grave (ì); se copió tal cual, probablemente sea \"Biología\"",
+    "Martes 09:55-11:55: la materia aparece escrita \"Ciencias Sociales (Geografìa)\" con acento grave (ì); se copió tal cual, probablemente sea \"Geografía\""
+  ]
+}

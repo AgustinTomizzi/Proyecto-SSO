@@ -1,0 +1,189 @@
+{
+  "curso": "2D",
+  "titulo": "2do. \"D\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "10",
+      "docente": "Reynoso"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "10",
+      "docente": "Pujol"
+    },
+    {
+      "dia": 1,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "10",
+      "docente": "Dmitruck"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "10",
+      "docente": "Gimenez L."
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "10",
+      "docente": "Reynoso"
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "F/Q",
+      "docente": "Mesa"
+    },
+    {
+      "dia": 2,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "F/Q",
+      "docente": "Abate, J."
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "Mora"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR4",
+      "docente": "Rios"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR5",
+      "docente": "Minicucci"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "Mora"
+    },
+    {
+      "dia": 3,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": "Playón",
+      "docente": "Britez P."
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR2",
+      "docente": "Minicucci"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "TE",
+      "docente": "Anichino"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "TE",
+      "docente": "Anichino"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR1",
+      "docente": "Huertas"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "10",
+      "docente": "Pereira"
+    },
+    {
+      "dia": 4,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "10",
+      "docente": "Chazarreta"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "10",
+      "docente": "Dmitruck"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "10",
+      "docente": "MartinezM"
+    }
+  ],
+  "dudas": [
+    "Lunes 13:00-15:00 y Jueves 15:15-17:15: la imagen dice \"Geografìa\" y \"Biologìa\" con acento grave (ì); se copió tal cual."
+  ]
+}

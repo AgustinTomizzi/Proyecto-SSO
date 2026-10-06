@@ -1,0 +1,29 @@
+{
+  "curso": "63",
+  "titulo": "6to 3ra Mult.",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Física", "aula": "Campo", "docente": "Balverdi"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Literatura", "aula": "302", "docente": "Suarez, D. / GonzalezN"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Gestión Proyectos", "aula": "11", "docente": "Torrado"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Sistemas Multimediales", "aula": "201", "docente": "Martin, C."},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Sistemas Multimediales", "aula": "210", "docente": "CordobésE"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Sistemas Multimediales", "aula": "210", "docente": "CordobésE"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Matemática Aplicada", "aula": "AT3", "docente": "DiLisio"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Filosofía", "aula": "AT5", "docente": "MarassoF"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Inglés", "aula": "4", "docente": "Retore"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Derechos Trabajo", "aula": "AT2", "docente": "Turrini"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Arte", "aula": "AT2", "docente": "GonzalezSer"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Realización Audiovisual", "aula": "204", "docente": "LuminiL"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Realización Audiovisual", "aula": "302", "docente": "CordobésE"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Realización Audiovisual", "aula": "302", "docente": "CordobésE"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Realización Audiovisual", "aula": "204", "docente": "LuminiL"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Lenguajes Artísticos/Teatro", "aula": "4", "docente": "Campuzano"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Diseño Gráfico", "aula": "204", "docente": "LuminiL"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Sistemas Multimediales", "aula": "209", "docente": "CordobésE"},
+    {"dia": 5, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Sint. Imágen Animación", "aula": "201", "docente": "LuminiL"},
+    {"dia": 5, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Sint. Imágen Animación", "aula": "204", "docente": "CordobésE"},
+    {"dia": 5, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Sint. Imágen Animación", "aula": "201", "docente": "CordobésE"},
+    {"dia": 5, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Sint. Imágen Animación", "aula": "204", "docente": "LuminiL"}
+  ],
+  "dudas": []
+}

@@ -1,0 +1,33 @@
+{
+  "curso": "41",
+  "titulo": "4to 1ra",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Matemática", "aula": "10", "docente": "Bruno"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "210", "docente": "Tálamo"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "204", "docente": "Casciano, F."},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "301", "docente": "Castronuovo"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "204", "docente": "Vallone"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Literatura", "aula": "7", "docente": "Santracruz Palacios"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "210", "docente": "Tálamo"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "204", "docente": "Ivanoff"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "108", "docente": "Barneche"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "210", "docente": "SalcedoE"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Laboratorio de Aplicaciones", "aula": "205", "docente": "Vallone"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Laboratorio de Aplicaciones", "aula": "301", "docente": "Vandevoorde"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Salud y Adolescencia", "aula": "8", "docente": "Abate, J."},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Tecnologías Electrónicas", "aula": "10", "docente": "SosaP"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Historia", "aula": "10", "docente": "Pereira"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Química", "aula": "10", "docente": "Vazza"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Matemática", "aula": "9", "docente": "Bruno"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Inglés", "aula": "9", "docente": "Scuderi"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Educación Física", "aula": "Campo", "docente": "Balverdi"},
+    {"dia": 5, "desde": "08:40", "hasta": "09:40", "grupo": 0, "materia": "Física", "aula": "3", "docente": "SosaP"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Física", "aula": "3", "docente": "SosaP"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "301", "docente": "Fusaro"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 2, "materia": "Laboratorio de Programación", "aula": "207", "docente": "Choque"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Geografía", "aula": "9", "docente": "CanterosMM"}
+  ],
+  "dudas": [
+    "Lunes 15:15-17:15 Literatura: el docente aparece como \"Santracruz Palacios\" (posible errata de \"Santacruz\"); se copió tal cual."
+  ]
+}

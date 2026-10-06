@@ -65,6 +65,7 @@ CREATE TABLE cursos (
   preceptor VARCHAR(255) DEFAULT NULL,
   preceptor_id INT UNSIGNED DEFAULT NULL,
   PRIMARY KEY (id_cursos),
+  UNIQUE KEY uq_curso_anio_division (anio, division),
   CONSTRAINT fk_curso_preceptor FOREIGN KEY (preceptor_id) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -220,39 +221,60 @@ CREATE TABLE reservations (
   CONSTRAINT chk_reservation_time CHECK (start_time < end_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Grilla de horarios (Fase 1). Reemplaza a horarios_curso (imagen), que queda
--- como historico de solo lectura.
+-- Grilla de horarios (Fase 1). Mismo formato que los horarios del colegio:
+-- 12 modulos de 60 minutos compartidos por todos los cursos (mañana, tarde y
+-- vespertino); un curso puede cursar en varios turnos. Reemplaza a
+-- horarios_curso (imagen), que queda como historico de solo lectura.
 CREATE TABLE franjas_horarias (
   id_franja INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  turno VARCHAR(20) NOT NULL,
   orden TINYINT UNSIGNED NOT NULL,
+  turno VARCHAR(20) NOT NULL,
   hora_inicio TIME NOT NULL,
   hora_fin TIME NOT NULL,
-  es_recreo TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (id_franja),
-  UNIQUE KEY uq_franja_turno_orden (turno, orden),
+  UNIQUE KEY uq_franja_orden (orden),
   CONSTRAINT chk_franja_horario CHECK (hora_inicio < hora_fin)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Aulas del colegio por codigo (AT5, TR2, 204, Playón...). Si el aula tambien
+-- se reserva en Galiservas, resource_id la vincula con el recurso.
+CREATE TABLE aulas (
+  id_aula INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  codigo VARCHAR(30) NOT NULL,
+  nombre VARCHAR(100) DEFAULT NULL,
+  resource_id INT UNSIGNED DEFAULT NULL,
+  -- 1 = admite varias clases a la vez (Playón, Campo, Patio).
+  compartida TINYINT(1) NOT NULL DEFAULT 0,
+  activa TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id_aula),
+  UNIQUE KEY uq_aula_codigo (codigo),
+  UNIQUE KEY uq_aula_resource (resource_id),
+  CONSTRAINT fk_aula_resource FOREIGN KEY (resource_id) REFERENCES resources (id_resource) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Una fila por curso, dia, modulo y grupo. grupo 0 = curso completo;
+-- 1 y 2 = mitades del curso que cursan en paralelo (celda partida).
 CREATE TABLE horario_clases (
   id_clase INT UNSIGNED NOT NULL AUTO_INCREMENT,
   curso_id INT UNSIGNED NOT NULL,
   dia_semana TINYINT UNSIGNED NOT NULL,
   franja_id INT UNSIGNED NOT NULL,
+  grupo TINYINT UNSIGNED NOT NULL DEFAULT 0,
   materia_id INT UNSIGNED NOT NULL,
   docente_id INT UNSIGNED DEFAULT NULL,
-  aula_resource_id INT UNSIGNED DEFAULT NULL,
+  aula_id INT UNSIGNED DEFAULT NULL,
   vigente_desde DATE NOT NULL,
   vigente_hasta DATE DEFAULT NULL,
   PRIMARY KEY (id_clase),
-  UNIQUE KEY uq_clase_curso_dia_franja (curso_id, dia_semana, franja_id, vigente_desde),
+  UNIQUE KEY uq_clase_celda (curso_id, dia_semana, franja_id, grupo, vigente_desde),
   KEY idx_clase_docente (docente_id, dia_semana, franja_id),
-  KEY idx_clase_aula (aula_resource_id, dia_semana, franja_id),
+  KEY idx_clase_aula (aula_id, dia_semana, franja_id),
   CONSTRAINT fk_clase_curso FOREIGN KEY (curso_id) REFERENCES cursos (id_cursos) ON DELETE CASCADE,
   CONSTRAINT fk_clase_franja FOREIGN KEY (franja_id) REFERENCES franjas_horarias (id_franja) ON DELETE RESTRICT,
   CONSTRAINT fk_clase_materia FOREIGN KEY (materia_id) REFERENCES materias (id_materia) ON DELETE RESTRICT,
   CONSTRAINT fk_clase_docente FOREIGN KEY (docente_id) REFERENCES usuarios (id_usuario) ON DELETE SET NULL,
-  CONSTRAINT fk_clase_aula FOREIGN KEY (aula_resource_id) REFERENCES resources (id_resource) ON DELETE SET NULL,
+  CONSTRAINT fk_clase_aula FOREIGN KEY (aula_id) REFERENCES aulas (id_aula) ON DELETE SET NULL,
   CONSTRAINT chk_clase_dia CHECK (dia_semana BETWEEN 1 AND 5),
+  CONSTRAINT chk_clase_grupo CHECK (grupo IN (0, 1, 2)),
   CONSTRAINT chk_clase_vigencia CHECK (vigente_hasta IS NULL OR vigente_hasta >= vigente_desde)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

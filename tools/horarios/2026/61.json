@@ -1,0 +1,32 @@
+{
+  "curso": "61",
+  "titulo": "6to 1ra",
+  "clases": [
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Educación Física", "aula": "Campo", "docente": "Balverdi"},
+    {"dia": 1, "desde": "14:00", "hasta": "15:00", "grupo": 0, "materia": "Sistemas Digitales", "aula": "209", "docente": "Minujen"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "210", "docente": "Minujen"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "201", "docente": "Bolañez"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Arte", "aula": "4", "docente": "Urquiza"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "201", "docente": "Borrelli"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "209", "docente": "Minujen"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Literatura", "aula": "302", "docente": "Antonelli, C. / GonzalezN"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Seguridad Informática", "aula": "203", "docente": "Iriso"},
+    {"dia": 2, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Filosofía", "aula": "3", "docente": "SciartinoM"},
+    {"dia": 2, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Laboratorio de Aplicaciones", "aula": "204", "docente": "Vallone"},
+    {"dia": 3, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Aplicaciones", "aula": "201", "docente": "Vallejos C"},
+    {"dia": 3, "desde": "13:00", "hasta": "14:00", "grupo": 0, "materia": "Seguridad Informática", "aula": "202", "docente": "Iriso"},
+    {"dia": 3, "desde": "14:00", "hasta": "15:00", "grupo": 0, "materia": "Investigación Operativa", "aula": "Bibl", "docente": "Reynoso"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Matemática Aplicada", "aula": "302", "docente": "VázquezS"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "209", "docente": "Yapura"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Laboratorio de Programación", "aula": "201", "docente": "Chiarore"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 0, "materia": "Inglés", "aula": "3", "docente": "Brandi"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Sistemas Digitales", "aula": "203", "docente": "Minujen"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Derechos Trabajo", "aula": "4", "docente": "TorresM"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "209", "docente": "Yapura"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "207", "docente": "Chiarore"},
+    {"dia": 5, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "202", "docente": "Vilca"},
+    {"dia": 5, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Investigación Operativa", "aula": "2", "docente": "Reynoso"},
+    {"dia": 5, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "209", "docente": "Minujen"}
+  ],
+  "dudas": []
+}

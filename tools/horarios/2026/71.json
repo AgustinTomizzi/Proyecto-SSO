@@ -1,0 +1,25 @@
+{
+  "curso": "71",
+  "titulo": "7mo 1ra",
+  "clases": [
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Modelos y Sistemas.", "aula": "8", "docente": "Reynoso"},
+    {"dia": 1, "desde": "17:30", "hasta": "19:30", "grupo": 0, "materia": "Eval. Proyectos.", "aula": "9", "docente": "Bolañez"},
+    {"dia": 1, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Inst. Mant. Rep. Sist. Comput.", "aula": "203", "docente": "Lerzundi"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Empren. Productivos.", "aula": "AT4", "docente": "Vandevoorde"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Proy. Dis. Imp. Sistemas Comput.", "aula": "210", "docente": "Bogado"},
+    {"dia": 3, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Proy. Dis. Imp. Sistemas Comput.", "aula": "207", "docente": "DiazA"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Proy. Dis. Imp. Sistemas Comput.", "aula": "207", "docente": "DiazA"},
+    {"dia": 3, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Proy. Dis. Imp. Sistemas Comput.", "aula": "210", "docente": "Bogado"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Inst. Mant. Rep. Redes", "aula": "207", "docente": "Gallegos"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 1, "materia": "Inst. Mant. Rep. Redes", "aula": "207", "docente": "Minujen"},
+    {"dia": 4, "desde": "17:30", "hasta": "19:30", "grupo": 2, "materia": "Inst. Mant. Rep. Sist. Comput.", "aula": "209", "docente": "Lerzundi"},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 1, "materia": "Inst. Mant. Rep. Sist. Comput.", "aula": "209", "docente": "Lerzundi"},
+    {"dia": 4, "desde": "19:40", "hasta": "21:40", "grupo": 2, "materia": "Inst. Mant. Rep. Redes", "aula": "208", "docente": "Minujen"},
+    {"dia": 5, "desde": "15:15", "hasta": "16:15", "grupo": 0, "materia": "Bases de Datos", "aula": "208", "docente": "Gallegos"},
+    {"dia": 5, "desde": "16:15", "hasta": "18:30", "grupo": 0, "materia": "Bases de Datos", "aula": "208", "docente": "Gallegos"},
+    {"dia": 5, "desde": "18:30", "hasta": "20:40", "grupo": 1, "materia": "Inst. Mant. Rep. Redes", "aula": "208", "docente": "Gallegos"}
+  ],
+  "dudas": [
+    "Viernes: los recuadros están desfasados respecto del resto de la semana: Bases de Datos 15:15-16:15 (1 módulo) + Bases de Datos 16:15-18:30 (2 módulos, cruza el recreo de 17:15) e Inst. Mant. Rep. Redes grupo 1 18:30-20:40 (cruza el recreo de 19:30). Los bordes coinciden con módulos, se transcribieron así."
+  ]
+}

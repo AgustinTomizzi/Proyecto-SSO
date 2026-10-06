@@ -1,0 +1,191 @@
+{
+  "curso": "3F",
+  "titulo": "3ro. \"F\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR2",
+      "docente": "Capul"
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "205",
+      "docente": "GonzalezA"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "7",
+      "docente": "Valenzuela"
+    },
+    {
+      "dia": 1,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "AT1",
+      "docente": "Giordan"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "201",
+      "docente": null
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR2",
+      "docente": "Bronimann"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "302",
+      "docente": "Giordan"
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "AT2",
+      "docente": "Braian"
+    },
+    {
+      "dia": 2,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "AT2",
+      "docente": "Keller"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR1",
+      "docente": "Loto, D."
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR2",
+      "docente": "Bronimann"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "AT3",
+      "docente": "Marueli"
+    },
+    {
+      "dia": 3,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "AT3",
+      "docente": "Brandi"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": "Playón",
+      "docente": "VeraS"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "8",
+      "docente": "Marueli"
+    },
+    {
+      "dia": 4,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "8",
+      "docente": "Vazza"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "AT4",
+      "docente": "Chazarreta"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "AT4",
+      "docente": "RojasW"
+    },
+    {
+      "dia": 5,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "Marquez"
+    },
+    {
+      "dia": 5,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": null,
+      "docente": "Greskow"
+    }
+  ],
+  "dudas": [
+    "Viernes 07:40-09:40 y Martes 13:00-15:00: la imagen dice \"Biologìa\" y \"Geografìa\" con acento grave (ì); se copió tal cual.",
+    "Martes 07:40-09:40 grupo 1 (Lenguajes Tecnológicos, 201): no figura docente.",
+    "Viernes 13:00-15:00 grupo 2 (Sistemas Tecnológicos, Greskow): no figura aula."
+  ]
+}

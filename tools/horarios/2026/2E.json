@@ -1,0 +1,190 @@
+{
+  "curso": "2E",
+  "titulo": "2do. \"E\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "12",
+      "docente": "SantaCruz"
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "12",
+      "docente": "Abate, J."
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "8",
+      "docente": "Aguilo"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR3",
+      "docente": "RodriguezF"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR1",
+      "docente": "Frazzeto"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "DiDonato"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "203",
+      "docente": "Rivero, N."
+    },
+    {
+      "dia": 2,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "6",
+      "docente": "Susi"
+    },
+    {
+      "dia": 2,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "AT3",
+      "docente": "Pujol"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "12",
+      "docente": "Sisti"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "12",
+      "docente": "Petrof"
+    },
+    {
+      "dia": 3,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "ATN",
+      "docente": "SantaCruz"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": null,
+      "docente": "Petrof"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "12",
+      "docente": "CanterosMM"
+    },
+    {
+      "dia": 4,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": "Playón",
+      "docente": "VeraS"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "202",
+      "docente": "Villa"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "Coone"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR3",
+      "docente": "Huertas"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR4",
+      "docente": "Loto, D."
+    },
+    {
+      "dia": 5,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "F/Q",
+      "docente": "Mesa"
+    }
+  ],
+  "dudas": [
+    "Lunes 09:55-11:55 y Jueves 09:55-11:55: la imagen dice \"Biologìa\" y \"Geografìa\" con acento grave (ì); se copió tal cual.",
+    "Jueves 07:40-09:40 (Matemática, Petrof): no figura aula."
+  ]
+}

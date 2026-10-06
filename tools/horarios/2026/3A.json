@@ -1,0 +1,190 @@
+{
+  "curso": "3A",
+  "titulo": "3ro. \"A\"",
+  "clases": [
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR5",
+      "docente": "La Rocca"
+    },
+    {
+      "dia": 1,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "201",
+      "docente": "Stemke, A."
+    },
+    {
+      "dia": 1,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Educación Artística",
+      "aula": "AT3",
+      "docente": "Urquiza"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR4",
+      "docente": "CanterosM"
+    },
+    {
+      "dia": 1,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "Marquez"
+    },
+    {
+      "dia": 1,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 1,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TE",
+      "docente": "Marquez"
+    },
+    {
+      "dia": 1,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 2,
+      "materia": "Procedimientos Técnicos",
+      "aula": "TR5",
+      "docente": "Minicucci"
+    },
+    {
+      "dia": 2,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Biologìa)",
+      "aula": "3",
+      "docente": "Chazarreta"
+    },
+    {
+      "dia": 2,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Historia)",
+      "aula": "3",
+      "docente": "Pereira"
+    },
+    {
+      "dia": 2,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "Educación Física",
+      "aula": "Campo",
+      "docente": "Balverdi"
+    },
+    {
+      "dia": 3,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "3",
+      "docente": "SantaCruz"
+    },
+    {
+      "dia": 3,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "3",
+      "docente": "Mesa"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 1,
+      "materia": "Lenguajes Tecnológicos",
+      "aula": "205",
+      "docente": "Ocampo"
+    },
+    {
+      "dia": 4,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 2,
+      "materia": "Sistemas Tecnológicos",
+      "aula": "TR4",
+      "docente": "La Rocca"
+    },
+    {
+      "dia": 4,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "P. del Lenguaje",
+      "aula": "10",
+      "docente": "SantaCruz"
+    },
+    {
+      "dia": 4,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Naturales (Físico-Química)",
+      "aula": "F/Q",
+      "docente": "Mesa"
+    },
+    {
+      "dia": 4,
+      "desde": "15:15",
+      "hasta": "17:15",
+      "grupo": 0,
+      "materia": "C. Ciudadanía",
+      "aula": "AT1",
+      "docente": "Keller"
+    },
+    {
+      "dia": 5,
+      "desde": "07:40",
+      "hasta": "09:40",
+      "grupo": 0,
+      "materia": "Inglés",
+      "aula": "12",
+      "docente": "Scuderi"
+    },
+    {
+      "dia": 5,
+      "desde": "09:55",
+      "hasta": "11:55",
+      "grupo": 0,
+      "materia": "Matemática",
+      "aula": "12",
+      "docente": "Mesa"
+    },
+    {
+      "dia": 5,
+      "desde": "13:00",
+      "hasta": "15:00",
+      "grupo": 0,
+      "materia": "Ciencias Sociales (Geografìa)",
+      "aula": "7",
+      "docente": "CanterosMM"
+    }
+  ],
+  "dudas": [
+    "Martes 07:40-09:40 y Viernes 13:00-15:00: la imagen dice \"Biologìa\" y \"Geografìa\" con acento grave (ì); se copió tal cual.",
+    "Lunes 13:00-15:00 grupo 1: docente \"CanterosM\" (distinto de \"CanterosMM\" del viernes); se copió tal cual."
+  ]
+}

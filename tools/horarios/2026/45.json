@@ -1,0 +1,33 @@
+{
+  "curso": "45",
+  "titulo": "4to 5ta Prog.",
+  "clases": [
+    {"dia": 1, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Química", "aula": "9", "docente": "Torecilla"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "201", "docente": "Ivanoff"},
+    {"dia": 1, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "108", "docente": "SalcedoM"},
+    {"dia": 1, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Literatura", "aula": "3", "docente": "PereyraY"},
+    {"dia": 1, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Física", "aula": "3", "docente": "SosaP"},
+    {"dia": 1, "desde": "17:30", "hasta": "18:30", "grupo": 0, "materia": "Física", "aula": "3", "docente": "SosaP"},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "108", "docente": "BenitezM"},
+    {"dia": 2, "desde": "07:40", "hasta": "09:40", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": "210", "docente": "Chiarore"},
+    {"dia": 2, "desde": "09:55", "hasta": "11:55", "grupo": 0, "materia": "Salud y Adolescencia", "aula": "8", "docente": "Chazarreta"},
+    {"dia": 2, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Matemática", "aula": "3", "docente": "Di Pietro"},
+    {"dia": 2, "desde": "15:15", "hasta": "17:15", "grupo": 2, "materia": "Laboratorio de Hardware", "aula": null, "docente": "Chiarore"},
+    {"dia": 3, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Educación Física", "aula": "Campo", "docente": "Balverdi"},
+    {"dia": 3, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Matemática", "aula": "11", "docente": "Di Pietro"},
+    {"dia": 3, "desde": "15:15", "hasta": "17:15", "grupo": 0, "materia": "Tecnologías Electrónicas", "aula": "11", "docente": "SosaP"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 1, "materia": "Laboratorio de Sistemas Operativos", "aula": "108", "docente": "MartinezD"},
+    {"dia": 4, "desde": "07:40", "hasta": "09:40", "grupo": 2, "materia": "Laboratorio de Aplicaciones", "aula": "204", "docente": "Choque"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Hardware", "aula": "210", "docente": "Ivanoff"},
+    {"dia": 4, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Sistemas Operativos", "aula": "205", "docente": "Cabrera"},
+    {"dia": 4, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Geografía", "aula": "4", "docente": "CanterosMM"},
+    {"dia": 4, "desde": "15:15", "hasta": "17:15", "grupo": 1, "materia": "Laboratorio de Aplicaciones", "aula": "204", "docente": "Vallone"},
+    {"dia": 5, "desde": "07:40", "hasta": "09:40", "grupo": 0, "materia": "Inglés", "aula": "8", "docente": "Muñoz"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 1, "materia": "Laboratorio de Programación", "aula": "204", "docente": "Choque"},
+    {"dia": 5, "desde": "09:55", "hasta": "11:55", "grupo": 2, "materia": "Laboratorio de Programación", "aula": "207", "docente": "Chiarore"},
+    {"dia": 5, "desde": "13:00", "hasta": "15:00", "grupo": 0, "materia": "Historia", "aula": "9", "docente": "Aimone"}
+  ],
+  "dudas": [
+    "Martes 15:15-17:15 grupo 2 Laboratorio de Hardware (Chiarore): el recuadro no muestra aula; se dejó null."
+  ]
+}
