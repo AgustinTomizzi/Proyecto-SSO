@@ -158,6 +158,7 @@
 .cart-add__row .cart-add__qty { flex: 0 0 110px; min-width: 90px; }
 .cart-add__btn { min-height: 42px; flex: none; }
 .cart-add .hint { margin: 10px 0 0; color: var(--text-soft); font-size: 12.5px; }
+.field-grid > .hint { margin: -6px 0 0; color: var(--text-soft); font-size: 12.5px; }
 .cart-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
 .cart-empty { margin: 0; padding: 16px; text-align: center; color: var(--text-muted); font-size: 13px; background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: 12px; }
 .cart-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-xs); }

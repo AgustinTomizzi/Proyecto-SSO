@@ -383,6 +383,26 @@ Filtros opcionales: `usuarioId`, `entidad`, `accion`, `desde`, `hasta`, `limit`.
 
 Orden descendente. `detalle` se decodifica a JSON. Si falta la tabla devuelve `500` con instrucción de migración. Otro método: `405`.
 
+## Configuración institucional
+
+Claves, tipos, límites y valores por defecto en `includes/config.php`; la tabla `config_institucion` guarda solo los valores modificados y se lee en cada request.
+
+- `GET /config_institucion.php`: cualquier sesión. Devuelve `valores` (tipados), `esquema` (`clave`, `tipo` `bool`/`int`/`hora`, `min`, `max`, `defecto`, `etiqueta`), `franjasReserva` (turnos habilitados unidos cuando se tocan) y `puedeEditar`.
+- `PUT /config_institucion.php` con `{"valores":{"reservas.duracion_maxima_min":120,"reservas.vespertino_habilitado":false}}`, permiso `config.gestionar` (Administrador). Cambio parcial. `400` con `errores` si hay una clave inexistente, un valor fuera de tipo o de rango, o el resultado queda incoherente (un turno que abre después de cerrar, ningún turno habilitado). Audita `config.actualizar` con el antes y el después de lo que cambió.
+- `DELETE /config_institucion.php` con `{"claves":["reservas.duracion_maxima_min"]}`: vuelve esas claves al valor por defecto. Audita `config.actualizar`.
+
+Reglas de reserva:
+
+| Clave | Por defecto | Uso |
+|---|---|---|
+| `reservas.{manana,tarde,vespertino}_habilitado` | `true` | Turno en el que se puede reservar. |
+| `reservas.manana_desde` / `_hasta` | `07:00` / `13:00` | Horario del turno mañana. |
+| `reservas.tarde_desde` / `_hasta` | `13:00` / `17:30` | Horario del turno tarde. |
+| `reservas.vespertino_desde` / `_hasta` | `17:30` / `22:00` | Horario del turno vespertino. |
+| `reservas.duracion_maxima_min` | `240` (15 a 900) | Duración máxima de una reserva. |
+| `reservas.anticipacion_minima_horas` | `0` (0 a 168) | Horas mínimas entre ahora y el inicio; `0` = sin mínimo. |
+| `reservas.anticipacion_maxima_dias` | `90` (0 a 365) | Días máximos hacia adelante; `0` = sin límite. |
+
 ## Galiservas: recursos y reservas
 
 Todos los endpoints de Galiservas (`recursos.php`, `reservas.php`, `reportes_reservas.php`) exigen primero que el rol tenga habilitado el sistema Galiservas en `rol_sistema` (`403` «tu rol no tiene acceso a Galiservas»). La UI pide además el permiso `galiservas.acceder`. Alumno, Directivo y Administrador Académico no tienen acceso.
@@ -414,11 +434,11 @@ Nombre, tipo, categoría (`hardware_pc` o `audiovisual`), ubicación y capacidad
 {"resourceId":3,"date":"2026-09-04","startTime":"10:00","endTime":"11:00","quantity":2,"reason":"Clase de laboratorio"}
 ```
 
-También acepta `recursoId`, `fecha`, `horaInicio`, `horaFin`, `cantidad`, `motivo`. Solo un administrador de reservas puede indicar `userId`; si hay stock el estado inicial es `confirmada`, sin aprobación manual. Dentro de transacción bloquea el recurso, exige fecha actual o futura (en hora argentina; una fecha pasada da `400`), horas válidas, inicio menor a fin y motivo. Recurso inexistente o no disponible: `409`. Suma cantidades solapadas `pendiente`/`confirmada`; falta de capacidad devuelve `409`. Éxito `201` y auditoría.
+También acepta `recursoId`, `fecha`, `horaInicio`, `horaFin`, `cantidad`, `motivo`. Solo un administrador de reservas puede indicar `userId`; si hay stock el estado inicial es `confirmada`, sin aprobación manual. Dentro de transacción bloquea el recurso, exige fecha actual o futura (en hora argentina; una fecha pasada da `400`), horas válidas, inicio menor a fin y motivo. Recurso inexistente o no disponible: `409`. Suma cantidades solapadas `pendiente`/`confirmada`; falta de capacidad devuelve `409`. Además aplica las reglas institucionales (ver «Configuración institucional»): la reserva tiene que caber en un turno habilitado y no superar la duración máxima (`400`); la anticipación mínima y máxima (`400`) no se aplica a quien tiene `reservas.administrar`. Éxito `201` y auditoría.
 
 `GET /reportes_reservas.php[?desde=2026-09-01&hasta=2026-09-30]`, permiso `reservas.administrar`. Cuenta solo reservas `confirmada`/`completada` y responde `{"ok":true,"report":{"byResource":[],"byCategory":[],"byHour":[]}}` con reservas y unidades por recurso, categoría y hora de inicio. Rango inválido: `400`.
 
-`PUT /reservas.php`, permiso `reservas.editar`, requiere `id` en JSON. Usuario común: solo propia y activa (`pendiente` legado o `confirmada`); no puede cambiar estado salvo cancelar. Administrador: puede editar cualquiera y finalizar/cancelar. Revalida capacidad para estados activos. Respuesta `200`.
+`PUT /reservas.php`, permiso `reservas.editar`, requiere `id` en JSON. Usuario común: solo propia y activa (`pendiente` legado o `confirmada`); no puede cambiar estado salvo cancelar. Administrador: puede editar cualquiera y finalizar/cancelar. Revalida capacidad para estados activos; las reglas institucionales se reaplican solo si cambia la fecha o el horario. Respuesta `200`.
 
 `DELETE /reservas.php?id=12`, permiso `reservas.cancelar`, hace cancelación lógica. Usuario común solo propia pendiente/confirmada; administrador puede cancelar cualquier estado. Respuestas: `403` ajena/cambio prohibido, `404` ID, `409` estado/capacidad, `400` validación, `405` método.
 

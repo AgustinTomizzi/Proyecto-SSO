@@ -1,15 +1,17 @@
 import { useEffect, useEffectEvent, useState, type FormEvent, type ReactNode } from 'react'
 import {
   API_URL,
-  ApiError, cancelReservation, createReservation, createResource, getReservationReport, getReservations, getResources,
-  logout, restoreSession, setReservationStatus, updateReservation, updateResource,
+  ApiError, cancelReservation, createReservation, createResource, getConfig, getReservationReport, getReservations, getResources,
+  logout, resetConfig, restoreSession, setReservationStatus, updateConfig, updateReservation, updateResource,
 } from './api'
 import { hoyLocal, horaLocal, ZONA_HORARIA } from './fecha'
-import type { Page, Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session } from './types'
+import type { InstitutionConfig, Page, Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session } from './types'
 import { AppLayout, type NavItem } from './components/AppLayout'
 import { Icon, type IconName } from './components/Icon'
 import { SplashScreen, StatusScreen } from './components/StatusScreen'
 import { Calendario } from './components/Calendario'
+import { ReglasReserva } from './components/ReglasReserva'
+import { errorReglas, fechaMaxima, resumenReglas } from './reglas'
 import { avisarCierreSesion, canAccessGaliservas, escucharCierreSesion, GALISENCIA_URL, messageOf, normalize, urlLoginGalisencia } from './utils'
 import { useTheme } from './theme'
 import './App.css'
@@ -49,8 +51,9 @@ function LoadingLine({ children }: { children: ReactNode }) {
   return <div className="loading-line" role="status"><span className="spinner"/>{children}</div>
 }
 
-function ReservationForm({ resources, initial, preferredResourceId, busy, onSubmit, onClose }: {
-  resources: Resource[], initial?: Reservation, preferredResourceId?: string, busy: boolean, onSubmit: (input: ReservationInput) => void, onClose?: () => void
+function ReservationForm({ resources, initial, preferredResourceId, busy, onSubmit, onClose, config, admin }: {
+  resources: Resource[], initial?: Reservation, preferredResourceId?: string, busy: boolean, onSubmit: (input: ReservationInput) => void, onClose?: () => void,
+  config: InstitutionConfig | null, admin: boolean,
 }) {
   const [form, setForm] = useState<ReservationInput>(() => {
     if (initial) return { resourceId: initial.resourceId, date: initial.date, start: initial.start, end: initial.end, quantity: initial.quantity, reason: initial.reason }
@@ -101,6 +104,10 @@ function ReservationForm({ resources, initial, preferredResourceId, busy, onSubm
     if (!form.date || !form.start || !form.end) return setError('Completá la fecha y el horario de la reserva.')
     if (form.date < hoyLocal()) return setError('La fecha no puede ser anterior a hoy.')
     if (form.start >= form.end) return setError('La hora de fin debe ser posterior al inicio.')
+    // Las reglas se reaplican solo si cambia la fecha o el horario (igual que el servidor).
+    const changedSlot = !initial || initial.date !== form.date || initial.start !== form.start || initial.end !== form.end
+    const ruleError = changedSlot ? errorReglas(config, admin, form.date, form.start, form.end) : ''
+    if (ruleError) return setError(ruleError)
     const maximum = slotAvailable ?? selected.capacity
     const quantity = isRoom ? selected.capacity : form.quantity
     if (isRoom) {
@@ -117,10 +124,11 @@ function ReservationForm({ resources, initial, preferredResourceId, busy, onSubm
       <label className="span-2">Recurso<select value={form.resourceId} onChange={(e) => change('resourceId', e.target.value)} disabled={busy}>
         <option value="">Seleccionar recurso</option>{resources.filter((item) => item.active).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.capacity} equipos</option>)}
       </select></label>
-      <label className={isRoom ? 'span-2' : undefined}>Fecha<input type="date" min={hoyLocal()} value={form.date} onChange={(e) => change('date', e.target.value)} disabled={busy}/>{isRoom && <small>{checkingAvailability ? 'Consultando disponibilidad...' : (slotAvailable ?? selected?.capacity ?? 0) >= (selected?.capacity ?? 0) ? `Aula completa disponible (${selected?.capacity} equipos)` : `Solo disponible parcialmente para ese horario`}</small>}</label>
+      <label className={isRoom ? 'span-2' : undefined}>Fecha<input type="date" min={hoyLocal()} max={fechaMaxima(config, admin)} value={form.date} onChange={(e) => change('date', e.target.value)} disabled={busy}/>{isRoom && <small>{checkingAvailability ? 'Consultando disponibilidad...' : (slotAvailable ?? selected?.capacity ?? 0) >= (selected?.capacity ?? 0) ? `Aula completa disponible (${selected?.capacity} equipos)` : `Solo disponible parcialmente para ese horario`}</small>}</label>
       {!isRoom && <label>Cantidad<input type="number" min="1" max={slotAvailable ?? selected?.capacity ?? 1} value={form.quantity} onChange={(e) => change('quantity', Number(e.target.value))} disabled={busy || checkingAvailability}/><small>{checkingAvailability ? 'Consultando disponibilidad...' : `Disponibles en esa franja: ${slotAvailable ?? selected?.capacity ?? 0}`}</small></label>}
       <label>Hora de inicio<input type="time" value={form.start} onChange={(e) => change('start', e.target.value)} disabled={busy}/></label>
       <label>Hora de fin<input type="time" value={form.end} onChange={(e) => change('end', e.target.value)} disabled={busy}/></label>
+      {config && <p className="hint span-2">{resumenReglas(config, admin)}</p>}
       <label className="span-2">Motivo<textarea rows={4} maxLength={300} value={form.reason} onChange={(e) => change('reason', e.target.value)} placeholder="Ej.: Práctica de programación de 4° año" disabled={busy}/><small className="counter">{form.reason.length}/300</small></label>
     </div>
     <div className="form-actions">{onClose && <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>}<button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Guardando...' : initial ? 'Guardar cambios' : 'Confirmar reserva'}</button></div>
@@ -129,8 +137,8 @@ function ReservationForm({ resources, initial, preferredResourceId, busy, onSubm
 
 type CartItem = { resourceId: string, resourceName: string, quantity: number, capacity: number, available: number, isRoom: boolean }
 
-function NewReservationForm({ resources, preferredResourceId, busy, onSubmit }: {
-  resources: Resource[], preferredResourceId?: string, busy: boolean,
+function NewReservationForm({ resources, preferredResourceId, busy, onSubmit, config, admin }: {
+  resources: Resource[], preferredResourceId?: string, busy: boolean, config: InstitutionConfig | null, admin: boolean,
   onSubmit: (shared: { date: string, start: string, end: string, reason: string }, items: { resourceId: string, quantity: number }[]) => Promise<{ failures: { resourceId: string, message: string }[] }>,
 }) {
   const activeResources = resources.filter((item) => item.active)
@@ -204,6 +212,8 @@ function NewReservationForm({ resources, preferredResourceId, busy, onSubmit }: 
     if (!shared.date || !shared.start || !shared.end) return setFormError('Completá la fecha y el horario de la reserva.')
     if (shared.date < hoyLocal()) return setFormError('La fecha no puede ser anterior a hoy.')
     if (shared.start >= shared.end) return setFormError('La hora de fin debe ser posterior al inicio.')
+    const ruleError = errorReglas(config, admin, shared.date, shared.start, shared.end)
+    if (ruleError) return setFormError(ruleError)
     if (shared.reason.trim().length < 5) return setFormError('Explicá el motivo de la reserva (mínimo 5 caracteres).')
     if (cart.length === 0) return setFormError('Agregá al menos un recurso a la reserva.')
     setSubmitting(true)
@@ -220,9 +230,10 @@ function NewReservationForm({ resources, preferredResourceId, busy, onSubmit }: 
   return <form className="gform cart-form" onSubmit={(e) => void submit(e)} noValidate>
     {formError && <div className="alert alert--error" role="alert"><Icon name="alert"/><span>{formError}</span></div>}
     <div className="field-grid field-grid--3">
-      <label>Fecha<input type="date" min={hoyLocal()} value={shared.date} onChange={(e) => changeShared('date', e.target.value)} disabled={disabled}/></label>
+      <label>Fecha<input type="date" min={hoyLocal()} max={fechaMaxima(config, admin)} value={shared.date} onChange={(e) => changeShared('date', e.target.value)} disabled={disabled}/></label>
       <label>Hora de inicio<input type="time" value={shared.start} onChange={(e) => changeShared('start', e.target.value)} disabled={disabled}/></label>
       <label>Hora de fin<input type="time" value={shared.end} onChange={(e) => changeShared('end', e.target.value)} disabled={disabled}/></label>
+      {config && <p className="hint span-all">{resumenReglas(config, admin)}</p>}
       <label className="span-all">Motivo<textarea rows={3} maxLength={300} value={shared.reason} onChange={(e) => changeShared('reason', e.target.value)} placeholder="Ej.: Práctica de programación de 4° año" disabled={disabled}/><small className="counter">{shared.reason.length}/300</small></label>
     </div>
 
@@ -564,6 +575,7 @@ function App() {
   const [resources, setResources] = useState<Resource[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [report, setReport] = useState<ReservationReport | null>(null)
+  const [config, setConfig] = useState<InstitutionConfig | null>(null)
   const [category, setCategory] = useState<'all' | Resource['category']>('all')
   const [dataLoading, setDataLoading] = useState(false)
   const [dataError, setDataError] = useState('')
@@ -608,11 +620,11 @@ function App() {
     if (!session) return
     setDataLoading(true); setDataError('')
     try {
-      const [nextResources, nextReservations, nextReport] = await Promise.all([
-        getResources(), getReservations(admin ? undefined : 'mine'), admin ? getReservationReport() : Promise.resolve(null),
+      const [nextResources, nextReservations, nextReport, nextConfig] = await Promise.all([
+        getResources(), getReservations(admin ? undefined : 'mine'), admin ? getReservationReport() : Promise.resolve(null), getConfig(),
       ])
       setResources(nextResources); setReservations(nextReservations)
-      setReport(nextReport)
+      setReport(nextReport); setConfig(nextConfig)
     } catch (error) { setDataError(messageOf(error)) }
     finally { setDataLoading(false) }
   }
@@ -654,6 +666,12 @@ function App() {
     else setToast('Error: no se pudo crear ninguna reserva.')
     return { failures }
   }
+  const saveConfig = async (action: () => Promise<InstitutionConfig>, success: string) => {
+    setBusyId('rules')
+    try { setConfig(await action()); setToast(success); return '' }
+    catch (error) { return messageOf(error) }
+    finally { setBusyId('') }
+  }
   const doLogout = async () => {
     setBusyId('logout')
     try { await logout(); avisarCierreSesion(); window.location.assign(GALISENCIA_URL) }
@@ -691,6 +709,7 @@ function App() {
     ...(admin ? [{ id: 'reservations' as Page, label: 'Reservas', icon: 'calendar' as const }] : []),
     ...(admin ? [{ id: 'resources' as Page, label: 'Recursos', icon: 'layers' as const }] : []),
     ...(admin ? [{ id: 'reports' as Page, label: 'Reportes', icon: 'chart' as const }] : []),
+    ...(config?.puedeEditar ? [{ id: 'rules' as Page, label: 'Reglas', icon: 'sliders' as const }] : []),
     { id: 'mine', label: 'Mis reservas', icon: 'user' }, { id: 'new', label: 'Nueva reserva', icon: 'plus' },
   ]
   const visibleReservations = page === 'mine' ? reservations.filter((item) => !item.userId || item.userId === session.user.id) : reservations
@@ -742,12 +761,20 @@ function App() {
         <Calendario scope={admin ? undefined : 'mine'} admin={admin} userId={session.user.id} version={reservations}
           puedeModificar={canChange} onEditar={setEditing} onCancelar={setCancelling}/>
       </>}
+      {page === 'rules' && config?.puedeEditar && <>
+        <PageHead title="Reglas de reserva" sub="Horario habilitado por turno, duración máxima y anticipación de las reservas."/>
+        <FormCard step="01" title="Reglas institucionales" description="Se aplican a todas las reservas nuevas de Galiservas.">
+          <ReglasReserva config={config} busy={busyId === 'rules'}
+            onSave={(valores) => saveConfig(() => updateConfig(valores), 'Reglas actualizadas.')}
+            onReset={(claves) => saveConfig(() => resetConfig(claves), 'Se restablecieron los valores por defecto.')}/>
+        </FormCard>
+      </>}
       {page === 'reports' && <><PageHead title="Reportes de reservas" sub="Recursos más utilizados, categorías y horarios de mayor demanda."/><Reports report={report}/></>}
       {page === 'resources' && <><PageHead title="Recursos" sub="Agregá aulas y objetos nuevos, o sumá cantidad a los que ya existen."/><ResourcesAdmin resources={resources} reservations={reservations} busyId={busyId} onCreate={createResourceItem} onAddQuantity={addResourceQuantity}/></>}
       {page === 'new' && <>
         <PageHead title="Reservar recursos" sub="Indicá cuándo, y sumá todas las aulas y objetos que necesites para esa reserva."/>
         <FormCard step="01" title="Datos de la reserva" description="Podés agregar más de un recurso antes de confirmar.">
-          <NewReservationForm resources={resources} preferredResourceId={preferredResourceId} busy={busyId === 'form'} onSubmit={submitReservationBatch}/>
+          <NewReservationForm resources={resources} preferredResourceId={preferredResourceId} busy={busyId === 'form'} onSubmit={submitReservationBatch} config={config} admin={admin}/>
         </FormCard>
       </>}
     </div>
@@ -758,7 +785,7 @@ function App() {
           <div><p className="card-kicker">Editar reserva</p><h2 className="modal__title" id="edit-title">{editing.resourceName}</h2></div>
           <button type="button" className="icon-btn" onClick={() => setEditing(null)} aria-label="Cerrar"><Icon name="close"/></button>
         </div>
-        <ReservationForm resources={resources} initial={editing} busy={busyId === editing.id} onClose={() => setEditing(null)} onSubmit={(input) => void mutate(() => updateReservation(editing.id, input), 'Reserva actualizada.', editing.id)}/>
+        <ReservationForm resources={resources} initial={editing} busy={busyId === editing.id} config={config} admin={admin} onClose={() => setEditing(null)} onSubmit={(input) => void mutate(() => updateReservation(editing.id, input), 'Reserva actualizada.', editing.id)}/>
       </section>
     </div>}
     {cancelling && <div className="modal-overlay" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setCancelling(null) }}>

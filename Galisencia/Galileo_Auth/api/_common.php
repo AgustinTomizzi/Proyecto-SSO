@@ -7,6 +7,7 @@ require_once __DIR__ . "/../includes/auth.php";
 require_once __DIR__ . "/../includes/permisos.php";
 require_once __DIR__ . "/../includes/auditoria.php";
 require_once __DIR__ . "/../includes/autenticacion.php";
+require_once __DIR__ . "/../includes/config.php";
 
 header("Content-Type: application/json; charset=utf-8");
 

@@ -65,10 +65,12 @@ El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre
 | Perfil efectivo | Navegación | Alcance backend |
 |---|---|---|
 | Preceptor, Docente | Panel, Aulas, Pañol, Calendario, Mis reservas, Nueva reserva | Recursos activos y reservas propias confirmadas automáticamente. |
-| Administrador | Panel, Aulas, Pañol, Calendario, Reservas, Recursos, Reportes, Mis reservas, Nueva reserva | Todas las reservas, reportes y API de recursos. |
+| Administrador | Panel, Aulas, Pañol, Calendario, Reservas, Recursos, Reportes, Reglas, Mis reservas, Nueva reserva | Todas las reservas, reportes y API de recursos. |
 | Alumno, Directivo, Administrador Académico | Sin acceso | UI y API rechazan la sesión para Galiservas. |
 
 **Calendario:** vistas de día, semana (lunes a domingo, grilla de 07:00 a 22:00 que se estira si hay reservas fuera de ese horario) y mes, con navegación anterior/hoy/siguiente y filtro por categoría (Hardware de PC o Audiovisuales), que aplica el servidor. Las canceladas se ocultan salvo que se marque "Mostrar canceladas". Al elegir una reserva se ve su detalle (el administrador ve además quién reservó) y, si sigue activa y es propia o se administra, se puede editar o cancelar. El Administrador ve todas las reservas; el resto, solo las propias.
+
+**Reglas:** el Administrador (`config.gestionar`) habilita o deshabilita cada turno, define su horario de apertura y cierre, la duración máxima y la anticipación mínima y máxima, o las restablece a los valores por defecto. Los formularios de reserva muestran las reglas vigentes debajo del horario y avisan antes de enviar; la validación que vale es la del servidor.
 
 Al cargar, Galiservas llama `GET sesion.php`; si la cookie es válida recupera usuario, permisos y sistemas habilitados. La UI exige `galiservas.acceder`, mientras `reservas.php`, `recursos.php` y `reportes_reservas.php` vuelven a validar `rol_sistema` (`api_requerir_sistema`) y permisos. Si la cuenta todavía tiene la contraseña inicial, Galiservas pide cambiarla desde Galisencia. El logout destruye la sesión y redirige a Galisencia.
 

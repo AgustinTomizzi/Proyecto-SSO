@@ -23,13 +23,57 @@ function horaReservaValida($hora)
     return api_hora_valida($hora);
 }
 
-function validarDisponibilidad($pdo, $datos, $excluirId = 0)
+/**
+ * Reglas institucionales (config_institucion): la reserva tiene que caber en un
+ * turno habilitado y no superar la duración máxima. La anticipación mínima y
+ * máxima no se aplica a quien administra reservas.
+ */
+function validarReglasInstitucionales($datos, $administra)
+{
+    $config = config_institucion();
+    $inicio = substr($datos["startTime"], 0, 5);
+    $fin = substr($datos["endTime"], 0, 5);
+    $franjas = config_franjas_reserva($config);
+    $dentro = false;
+    foreach ($franjas as $franja) {
+        if ($inicio >= $franja["desde"] && $fin <= $franja["hasta"]) {
+            $dentro = true;
+            break;
+        }
+    }
+    if (!$dentro) {
+        $horario = implode(" y ", array_map(fn ($f) => "{$f["desde"]} a {$f["hasta"]}", $franjas));
+        api_json(["ok" => false, "error" => "la reserva tiene que quedar dentro del horario habilitado ($horario)"], 400);
+    }
+    [$hi, $mi] = array_map("intval", explode(":", $inicio));
+    [$hf, $mf] = array_map("intval", explode(":", $fin));
+    $duracion = ($hf * 60 + $mf) - ($hi * 60 + $mi);
+    if ($duracion > $config["reservas.duracion_maxima_min"]) {
+        api_json(["ok" => false, "error" => "la reserva no puede durar más de {$config["reservas.duracion_maxima_min"]} minutos"], 400);
+    }
+    if ($administra) {
+        return;
+    }
+    $minimaHoras = $config["reservas.anticipacion_minima_horas"];
+    if ($minimaHoras > 0 && "{$datos["date"]} $inicio" < date("Y-m-d H:i", time() + $minimaHoras * 3600)) {
+        api_json(["ok" => false, "error" => "las reservas se hacen con al menos $minimaHoras horas de anticipación"], 400);
+    }
+    $maximaDias = $config["reservas.anticipacion_maxima_dias"];
+    if ($maximaDias > 0 && $datos["date"] > date("Y-m-d", strtotime("+$maximaDias days"))) {
+        api_json(["ok" => false, "error" => "las reservas se hacen con hasta $maximaDias días de anticipación"], 400);
+    }
+}
+
+function validarDisponibilidad($pdo, $datos, $excluirId = 0, $reglas = null)
 {
     if ($datos["resourceId"] <= 0 || !api_fecha_valida($datos["date"]) || !horaReservaValida($datos["startTime"]) || !horaReservaValida($datos["endTime"]) || $datos["startTime"] >= $datos["endTime"] || $datos["quantity"] <= 0 || $datos["reason"] === "" || strlen($datos["reason"]) > 500) {
         api_json(["ok" => false, "error" => "recurso, fecha, horario valido, quantity positiva y reason son requeridos"], 400);
     }
     if ($datos["date"] < date("Y-m-d")) {
         api_json(["ok" => false, "error" => "la fecha de reserva no puede ser anterior a hoy"], 400);
+    }
+    if ($reglas !== null) {
+        validarReglasInstitucionales($datos, $reglas["administra"]);
     }
     $stmt = $pdo->prepare("SELECT capacity, active, available FROM resources WHERE id_resource = ? FOR UPDATE");
     $stmt->execute([$datos["resourceId"]]);
@@ -96,7 +140,7 @@ if ($method === "POST") {
     }
     $pdo->beginTransaction();
     try {
-        validarDisponibilidad($pdo, $datos);
+        validarDisponibilidad($pdo, $datos, 0, ["administra" => $administra]);
         $stmt = $pdo->prepare("INSERT INTO reservations (user_id, resource_id, reservation_date, start_time, end_time, quantity, reason, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmada')");
         $stmt->execute([$userId, $datos["resourceId"], $datos["date"], $datos["startTime"], $datos["endTime"], $datos["quantity"], $datos["reason"]]);
         $id = (int) $pdo->lastInsertId();
@@ -149,7 +193,12 @@ if (!in_array($status, ["pendiente", "confirmada", "rechazada", "cancelada", "co
 $pdo->beginTransaction();
 try {
     if (in_array($status, ["pendiente", "confirmada"], true)) {
-        validarDisponibilidad($pdo, $datos, $id);
+        // Las reglas institucionales se aplican solo si cambia la fecha o el horario:
+        // un cambio de estado o de cantidad no invalida una reserva ya aceptada.
+        $cambiaHorario = $datos["date"] !== $actual["reservation_date"]
+            || substr($datos["startTime"], 0, 5) !== substr($actual["start_time"], 0, 5)
+            || substr($datos["endTime"], 0, 5) !== substr($actual["end_time"], 0, 5);
+        validarDisponibilidad($pdo, $datos, $id, $cambiaHorario ? ["administra" => $administra] : null);
     }
     $pdo->prepare("UPDATE reservations SET resource_id = ?, reservation_date = ?, start_time = ?, end_time = ?, quantity = ?, reason = ?, status = ? WHERE id_reservation = ?")
         ->execute([$datos["resourceId"], $datos["date"], $datos["startTime"], $datos["endTime"], $datos["quantity"], $datos["reason"], $status, $id]);

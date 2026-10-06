@@ -322,3 +322,14 @@ CREATE TABLE ciclos_lectivos (
   UNIQUE KEY uq_ciclo_anio (anio),
   CONSTRAINT fk_ciclo_cerrado_por FOREIGN KEY (cerrado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Configuracion institucional (clave/valor). Claves, tipos y valores por
+-- defecto: includes/config.php. Solo se guardan los valores modificados.
+CREATE TABLE config_institucion (
+  clave VARCHAR(64) NOT NULL,
+  valor VARCHAR(255) NOT NULL,
+  actualizado_por INT UNSIGNED DEFAULT NULL,
+  actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (clave),
+  CONSTRAINT fk_config_actualizado_por FOREIGN KEY (actualizado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

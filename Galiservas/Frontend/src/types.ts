@@ -1,4 +1,4 @@
-export type Page = 'dashboard' | 'aulas' | 'panol' | 'calendar' | 'reservations' | 'resources' | 'reports' | 'mine' | 'new'
+export type Page = 'dashboard' | 'aulas' | 'panol' | 'calendar' | 'reservations' | 'rules' | 'resources' | 'reports' | 'mine' | 'new'
 
 export interface User {
   id: string
@@ -66,4 +66,22 @@ export interface ResourceInput {
   capacity: number
   active: boolean
   available: boolean
+}
+
+export type ConfigValue = string | number | boolean
+
+export interface ConfigField {
+  clave: string
+  tipo: 'bool' | 'int' | 'hora'
+  defecto: ConfigValue
+  etiqueta: string
+  min?: number
+  max?: number
+}
+
+export interface InstitutionConfig {
+  valores: Record<string, ConfigValue>
+  esquema: ConfigField[]
+  franjasReserva: { desde: string, hasta: string }[]
+  puedeEditar: boolean
 }

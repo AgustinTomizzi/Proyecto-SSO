@@ -1,4 +1,4 @@
-import type { Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session, User } from './types'
+import type { InstitutionConfig, Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session, User } from './types'
 
 const configuredUrl = import.meta.env.VITE_API_URL?.trim()
 export const API_URL = (configuredUrl || '/api').replace(/\/+$/, '')
@@ -248,4 +248,24 @@ export async function cancelReservation(id: string) {
     if (!(error instanceof ApiError) || ![404, 405].includes(error.status)) throw error
     return request(`reservas.php?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
   }
+}
+
+function parseConfig(data: JsonRecord): InstitutionConfig {
+  const valores = record(data.valores) as InstitutionConfig['valores']
+  const franjas = Array.isArray(data.franjasReserva) ? data.franjasReserva.map(record).map((f) => ({ desde: text(f.desde), hasta: text(f.hasta) })) : []
+  const esquema = Array.isArray(data.esquema) ? data.esquema.map(record) as unknown as InstitutionConfig['esquema'] : []
+  return { valores, esquema, franjasReserva: franjas, puedeEditar: data.puedeEditar === true }
+}
+
+/** Configuración institucional (reglas de reserva). La lee cualquier sesión. */
+export async function getConfig(): Promise<InstitutionConfig> {
+  return parseConfig(await request('config_institucion.php'))
+}
+
+export async function updateConfig(valores: InstitutionConfig['valores']): Promise<InstitutionConfig> {
+  return parseConfig(await request('config_institucion.php', { method: 'PUT', body: JSON.stringify({ valores }) }))
+}
+
+export async function resetConfig(claves: string[]): Promise<InstitutionConfig> {
+  return parseConfig(await request('config_institucion.php', { method: 'DELETE', body: JSON.stringify({ claves }) }))
 }

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 export type IconName = 'grid' | 'calendar' | 'user' | 'plus' | 'logout' | 'monitor' | 'box' | 'clock' | 'menu' | 'close' | 'laptop' | 'camera'
   | 'mic' | 'speaker' | 'cable' | 'chevron' | 'chevron-left' | 'chevron-right' | 'layers' | 'sun' | 'moon' | 'bell' | 'school' | 'arrow-right'
-  | 'refresh' | 'lock' | 'eye' | 'eye-off' | 'alert' | 'chart' | 'check'
+  | 'refresh' | 'lock' | 'eye' | 'eye-off' | 'alert' | 'chart' | 'check' | 'sliders'
 
 const paths: Record<IconName, ReactNode> = {
   grid: <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></>,
@@ -36,6 +36,7 @@ const paths: Record<IconName, ReactNode> = {
   alert: <><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></>,
   chart: <path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>,
   check: <path d="M20 6 9 17l-5-5"/>,
+  sliders: <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>,
 }
 
 export function Icon({ name, size }: { name: IconName, size?: number }) {

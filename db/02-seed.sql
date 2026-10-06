@@ -43,7 +43,8 @@ INSERT INTO permisos (nombre, descripcion) VALUES
   ('horarios.ver', 'Ver el horario del curso'),
   ('horarios.gestionar', 'Cargar, reemplazar y eliminar horarios'),
   ('suplencias.crear', 'Registrar suplencias de preceptores'),
-  ('ciclos.promover', 'Promover alumnos y cerrar el ciclo lectivo');
+  ('ciclos.promover', 'Promover alumnos y cerrar el ciclo lectivo'),
+  ('config.gestionar', 'Modificar la configuracion institucional');
 
 -- Galisencia admite todos los perfiles; Galiservas solo Preceptor, Docente y Administrador.
 INSERT INTO rol_sistema (rol_id, sistema_id)

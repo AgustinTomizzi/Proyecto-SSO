@@ -1,0 +1,12 @@
+/* Reglas institucionales de reserva. Usa solo los tokens del tema. */
+.reglas__grupo { margin: 0 0 22px; padding: 0; border: 0; }
+.reglas__grupo legend { margin-bottom: 12px; color: var(--text); font-family: "Plus Jakarta Sans", sans-serif; font-size: 14px; font-weight: 800; }
+.reglas__turno { display: grid; grid-template-columns: 160px repeat(2, minmax(0, 1fr)); align-items: end; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.reglas__turno.off label:not(.reglas__check) { opacity: .5; }
+.gform .reglas__check { flex-direction: row; align-items: center; gap: 10px; min-height: 42px; color: var(--text); font-size: 14px; cursor: pointer; }
+.gform .reglas__check input { width: 18px; min-height: 0; height: 18px; accent-color: var(--accent); }
+.reglas .hint { margin-top: 10px; color: var(--text-soft); font-size: 12.5px; }
+@media (max-width: 640px) {
+  .reglas__turno { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reglas__check { grid-column: 1 / -1; }
+}

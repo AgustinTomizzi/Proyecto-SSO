@@ -647,7 +647,11 @@ async function main() {
   assert.equal(reporteMateria.body.resumen.totalAlumnos, 12);
 
   // ---- Galiservas: acceso por rol y reservas con stock ----
-  const fechaReserva = new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  // Fechas en hora argentina. La reserva de prueba va a 45 días: fuera de la
+  // actividad demo (21 días) y dentro de la anticipación máxima por defecto (90).
+  const fechaArgentina = (instante) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" }).format(instante);
+  const enDias = (dias) => fechaArgentina(new Date(Date.now() + dias * 24 * 3600 * 1000));
+  const fechaReserva = enDias(45);
 
   expectStatus(await alumno.request("/recursos.php"), 403, "alumno lista recursos");
   expectStatus(await directivo.request("/recursos.php"), 403, "directivo lista recursos");
@@ -666,16 +670,15 @@ async function main() {
   assert.ok(recursosStend, "Debe existir stock del pañol audiovisual");
 
   // ---- Zona horaria: "hoy" es la fecha argentina, no la UTC ----
-  const fechaArgentina = (instante) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" }).format(instante);
   const hoyArgentina = fechaArgentina(new Date());
   const ayerArgentina = fechaArgentina(new Date(Date.now() - 24 * 3600 * 1000));
   const reservaHoy = await preceptor.json("/reservas.php", "POST", {
-    resourceId: aula208.id, date: hoyArgentina, startTime: "23:00", endTime: "23:30", quantity: 1, reason: "test zona horaria",
+    resourceId: aula208.id, date: hoyArgentina, startTime: "21:00", endTime: "21:30", quantity: 1, reason: "test zona horaria",
   });
   expectStatus(reservaHoy, 201, `reserva para hoy en Argentina (${hoyArgentina})`);
   expectStatus(
     await preceptor.json("/reservas.php", "POST", {
-      resourceId: aula208.id, date: ayerArgentina, startTime: "23:00", endTime: "23:30", quantity: 1, reason: "ayer",
+      resourceId: aula208.id, date: ayerArgentina, startTime: "21:00", endTime: "21:30", quantity: 1, reason: "ayer",
     }),
     400,
     "reserva para ayer"
@@ -759,6 +762,51 @@ async function main() {
   expectStatus(await preceptor.request("/reservas.php?desde=2026-02-10&hasta=2026-02-01"), 400, "rango invertido");
   expectStatus(await preceptor.request("/reservas.php?desde=2026-02-01"), 400, "rango incompleto");
   expectStatus(await preceptor.request("/reservas.php?categoria=muebles"), 400, "categoría inexistente");
+
+  // ---- Reglas institucionales de reserva (config_institucion) ----
+  {
+    const config = await preceptor.request("/config_institucion.php");
+    expectStatus(config, 200, "cualquier sesión lee la configuración");
+    assert.deepEqual(config.body.franjasReserva, [{ desde: "07:00", hasta: "22:00" }], "turnos por defecto contiguos");
+    assert.equal(config.body.valores["reservas.duracion_maxima_min"], 240);
+    assert.equal(config.body.puedeEditar, false);
+    const cambiarConfig = (sesion, valores) => sesion.json("/config_institucion.php", "PUT", { valores });
+    expectStatus(await cambiarConfig(preceptor, { "reservas.duracion_maxima_min": 60 }), 403, "preceptor no cambia la configuración");
+    expectStatus(await cambiarConfig(academica, { "reservas.duracion_maxima_min": 60 }), 403, "administración académica no cambia la configuración");
+    expectStatus(await cambiarConfig(admin, { "reservas.inventada": 1 }), 400, "clave inexistente");
+    expectStatus(await cambiarConfig(admin, { "reservas.duracion_maxima_min": 5 }), 400, "duración fuera de rango");
+    expectStatus(await cambiarConfig(admin, { "reservas.manana_desde": "25:00" }), 400, "hora inválida");
+    expectStatus(await cambiarConfig(admin, { "reservas.manana_desde": "14:00" }), 400, "turno que abre después de cerrar");
+    const reglas = await cambiarConfig(admin, {
+      "reservas.duracion_maxima_min": 60, "reservas.anticipacion_minima_horas": 48,
+      "reservas.anticipacion_maxima_dias": 30, "reservas.vespertino_habilitado": false,
+    });
+    expectStatus(reglas, 200, "el administrador cambia las reglas");
+    assert.deepEqual(reglas.body.franjasReserva, [{ desde: "07:00", hasta: "17:30" }]);
+
+    const reservar = (sesion, date, startTime, endTime, reason) => sesion.json("/reservas.php", "POST", { resourceId: aula208.id, date, startTime, endTime, quantity: 1, reason });
+    expectStatus(await reservar(preceptor, enDias(45), "10:00", "11:00", "lejos"), 400, "supera la anticipación máxima");
+    expectStatus(await reservar(preceptor, enDias(1), "08:00", "09:00", "pronto"), 400, "no respeta la anticipación mínima");
+    expectStatus(await reservar(preceptor, enDias(10), "18:00", "19:00", "vespertino"), 400, "turno deshabilitado");
+    expectStatus(await reservar(preceptor, enDias(10), "08:00", "10:00", "larga"), 400, "supera la duración máxima");
+    const valida = await reservar(preceptor, enDias(10), "11:00", "12:00", "reglas ok");
+    expectStatus(valida, 201, "reserva que cumple las reglas");
+    expectStatus(await reservar(admin, enDias(45), "10:00", "11:00", "admin lejos"), 201, "la anticipación no aplica a quien administra");
+
+    expectStatus(await cambiarConfig(admin, { "reservas.duracion_maxima_min": 30 }), 200, "reduce la duración máxima");
+    const idValida = valida.body.reserva.id;
+    expectStatus(await preceptor.json("/reservas.php", "PUT", { id: idValida, quantity: 2 }), 200, "editar la cantidad no reaplica las reglas");
+    expectStatus(await preceptor.json("/reservas.php", "PUT", { id: idValida, endTime: "12:30" }), 400, "cambiar el horario sí las reaplica");
+
+    const auditoriaConfig = await admin.request("/auditoria.php?accion=config.actualizar&limit=5");
+    assert.ok(auditoriaConfig.body.registros.some((r) => r.detalle?.cambios?.["reservas.duracion_maxima_min"]?.despues === 30), "cambio de configuración auditado");
+    const restablecida = await admin.json("/config_institucion.php", "DELETE", { claves: [
+      "reservas.duracion_maxima_min", "reservas.anticipacion_minima_horas", "reservas.anticipacion_maxima_dias", "reservas.vespertino_habilitado",
+    ] });
+    expectStatus(restablecida, 200, "restablece los valores por defecto");
+    assert.equal(restablecida.body.valores["reservas.duracion_maxima_min"], 240);
+    assert.deepEqual(restablecida.body.franjasReserva, [{ desde: "07:00", hasta: "22:00" }]);
+  }
 
   const auditoriaReservas = await admin.request("/auditoria.php?accion=reservas.crear&limit=10");
   expectStatus(auditoriaReservas, 200, "auditoria de reservas");
