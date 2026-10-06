@@ -10,8 +10,9 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 3. `db/03-migracion-rbac-auditoria.sql`: migración incremental para instalaciones anteriores. En una instalación nueva es redundante pero segura; Docker la ejecuta igual porque monta todo `db/` en `docker-entrypoint-initdb.d`.
 4. `db/04-horarios.sql`: imágenes de horario por curso y permisos `horarios.*`.
 5. `db/05-seguridad.sql`: tabla `login_intentos` (límite de intentos de autenticación) y columna `usuarios.debe_cambiar_password` (al crearla marca las cuentas demo). Idempotente.
+6. `db/06-horarios-grilla.sql`: grilla de horarios (`franjas_horarias` con sus módulos por turno y `horario_clases`). Idempotente.
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `06-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) quedará obsoleta cuando la Fase 1 pase los horarios a tabla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `07-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -36,6 +37,11 @@ erDiagram
     CURSOS ||--o| HORARIOS_CURSO : publica
     ALUMNOS ||--o{ ALUMNO_MOVIMIENTOS : historial
     USUARIOS ||--o{ ALUMNO_MOVIMIENTOS : realiza
+    CURSOS ||--o{ HORARIO_CLASES : cursa
+    FRANJAS_HORARIAS ||--o{ HORARIO_CLASES : ubica
+    MATERIAS ||--o{ HORARIO_CLASES : dicta
+    USUARIOS o|--o{ HORARIO_CLASES : docente
+    RESOURCES o|--o{ HORARIO_CLASES : aula
 
     ROLES {
       int id_rol PK
@@ -173,6 +179,25 @@ erDiagram
       varchar ip
       enum tipo
       datetime fecha
+    }
+    FRANJAS_HORARIAS {
+      int id_franja PK
+      varchar turno
+      tinyint orden
+      time hora_inicio
+      time hora_fin
+      boolean es_recreo
+    }
+    HORARIO_CLASES {
+      int id_clase PK
+      int curso_id FK
+      tinyint dia_semana
+      int franja_id FK
+      int materia_id FK
+      int docente_id FK
+      int aula_resource_id FK
+      date vigente_desde
+      date vigente_hasta
     }
 ```
 
@@ -347,6 +372,36 @@ Propósito: imagen del horario publicado para cada curso (`db/04-horarios.sql`).
 | `imagen` | `MEDIUMBLOB NOT NULL` | | Contenido. |
 | `actualizado_por` | `INT UNSIGNED NULL` | FK a `usuarios` (SET NULL) | Quién lo cargó. |
 | `actualizado_en` | `DATETIME NOT NULL` | | Última carga. |
+
+### `franjas_horarias`
+
+Propósito: módulos horarios de cada turno (`db/06-horarios-grilla.sql`). El seed carga ocho franjas por turno: seis módulos de 40 minutos y dos recreos de 10.
+
+| Campo | Tipo y nulabilidad | Clave | Significado |
+|---|---|---|---|
+| `id_franja` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
+| `turno` | `VARCHAR(20) NOT NULL` | UNIQUE (`turno`, `orden`) | Igual que `cursos.turno` (`Mañana`, `Tarde`). |
+| `orden` | `TINYINT UNSIGNED NOT NULL` | | Posición dentro del turno. |
+| `hora_inicio`, `hora_fin` | `TIME NOT NULL` | CHECK inicio < fin | Horario del módulo. |
+| `es_recreo` | `TINYINT(1) NOT NULL DEFAULT 0` | | `1` si es recreo: no admite clases. |
+
+### `horario_clases`
+
+Propósito: cada celda de la grilla de un curso, con vigencia. Reemplaza a `horarios_curso`.
+
+| Campo | Tipo y nulabilidad | Clave | Significado |
+|---|---|---|---|
+| `id_clase` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
+| `curso_id` | `INT UNSIGNED NOT NULL` | FK a `cursos` (CASCADE) | Curso. |
+| `dia_semana` | `TINYINT UNSIGNED NOT NULL` | CHECK 1..5 | 1 = lunes … 5 = viernes. |
+| `franja_id` | `INT UNSIGNED NOT NULL` | FK a `franjas_horarias` (RESTRICT) | Módulo. |
+| `materia_id` | `INT UNSIGNED NOT NULL` | FK a `materias` (RESTRICT) | Materia dictada. |
+| `docente_id` | `INT UNSIGNED NULL` | FK a `usuarios` (SET NULL) | Docente a cargo, si está asignado. |
+| `aula_resource_id` | `INT UNSIGNED NULL` | FK a `resources` (SET NULL) | Aula, si se asignó. |
+| `vigente_desde` | `DATE NOT NULL` | | Desde cuándo rige. |
+| `vigente_hasta` | `DATE NULL` | CHECK ≥ desde | Hasta cuándo; `NULL` = vigente. |
+
+Únicos e índices: (`curso_id`, `dia_semana`, `franja_id`, `vigente_desde`) evita dos clases en la misma celda con igual vigencia; `idx_clase_docente` e `idx_clase_aula` sirven para detectar que un docente o un aula estén en dos lugares a la vez (lo valida la API, porque depende de las vigencias superpuestas).
 
 ## Auditoría
 

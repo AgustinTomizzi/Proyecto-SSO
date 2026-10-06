@@ -139,6 +139,15 @@ INSERT INTO alumnos (nombre, apellido, dni, direccion, email, curso_id, estado) 
 INSERT INTO materias (nombre) VALUES
   ('Matematica'),('Lengua'),('Historia'),('Biologia'),('Ingles'),('Fisica'),('Ed. Tecnica'),('Geografia'),('Quimica'),('Ciudadania');
 
+-- Modulos de 40 minutos por turno; los recreos ocupan una franja propia.
+INSERT INTO franjas_horarias (turno, orden, hora_inicio, hora_fin, es_recreo) VALUES
+  ('Mañana', 1, '07:30', '08:10', 0), ('Mañana', 2, '08:10', '08:50', 0), ('Mañana', 3, '08:50', '09:00', 1),
+  ('Mañana', 4, '09:00', '09:40', 0), ('Mañana', 5, '09:40', '10:20', 0), ('Mañana', 6, '10:20', '10:30', 1),
+  ('Mañana', 7, '10:30', '11:10', 0), ('Mañana', 8, '11:10', '11:50', 0),
+  ('Tarde', 1, '13:00', '13:40', 0), ('Tarde', 2, '13:40', '14:20', 0), ('Tarde', 3, '14:20', '14:30', 1),
+  ('Tarde', 4, '14:30', '15:10', 0), ('Tarde', 5, '15:10', '15:50', 0), ('Tarde', 6, '15:50', '16:00', 1),
+  ('Tarde', 7, '16:00', '16:40', 0), ('Tarde', 8, '16:40', '17:20', 0);
+
 DELIMITER $$
 CREATE PROCEDURE seed_datos_academicos()
 BEGIN

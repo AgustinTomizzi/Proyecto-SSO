@@ -216,3 +216,40 @@ CREATE TABLE reservations (
   CONSTRAINT chk_reservation_quantity CHECK (quantity > 0),
   CONSTRAINT chk_reservation_time CHECK (start_time < end_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Grilla de horarios (Fase 1). Reemplaza a horarios_curso (imagen), que queda
+-- como historico de solo lectura.
+CREATE TABLE franjas_horarias (
+  id_franja INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  turno VARCHAR(20) NOT NULL,
+  orden TINYINT UNSIGNED NOT NULL,
+  hora_inicio TIME NOT NULL,
+  hora_fin TIME NOT NULL,
+  es_recreo TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (id_franja),
+  UNIQUE KEY uq_franja_turno_orden (turno, orden),
+  CONSTRAINT chk_franja_horario CHECK (hora_inicio < hora_fin)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE horario_clases (
+  id_clase INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  curso_id INT UNSIGNED NOT NULL,
+  dia_semana TINYINT UNSIGNED NOT NULL,
+  franja_id INT UNSIGNED NOT NULL,
+  materia_id INT UNSIGNED NOT NULL,
+  docente_id INT UNSIGNED DEFAULT NULL,
+  aula_resource_id INT UNSIGNED DEFAULT NULL,
+  vigente_desde DATE NOT NULL,
+  vigente_hasta DATE DEFAULT NULL,
+  PRIMARY KEY (id_clase),
+  UNIQUE KEY uq_clase_curso_dia_franja (curso_id, dia_semana, franja_id, vigente_desde),
+  KEY idx_clase_docente (docente_id, dia_semana, franja_id),
+  KEY idx_clase_aula (aula_resource_id, dia_semana, franja_id),
+  CONSTRAINT fk_clase_curso FOREIGN KEY (curso_id) REFERENCES cursos (id_cursos) ON DELETE CASCADE,
+  CONSTRAINT fk_clase_franja FOREIGN KEY (franja_id) REFERENCES franjas_horarias (id_franja) ON DELETE RESTRICT,
+  CONSTRAINT fk_clase_materia FOREIGN KEY (materia_id) REFERENCES materias (id_materia) ON DELETE RESTRICT,
+  CONSTRAINT fk_clase_docente FOREIGN KEY (docente_id) REFERENCES usuarios (id_usuario) ON DELETE SET NULL,
+  CONSTRAINT fk_clase_aula FOREIGN KEY (aula_resource_id) REFERENCES resources (id_resource) ON DELETE SET NULL,
+  CONSTRAINT chk_clase_dia CHECK (dia_semana BETWEEN 1 AND 5),
+  CONSTRAINT chk_clase_vigencia CHECK (vigente_hasta IS NULL OR vigente_hasta >= vigente_desde)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
