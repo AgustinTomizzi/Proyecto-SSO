@@ -33,4 +33,4 @@ src/
 ## Acceso
 
 - Solo entran los roles que tienen el sistema Galiservas en `rol_sistema` y el permiso `galiservas.acceder` (hoy Preceptor, Docente y Administrador). Alumno, Directivo y Administrador Académico no tienen acceso; la API lo vuelve a validar en cada request.
-- Si la cuenta todavía tiene la contraseña inicial, la app pide cambiarla desde Galisencia (`VITE_GALISENCIA_URL`, por defecto `/`).
+- No tiene formulario de login propio: sin sesión redirige a `/login?next=…` de Galisencia (`VITE_GALISENCIA_URL`, por defecto `/`) y vuelve sola después del login o del cambio de contraseña inicial. Al cerrar sesión avisa a Galisencia (`BroadcastChannel`).

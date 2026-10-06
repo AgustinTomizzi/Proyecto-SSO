@@ -61,6 +61,12 @@ El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre
 
 Al cargar, Galiservas llama `GET sesion.php`; si la cookie es válida recupera usuario, permisos y sistemas habilitados. La UI exige `galiservas.acceder`, mientras `reservas.php`, `recursos.php` y `reportes_reservas.php` vuelven a validar `rol_sistema` (`api_requerir_sistema`) y permisos. Si la cuenta todavía tiene la contraseña inicial, Galiservas pide cambiarla desde Galisencia. El logout destruye la sesión y redirige a Galisencia.
 
+## Login único
+
+Galiservas no tiene formulario propio: si no hay sesión, redirige a `/login?next=/galiservas/` de Galisencia. Después del login (y del cambio de contraseña inicial, si la cuenta lo tiene pendiente) Galisencia vuelve al destino. `next` solo acepta rutas del mismo origen (o, en desarrollo, la URL configurada de Galiservas) para evitar redirecciones abiertas.
+
+El cierre de sesión en cualquiera de las dos apps destruye la sesión compartida y avisa a la otra con `BroadcastChannel("galileo-sesion")`: las pestañas abiertas de la otra app vuelven al login sin esperar al siguiente pedido.
+
 ## Flujo SSO con cookie
 
 1. El cliente envía email/contraseña a `api/login.php`.

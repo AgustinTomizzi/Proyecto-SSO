@@ -88,11 +88,6 @@ function parseSession(data: JsonRecord): Session {
   }
 }
 
-export async function login(email: string, password: string): Promise<Session> {
-  const data = await request('login.php', { method: 'POST', body: JSON.stringify({ email, password }) })
-  return parseSession(data)
-}
-
 export async function restoreSession(): Promise<Session> {
   const data = await request('sesion.php')
   return parseSession(data)

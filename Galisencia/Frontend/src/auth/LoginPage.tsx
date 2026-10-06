@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import { destinoSeguro, guardarDestino } from "./sesionCompartida";
 import "./LoginPage.css";
 
 const HOME = {
@@ -115,6 +116,8 @@ function SunGlow() {
 export default function LoginPage() {
   const { login, loading, errorConexion, reintentarSesion } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const destino = destinoSeguro(params.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -130,8 +133,11 @@ export default function LoginPage() {
     }
     setError(null);
     try {
+      // Con destino (por ejemplo, Galiservas) la redirección la hace App
+      // cuando la cuenta ya no tiene el cambio de contraseña pendiente.
+      if (destino) guardarDestino(destino);
       const user = await login(email.trim(), password);
-      navigate(HOME[user.rol]);
+      if (!destino) navigate(HOME[user.rol]);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No se pudo iniciar sesión.");
     }

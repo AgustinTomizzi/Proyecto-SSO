@@ -1,8 +1,9 @@
-import { type ReactNode } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect, type ReactNode } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import LoginPage from "./auth/LoginPage";
 import CambiarPasswordPage from "./auth/CambiarPasswordPage";
+import { destinoSeguro, tomarDestino } from "./auth/sesionCompartida";
 import AppLayout, { HOME } from "./components/layout/AppLayout";
 import type { Rol } from "./data/types";
 import AlumnoPage from "./components/alumno/AlumnoPage";
@@ -37,6 +38,16 @@ function RutaConPermiso({ permiso, children }: { permiso: string; children: Reac
 
 export default function App() {
   const { usuario, loading } = useAuth();
+  const location = useLocation();
+
+  // Login único: si se llegó desde Galiservas (/login?next=…), volver allá
+  // cuando haya sesión y no quede un cambio de contraseña pendiente.
+  useEffect(() => {
+    if (!usuario || usuario.debeCambiarPassword) return;
+    const pedido = location.pathname === "/login" ? destinoSeguro(new URLSearchParams(location.search).get("next")) : null;
+    const destino = pedido ?? tomarDestino();
+    if (destino) window.location.assign(destino);
+  }, [usuario, location]);
 
   if (loading) return null;
   if (usuario?.debeCambiarPassword) return <CambiarPasswordPage />;

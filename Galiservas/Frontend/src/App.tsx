@@ -8,9 +8,8 @@ import { hoyLocal, horaLocal, ZONA_HORARIA } from './fecha'
 import type { Page, Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session } from './types'
 import { AppLayout, type NavItem } from './components/AppLayout'
 import { Icon, type IconName } from './components/Icon'
-import { LoginPage } from './components/LoginPage'
 import { SplashScreen, StatusScreen } from './components/StatusScreen'
-import { canAccessGaliservas, GALISENCIA_URL, messageOf, normalize } from './utils'
+import { avisarCierreSesion, canAccessGaliservas, escucharCierreSesion, GALISENCIA_URL, messageOf, normalize, urlLoginGalisencia } from './utils'
 import { useTheme } from './theme'
 import './App.css'
 
@@ -591,6 +590,10 @@ function App() {
     const timer = window.setTimeout(() => void restoreOnMount(), 0)
     return () => window.clearTimeout(timer)
   }, [])
+  // Login único: sin sesión se inicia sesión en Galisencia y se vuelve acá.
+  useEffect(() => { if (authState === 'guest') window.location.replace(urlLoginGalisencia()) }, [authState])
+  // Si se cierra la sesión en Galisencia, esta app también sale.
+  useEffect(() => escucharCierreSesion(() => { setSession(null); setAuthState('guest') }), [])
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 3500); return () => window.clearTimeout(timer) }, [toast])
   useEffect(() => {
     if (!editing && !cancelling) return
@@ -652,7 +655,7 @@ function App() {
   }
   const doLogout = async () => {
     setBusyId('logout')
-    try { await logout(); window.location.assign(GALISENCIA_URL) }
+    try { await logout(); avisarCierreSesion(); window.location.assign(GALISENCIA_URL) }
     catch (error) { setToast(`No se pudo cerrar la sesión: ${messageOf(error)}`) }
     finally { setBusyId('') }
   }
@@ -672,10 +675,12 @@ function App() {
     <p>Galiservas está disponible únicamente para Preceptores, Docentes y Administradores.</p>
   </StatusScreen>
   if (authState === 'password') return <StatusScreen kicker="Contraseña inicial" title="Cambiá tu contraseña" actions={<>
-    <a className="login__submit" href={GALISENCIA_URL}>Ir a Galisencia</a>
+    <a className="login__submit" href={urlLoginGalisencia()}>Cambiarla en Galisencia</a>
     <button type="button" className="login__sso" onClick={() => void restore()}>Ya la cambié</button>
-  </>}><p>Antes de usar Galiservas tenés que reemplazar la contraseña inicial. Hacelo desde Galisencia y después volvé a esta pantalla.</p></StatusScreen>
-  if (!session) return <LoginPage onSuccess={(current) => { setSession(current); setAuthState(stateFor(current)) }}/>
+  </>}><p>Antes de usar Galiservas tenés que reemplazar la contraseña inicial. Lo hacés en Galisencia y después volvés acá automáticamente.</p></StatusScreen>
+  if (!session) return <StatusScreen kicker="Inicio de sesión" title="Iniciá sesión en Galisencia" actions={<a className="login__submit" href={urlLoginGalisencia()}>Ir al inicio de sesión</a>}>
+    <p>Galiservas usa la misma cuenta que Galisencia. Te llevamos al inicio de sesión y después volvés acá.</p>
+  </StatusScreen>
 
   const nav: NavItem[] = [
     { id: 'dashboard', label: 'Panel general', icon: 'grid' },

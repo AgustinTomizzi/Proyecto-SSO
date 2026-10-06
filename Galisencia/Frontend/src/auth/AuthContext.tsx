@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Usuario } from "../data/types";
 import { changePassword, closeSession, login as loginService, restoreSession } from "./auth.service";
 import { limpiarDatosLocales } from "../data/localData";
+import { avisarCierreSesion, escucharCierreSesion } from "./sesionCompartida";
 
 interface AuthState {
   usuario: Usuario | null;
@@ -41,6 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [intento]);
 
+  // Si se cierra la sesión en Galiservas (misma cookie), esta app también sale.
+  useEffect(() => escucharCierreSesion(() => {
+    limpiarDatosLocales();
+    setUsuario(null);
+  }), []);
+
   function reintentarSesion() {
     setLoading(true);
     setIntento((n) => n + 1);
@@ -63,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await closeSession();
     } finally {
       limpiarDatosLocales();
+      avisarCierreSesion();
       setUsuario(null);
     }
   }

@@ -95,6 +95,5 @@ Sin variables de entorno, `config/database.php` usa `DB_HOST=localhost`, `DB_NAM
 ## Límites conocidos relevantes
 
 - El ciclo lectivo de asistencia se obtiene del año de la fecha; aún no se modelan períodos trimestrales independientes.
-- Galiservas todavía tiene su propio formulario de login (el login único llega en la Fase 2).
 
 Para convenciones de colaboración, consultar [CONTRIBUTING.md](CONTRIBUTING.md).

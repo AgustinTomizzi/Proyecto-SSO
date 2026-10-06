@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { CircuitPattern, LoginFooter } from './LoginPage'
+import { CircuitPattern, LoginFooter } from './Decoracion'
 
 // Pantallas de estado previas al ingreso (carga, sin conexión, acceso
 // restringido, contraseña inicial) sobre el mismo fondo que el login.
