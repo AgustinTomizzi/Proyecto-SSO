@@ -296,6 +296,22 @@ Un preceptor cubre temporalmente un curso ajeno. Mientras la suplencia está vig
 - `POST /suplencias.php` con `{"cursoId":4,"desde":"2026-10-06","hasta":"2026-10-10","motivo":"Licencia"}`. Quien gestiona indica además `preceptorId`. Un Preceptor solo registra suplencias propias, que no pueden empezar en el pasado ni durar más de 30 días. Errores: `400` fechas o motivo inválidos, usuario sin rol Preceptor, curso que ya es del preceptor; `404` curso o preceptor inexistente; `409` superposición con otra suplencia del mismo preceptor en el curso. Responde `201` con `suplencia` y audita `suplencias.crear`.
 - `DELETE /suplencias.php` con `{"id":7}`: el Preceptor solo quita las suyas (`403`); quien gestiona, cualquiera. Audita `suplencias.eliminar`.
 
+## Promoción de ciclo lectivo
+
+Permiso `ciclos.promover` (Administrador Académico, Administrador).
+
+- `GET /promocion.php[?ciclo=2026]`: vista previa. Devuelve el `ciclo` (`abierto` o `cerrado`), `pendientes` (alumnos activos sin procesar) y los 39 `cursos` con sus alumnos activos (`procesado`: tipo de movimiento si ya se procesó en el ciclo) y una `sugerencia`:
+  - 7º: `egresar`.
+  - El resto: `promover` al año siguiente en la misma división; de 3º a 4º, las letras pasan a números (A → 1).
+  - Sin división equivalente (por ejemplo 1º G y 1º H), `cursoDestinoId` es `null` y la administración elige.
+- `POST /promocion.php[?ciclo=2026]` con `{"movimientos":[{"alumnoId":12,"accion":"promover","cursoDestinoId":20}],"cerrarCiclo":false}`. Acciones:
+  - `promover`: el destino tiene que ser del año siguiente.
+  - `repetir`: destino opcional, del mismo año; por defecto el curso actual.
+  - `egresar`: solo 7º; deja al alumno inactivo.
+  - `baja`: deja al alumno inactivo.
+
+  Todo el lote (hasta 1000) va en una transacción. Cada alumno se procesa una sola vez por ciclo (`409`) y queda registrado en `alumno_movimientos` (`promocion`, `repitencia`, `egreso` o `baja`, con `ciclo_lectivo`). `cerrarCiclo: true` cierra el ciclo solo si no quedan alumnos pendientes (`409` con `pendientes`) y abre el siguiente. Con el ciclo cerrado, el `POST` responde `409`. Se audita `ciclos.promover` con el resumen.
+
 ## Usuarios y roles
 
 ### Listar: **Implementada**

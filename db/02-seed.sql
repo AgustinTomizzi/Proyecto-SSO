@@ -42,7 +42,8 @@ INSERT INTO permisos (nombre, descripcion) VALUES
   ('galiservas.acceder', 'Acceder al sistema Galiservas'),
   ('horarios.ver', 'Ver el horario del curso'),
   ('horarios.gestionar', 'Cargar, reemplazar y eliminar horarios'),
-  ('suplencias.crear', 'Registrar suplencias de preceptores');
+  ('suplencias.crear', 'Registrar suplencias de preceptores'),
+  ('ciclos.promover', 'Promover alumnos y cerrar el ciclo lectivo');
 
 -- Galisencia admite todos los perfiles; Galiservas solo Preceptor, Docente y Administrador.
 INSERT INTO rol_sistema (rol_id, sistema_id)
@@ -64,7 +65,7 @@ WHERE r.nombre = 'Directivo' AND p.nombre IN ('alumnos.ver','cursos.ver','asiste
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Administrador Academico' AND p.nombre IN ('suplencias.crear','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','cursos.crear','cursos.asignar','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','reportes.ver','horarios.ver','horarios.gestionar');
+WHERE r.nombre = 'Administrador Academico' AND p.nombre IN ('ciclos.promover','suplencias.crear','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','cursos.crear','cursos.asignar','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','reportes.ver','horarios.ver','horarios.gestionar');
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p

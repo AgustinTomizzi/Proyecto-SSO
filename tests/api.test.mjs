@@ -851,6 +851,61 @@ async function main() {
   });
   expectStatus(bajaTmp, 200, "preceptor da de baja con contraseña correcta");
 
+  // ---- Promoción de ciclo lectivo ----
+  {
+    expectStatus(await preceptor.request("/promocion.php"), 403, "preceptor sin acceso a la promoción");
+    expectStatus(await directivo.request("/promocion.php"), 403, "directivo sin acceso a la promoción");
+    const cursosTodos = (await academica.request("/cursos.php")).body.cursos;
+    const idCurso = (anio, division) => String(cursosTodos.find((c) => String(c.anio) === anio && String(c.division) === division).id);
+    const vista = await academica.request("/promocion.php");
+    expectStatus(vista, 200, "vista previa de la promoción");
+    assert.equal(vista.body.ciclo.estado, "abierto");
+    assert.equal(vista.body.cursos.length, 39);
+    assert.ok(vista.body.pendientes > 0);
+    const sugerencia = (anio, division) => vista.body.cursos.find((c) => c.id === idCurso(anio, division)).sugerencia;
+    assert.deepEqual(sugerencia("1", "A"), { accion: "promover", cursoDestinoId: idCurso("2", "A") }, "1º A pasa a 2º A");
+    assert.deepEqual(sugerencia("3", "B"), { accion: "promover", cursoDestinoId: idCurso("4", "2") }, "3º B pasa a 4º 2ª");
+    assert.equal(sugerencia("1", "H").cursoDestinoId, null, "1º H no tiene división equivalente en 2º");
+    assert.equal(sugerencia("7", "1").accion, "egresar", "7º egresa");
+
+    const nuevoAlumno = async (apellido, anio, division) => {
+      const r = await academica.json("/alumnos.php", "POST", { nombre: "Ciclo", apellido, cursoId: idCurso(anio, division) });
+      expectStatus(r, 200, `alta de alumno ${apellido}`);
+      return r.body.alumno.id;
+    };
+    const promovido = await nuevoAlumno("Promovido", "1", "C");
+    const repitente = await nuevoAlumno("Repitente", "1", "C");
+    const egresado = await nuevoAlumno("Egresado", "7", "1");
+    const deBaja = await nuevoAlumno("DeBaja", "1", "C");
+
+    const lote = await academica.json("/promocion.php", "POST", { movimientos: [{ alumnoId: promovido, accion: "promover", cursoDestinoId: idCurso("2", "C") }] });
+    expectStatus(lote, 200, "promueve un alumno");
+    assert.equal(lote.body.resumen.promover, 1);
+    expectStatus(await academica.json("/promocion.php", "POST", { movimientos: [{ alumnoId: promovido, accion: "repetir" }] }), 409, "alumno ya procesado en el ciclo");
+    expectStatus(await academica.json("/promocion.php", "POST", { movimientos: [{ alumnoId: repitente, accion: "promover", cursoDestinoId: idCurso("3", "A") }] }), 400, "promoción a un año que no corresponde");
+    expectStatus(await academica.json("/promocion.php", "POST", { movimientos: [{ alumnoId: deBaja, accion: "egresar" }] }), 400, "solo egresan alumnos de 7º");
+    const resto = await academica.json("/promocion.php", "POST", { movimientos: [
+      { alumnoId: repitente, accion: "repetir" },
+      { alumnoId: egresado, accion: "egresar" },
+      { alumnoId: deBaja, accion: "baja" },
+    ] });
+    expectStatus(resto, 200, "lote con repitencia, egreso y baja");
+    assert.deepEqual(resto.body.resumen, { promover: 0, repetir: 1, egresar: 1, baja: 1 });
+
+    const historialPromovido = await academica.request(`/historial_alumno.php?id=${promovido}`);
+    assert.equal(String(historialPromovido.body.alumno.cursoId), idCurso("2", "C"), "el alumno promovido cambió de curso");
+    assert.ok(historialPromovido.body.movimientos.some((m) => m.tipo === "promocion"), "movimiento de promoción registrado");
+    const activos = (await academica.request("/alumnos.php")).body.alumnos.map((a) => String(a.id));
+    assert.ok(!activos.includes(String(egresado)) && !activos.includes(String(deBaja)), "egresado y baja quedan inactivos");
+    assert.ok(activos.includes(String(repitente)));
+
+    const cierre = await academica.json("/promocion.php", "POST", { cerrarCiclo: true });
+    expectStatus(cierre, 409, "no se cierra el ciclo con alumnos pendientes");
+    assert.ok(cierre.body.pendientes > 0);
+    const auditoriaCiclo = await admin.request("/auditoria.php?accion=ciclos.promover&limit=5");
+    assert.ok(auditoriaCiclo.body.registros.length >= 2, "promociones auditadas");
+  }
+
   expectStatus(await admin.request("/logout.php", { method: "POST" }), 200, "logout del admin");
   expectStatus(await admin.request("/usuarios.php"), 401, "sesion destruida tras logout");
 

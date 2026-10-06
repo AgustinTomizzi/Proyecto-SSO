@@ -19,8 +19,9 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 12. `db/12-actividad-demo.sql`: **solo demo**, no ejecutar en una instalación real. Genera, relativo a la fecha de creación de la base, 8 semanas de asistencias de cada alumno según la grilla de su curso (con tardanzas, ausencias y algunos alumnos en riesgo) y reservas de Galiservas pasadas (finalizadas) y de las tres semanas siguientes (confirmadas).
 13. `db/13-sesiones.sql`: tabla `sesiones` (sesiones PHP en la base, `SESSION_STORE=db`). Idempotente.
 14. `db/14-suplencias.sql`: tabla `cursos_suplencias` y permiso `suplencias.crear` (Preceptor, Administrador Académico, Administrador). Idempotente.
+15. `db/15-ciclos-lectivos.sql`: tabla `ciclos_lectivos` (abre el año en curso), tipos `promocion`, `repitencia` y `egreso` en `alumno_movimientos` y permiso `ciclos.promover`. Idempotente.
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `15-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `16-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -436,6 +437,19 @@ Propósito: la grilla. Una fila por curso, día, módulo y grupo, con vigencia. 
 | `vigente_hasta` | `DATE NULL` | CHECK ≥ desde | Hasta cuándo; `NULL` = vigente. |
 
 Únicos e índices: (`curso_id`, `dia_semana`, `franja_id`, `grupo`, `vigente_desde`); `idx_clase_docente` e `idx_clase_aula`. La API valida lo que la base no puede expresar: con vigencias superpuestas, el curso completo choca con cualquier grupo del mismo módulo, y un docente o un aula no compartida no pueden estar en dos clases en el mismo día y módulo. El horario real del colegio ya trae un caso (aula 201, jueves 17:30–19:30, 6º 4ª y 7º 3ª): se cargó tal cual y la API lo marcaría al editar esas celdas.
+
+### `ciclos_lectivos`
+
+Propósito: estado de cada ciclo lectivo (`db/15-ciclos-lectivos.sql`). Cerrar un ciclo (cuando todos los alumnos activos fueron promovidos, repitieron, egresaron o se dieron de baja) abre el siguiente.
+
+| Campo | Tipo y nulabilidad | Clave | Significado |
+|---|---|---|---|
+| `id_ciclo` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
+| `anio` | `SMALLINT UNSIGNED NOT NULL` | UNIQUE | Año del ciclo. |
+| `estado` | `ENUM('abierto','cerrado')` | | Con el ciclo cerrado no se procesan más promociones. |
+| `cerrado_por`, `cerrado_en` | `INT UNSIGNED NULL`, `DATETIME NULL` | FK a `usuarios` (SET NULL) | Quién y cuándo lo cerró. |
+
+`alumno_movimientos.tipo` admite además `promocion`, `repitencia` y `egreso`; cada alumno tiene a lo sumo uno de esos movimientos por ciclo.
 
 ### `cursos_suplencias`
 

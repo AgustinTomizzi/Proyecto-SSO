@@ -103,7 +103,7 @@ CREATE TABLE horarios_curso (
 CREATE TABLE alumno_movimientos (
   id_movimiento BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   alumno_id INT UNSIGNED NOT NULL,
-  tipo ENUM('cambio_curso','baja') NOT NULL,
+  tipo ENUM('cambio_curso','baja','promocion','repitencia','egreso') NOT NULL,
   curso_origen_id INT UNSIGNED DEFAULT NULL,
   curso_destino_id INT UNSIGNED DEFAULT NULL,
   ciclo_lectivo YEAR NOT NULL,
@@ -309,4 +309,16 @@ CREATE TABLE cursos_suplencias (
   CONSTRAINT fk_suplencia_preceptor FOREIGN KEY (preceptor_id) REFERENCES usuarios (id_usuario) ON DELETE CASCADE,
   CONSTRAINT fk_suplencia_creador FOREIGN KEY (creado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL,
   CONSTRAINT chk_suplencia_fechas CHECK (hasta >= desde)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Ciclos lectivos: la promocion de alumnos cierra un ciclo y abre el siguiente.
+CREATE TABLE ciclos_lectivos (
+  id_ciclo INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  anio SMALLINT UNSIGNED NOT NULL,
+  estado ENUM('abierto', 'cerrado') NOT NULL DEFAULT 'abierto',
+  cerrado_por INT UNSIGNED DEFAULT NULL,
+  cerrado_en DATETIME DEFAULT NULL,
+  PRIMARY KEY (id_ciclo),
+  UNIQUE KEY uq_ciclo_anio (anio),
+  CONSTRAINT fk_ciclo_cerrado_por FOREIGN KEY (cerrado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
