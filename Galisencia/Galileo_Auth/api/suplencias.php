@@ -9,8 +9,13 @@ $method = api_metodo(["GET", "POST", "DELETE"]);
 // de cualquier preceptor; un Preceptor solo registra las propias, con un
 // máximo de 30 días y sin fechas pasadas. El alcance del preceptor incluye el
 // curso solo mientras la suplencia está vigente (api_cursos_del_preceptor).
+// Para que nadie se sume cursos encadenando suplencias propias: empiezan como
+// mucho dentro de 7 días, hay una sola vigente o futura por preceptor y un curso
+// suma hasta 30 días de suplencias propias en cualquier ventana de 60.
 
 const SUPLENCIA_MAX_DIAS_PRECEPTOR = 30;
+const SUPLENCIA_MAX_ANTICIPACION_PRECEPTOR = 7;
+const SUPLENCIA_VENTANA_DIAS = 60;
 
 api_requerir_permiso("suplencias.crear");
 $esGestor = api_tiene_permiso("cursos.asignar");
@@ -77,7 +82,7 @@ if ($method === "DELETE") {
         api_json(["ok" => false, "error" => "solo podés quitar tus propias suplencias"], 403);
     }
     $pdo->prepare("DELETE FROM cursos_suplencias WHERE id_suplencia = ?")->execute([$id]);
-    registrarAuditoria("suplencias.eliminar", "suplencia", $id, ["antes" => suplencia_publica($suplencia)]);
+    registrarAuditoria("suplencias.eliminar", "suplencia", $id, ["antes" => array_diff_key(suplencia_publica($suplencia), ["motivo" => true])]);
     api_json(["ok" => true]);
 }
 
@@ -105,6 +110,9 @@ if (!$esGestor) {
     if ($dias > SUPLENCIA_MAX_DIAS_PRECEPTOR) {
         api_json(["ok" => false, "error" => "una suplencia propia puede durar hasta " . SUPLENCIA_MAX_DIAS_PRECEPTOR . " días; para más, pedila a la administración"], 400);
     }
+    if ($desde > date("Y-m-d", strtotime("+" . SUPLENCIA_MAX_ANTICIPACION_PRECEPTOR . " days"))) {
+        api_json(["ok" => false, "error" => "una suplencia propia puede empezar como mucho dentro de " . SUPLENCIA_MAX_ANTICIPACION_PRECEPTOR . " días; para antes, pedila a la administración"], 400);
+    }
 }
 
 $pdo->beginTransaction();
@@ -131,6 +139,31 @@ try {
         $pdo->rollBack();
         api_json(["ok" => false, "error" => "ese curso ya está asignado a ese preceptor"], 400);
     }
+    if (!$esGestor) {
+        // Bloquea las suplencias propias del preceptor para contar sin carreras.
+        $stmt = $pdo->prepare("SELECT curso_id, desde, hasta FROM cursos_suplencias WHERE preceptor_id = ? AND creado_por = ? FOR UPDATE");
+        $stmt->execute([$preceptorId, $preceptorId]);
+        $propias = $stmt->fetchAll();
+        foreach ($propias as $s) {
+            if ($s["hasta"] >= date("Y-m-d")) {
+                $pdo->rollBack();
+                api_json(["ok" => false, "error" => "ya tenés una suplencia propia vigente o próxima; para cubrir otro curso a la vez, pedila a la administración"], 409);
+            }
+        }
+        $inicioVentana = (new DateTimeImmutable($hasta))->modify("-" . (SUPLENCIA_VENTANA_DIAS - 1) . " days")->format("Y-m-d");
+        $usados = 0;
+        foreach ($propias as $s) {
+            if ((int) $s["curso_id"] !== $cursoId || $s["hasta"] < $inicioVentana) {
+                continue;
+            }
+            $desdeEnVentana = max($s["desde"], $inicioVentana);
+            $usados += (new DateTime($desdeEnVentana))->diff(new DateTime($s["hasta"]))->days + 1;
+        }
+        if ($usados + $dias > SUPLENCIA_MAX_DIAS_PRECEPTOR) {
+            $pdo->rollBack();
+            api_json(["ok" => false, "error" => "ese curso ya suma $usados días de suplencias tuyas en los últimos " . SUPLENCIA_VENTANA_DIAS . " días (máximo " . SUPLENCIA_MAX_DIAS_PRECEPTOR . "); pedila a la administración"], 409);
+        }
+    }
     $stmt = $pdo->prepare("SELECT 1 FROM cursos_suplencias WHERE curso_id = ? AND preceptor_id = ? AND desde <= ? AND hasta >= ? LIMIT 1 FOR UPDATE");
     $stmt->execute([$cursoId, $preceptorId, $hasta, $desde]);
     if ($stmt->fetchColumn()) {
@@ -143,7 +176,8 @@ try {
     $stmt = $pdo->prepare(SUPLENCIA_SELECT . " WHERE s.id_suplencia = ?");
     $stmt->execute([$id]);
     $nueva = suplencia_publica($stmt->fetch());
-    registrarAuditoria("suplencias.crear", "suplencia", $id, ["despues" => $nueva]);
+    // Sin el motivo: puede incluir datos de salud del preceptor titular (regla 5).
+    registrarAuditoria("suplencias.crear", "suplencia", $id, ["despues" => array_diff_key($nueva, ["motivo" => true])]);
     $pdo->commit();
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) {

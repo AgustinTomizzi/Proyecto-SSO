@@ -60,7 +60,7 @@ Puede gestionar alumnos de cursos asignados, ver historial, tomar/corregir asist
 
 No puede crear/asignar cursos, cargar notas, ver reportes ajenos, administrar reservas ajenas, recursos, usuarios o auditoría. Alumnos, asistencia, notas, reportes e historial aplican alcance por `preceptor_id`.
 
-Suplencias: puede registrar las propias (hasta 30 días, sin fechas pasadas) para cubrir un curso ajeno; mientras están vigentes el curso entra en su alcance. Administración Académica y Administrador las gestionan para cualquier preceptor.
+Suplencias: puede registrar las propias para cubrir un curso ajeno, con límites para que no se puedan encadenar: hasta 30 días, sin fechas pasadas, empezando como mucho dentro de 7 días, una sola vigente o futura a la vez y hasta 30 días por curso en cualquier ventana de 60. Mientras están vigentes, el curso entra en su alcance para la operación diaria (asistencia, justificaciones y consulta de alumnos, notas, historial y reportes), pero no para altas, bajas ni cambios de curso de alumnos, que siguen limitados a sus cursos titulares. Administración Académica y Administrador las gestionan para cualquier preceptor.
 
 ### Directivo
 
@@ -91,7 +91,7 @@ No puede violar validaciones: capacidad, solapamientos, FKs y protección del ú
 | Recurso | Usuario común | Administrador funcional |
 |---|---|---|
 | Alumnos de preceptor | Cursos con `preceptor_id` propio y cursos con suplencia vigente | Según permiso. |
-| Cursos de preceptor | Solo asignados | Todos según permiso. |
+| Cursos de preceptor | Asignados y con suplencia vigente | Todos según permiso. |
 | Asistencia/notas | Alumno: solo lo suyo. Preceptor: sus cursos. Docente: los pares curso/materia que dicta según la grilla. Directivo y Admin. Académico: sin restricción de curso | Según permiso. |
 | Reservas | Solo `user_id` propio | Todas con `reservas.administrar`. |
 | Edición de reserva | Propia y activa | Cualquiera; puede finalizar/cancelar. |

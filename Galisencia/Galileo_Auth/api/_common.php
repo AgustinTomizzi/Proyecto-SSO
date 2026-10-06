@@ -329,6 +329,19 @@ function api_cursos_del_preceptor($usuarioId, $bloquear = false)
 }
 
 /**
+ * Cursos de los que el preceptor es titular (sin suplencias). Las altas, bajas y
+ * cambios de curso de alumnos se limitan a estos: una suplencia da acceso a la
+ * operación diaria (asistencia, justificaciones, consulta), no a la estructura.
+ */
+function api_cursos_titulares_del_preceptor($usuarioId, $bloquear = false)
+{
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT id_cursos FROM cursos WHERE preceptor_id = ?" . ($bloquear ? " FOR UPDATE" : ""));
+    $stmt->execute([$usuarioId]);
+    return array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
+/**
  * Condición SQL: la columna de curso es de un curso a cargo del preceptor
  * (asignado o en suplencia vigente). Devuelve [sql, params].
  */

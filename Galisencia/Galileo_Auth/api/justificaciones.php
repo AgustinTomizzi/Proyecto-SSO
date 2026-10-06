@@ -193,6 +193,13 @@ if (mb_strlen($motivo) < 3 || mb_strlen($motivo) > 255) {
     api_json(["ok" => false, "error" => "el motivo debe tener entre 3 y 255 caracteres"], 400);
 }
 
+// Alcance antes de procesar el adjunto (orden: permiso -> alcance -> validación);
+// se vuelve a chequear dentro de la transacción.
+$alumnoPrevio = justif_alumno($alumnoId);
+if (!$alumnoPrevio || !justif_puede_justificar($alumnoPrevio, $usuarioId)) {
+    api_json(["ok" => false, "error" => $alumnoPrevio ? "el alumno no pertenece a uno de tus cursos" : "el alumno no existe o está inactivo"], $alumnoPrevio ? 403 : 400);
+}
+
 $adjunto = null;
 $adjuntoNombre = null;
 $adjuntoTipo = null;

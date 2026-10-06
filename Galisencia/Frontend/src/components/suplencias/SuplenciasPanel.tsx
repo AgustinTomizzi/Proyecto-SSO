@@ -275,6 +275,7 @@ export default function SuplenciasPanel({ onCambio }: Props) {
               type="date"
               value={desde}
               min={esGestor ? undefined : hoy}
+              max={esGestor ? undefined : sumarDias(hoy, 7)}
               onChange={(e) => cambiarDesde(e.target.value)}
             />
           </div>

@@ -884,8 +884,19 @@ async function main() {
       expectStatus(await preceptor.json("/suplencias.php", "POST", { cursoId: 6, desde: diaArg(-3), hasta: diaArg(2) }), 400, "suplencia que empieza en el pasado");
       expectStatus(await preceptor.json("/suplencias.php", "POST", { cursoId: 1, desde: diaArg(0), hasta: diaArg(2) }), 400, "suplencia sobre un curso propio");
 
-      const futura = await preceptor.json("/suplencias.php", "POST", { cursoId: 6, desde: diaArg(10), hasta: diaArg(12) });
-      expectStatus(futura, 201, "suplencia futura");
+      // Límites a las suplencias propias: no se pueden encadenar para sumarse cursos.
+      expectStatus(await preceptor.json("/suplencias.php", "POST", { cursoId: 6, desde: diaArg(10), hasta: diaArg(12) }), 400, "suplencia propia que empieza en más de 7 días");
+      expectStatus(await preceptor.json("/suplencias.php", "POST", { cursoId: 6, desde: diaArg(2), hasta: diaArg(4) }), 409, "segunda suplencia propia simultánea");
+      expectStatus(await preceptor.json("/suplencias.php", "POST", { cursoId: 4, desde: diaArg(6), hasta: diaArg(8) }), 409, "encadenar otra suplencia propia mientras la anterior sigue vigente");
+
+      // La suplencia da acceso a la operación diaria, no a la estructura del curso.
+      const cubierto = alumnosCubiertos[0];
+      expectStatus(await preceptor.json("/alumnos.php", "PUT", { id: cubierto.id, nombre: cubierto.nombre, apellido: cubierto.apellido, email: cubierto.email ?? "", cursoId: 1, currentPassword: preceptor.password }), 403, "el suplente no mueve alumnos del curso cubierto a uno propio");
+      expectStatus(await preceptor.request(`/alumnos.php?id=${cubierto.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentPassword: preceptor.password }) }), 403, "el suplente no da de baja alumnos del curso cubierto");
+      expectStatus(await preceptor.json("/alumnos.php", "POST", { nombre: "No", apellido: "Corresponde", cursoId: 4 }), 403, "el suplente no da de alta alumnos en el curso cubierto");
+
+      const futura = await academica.json("/suplencias.php", "POST", { cursoId: 6, preceptorId: 3, desde: diaArg(10), hasta: diaArg(12) });
+      expectStatus(futura, 201, "la administración registra una suplencia futura sin los límites de las propias");
       creadas.push(futura.body.suplencia.id);
       assert.ok(!(await cursosDe(preceptor)).includes(6), "una suplencia futura todavía no da alcance");
 
@@ -901,7 +912,9 @@ async function main() {
       expectStatus(await preceptor.json("/suplencias.php", "DELETE", { id: deGestion.body.suplencia.id }), 403, "el preceptor no quita suplencias ajenas");
 
       const auditoriaSuplencias = await admin.request("/auditoria.php?accion=suplencias.crear&limit=10");
-      assert.ok(auditoriaSuplencias.body.registros.some((r) => r.entidadId === String(propia.body.suplencia.id)), "alta auditada");
+      const altaAuditada = auditoriaSuplencias.body.registros.find((r) => r.entidadId === String(propia.body.suplencia.id));
+      assert.ok(altaAuditada, "alta auditada");
+      assert.equal(altaAuditada.detalle?.despues?.motivo, undefined, "la auditoría no guarda el motivo");
     } finally {
       for (const id of creadas) {
         expectStatus(await academica.json("/suplencias.php", "DELETE", { id }), 200, `quita la suplencia ${id}`);

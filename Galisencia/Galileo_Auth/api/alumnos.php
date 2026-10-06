@@ -98,9 +98,10 @@ if ($method === "POST") {
     }
 
     if (esPreceptor($rolSesion)) {
-        $misCursos = cursosDelPreceptor($pdo, $usuarioId);
+        // Solo cursos titulares: una suplencia no habilita altas.
+        $misCursos = api_cursos_titulares_del_preceptor($usuarioId);
         if ($curso_id === null || !in_array($curso_id, $misCursos, true)) {
-            api_json(["ok" => false, "error" => "no podes agregar alumnos a un curso que no tenes asignado"], 403);
+            api_json(["ok" => false, "error" => "no podes agregar alumnos a un curso que no tenes asignado como titular"], 403);
         }
     }
 
@@ -187,6 +188,12 @@ if ($method === "PUT") {
                 $pdo->rollBack();
                 api_json(["ok" => false, "error" => "no podes mover al alumno a un curso que no tenes asignado"], 403);
             }
+            // Cambiar de curso es estructural: origen y destino tienen que ser cursos titulares.
+            $titulares = api_cursos_titulares_del_preceptor($usuarioId);
+            if ($curso_id !== $cursoIdActual && (!in_array($cursoIdActual, $titulares, true) || !in_array($curso_id, $titulares, true))) {
+                $pdo->rollBack();
+                api_json(["ok" => false, "error" => "una suplencia no habilita cambios de curso: pedilo a la administración"], 403);
+            }
             if ($curso_id !== $cursoIdActual) {
                 $currentPassword = (string) ($d["currentPassword"] ?? "");
                 if ($currentPassword === "") {
@@ -251,10 +258,11 @@ if ($method === "DELETE") {
         $cursoIdActual = (int) $antes["curso_id"];
 
         if (esPreceptor($rolSesion)) {
-            $misCursos = api_cursos_del_preceptor($usuarioId, true);
+            // La baja es estructural: solo en cursos titulares (no por suplencia).
+            $misCursos = api_cursos_titulares_del_preceptor($usuarioId, true);
             if (!in_array($cursoIdActual, $misCursos, true)) {
                 $pdo->rollBack();
-                api_json(["ok" => false, "error" => "no podes quitar alumnos de un curso que no tenes asignado"], 403);
+                api_json(["ok" => false, "error" => "no podes quitar alumnos de un curso que no tenes asignado como titular"], 403);
             }
             $reauth = api_verificar_contrasena_actual((string) $d["currentPassword"]);
             if ($reauth !== "ok") {
