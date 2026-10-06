@@ -1,0 +1,621 @@
+/* =========================================================
+   Galiservas — Pantalla de inicio de sesión
+   Copiado de Galisencia/Frontend/src/auth/LoginPage.css.
+   ========================================================= */
+
+.login {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(160deg, #1a3a63 0%, #2e9fe0 25%, #1e9f7a 55%, #145c33 100%);
+}
+
+/* ─── Panel institucional ─── */
+.login__brand {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: clamp(20px, 4vw, 48px) 40px;
+}
+
+.login__circuit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.login__coderows {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.login__coderow {
+  position: absolute;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.06);
+  -webkit-user-select: none;
+  user-select: none;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+}
+
+.login__sunglow {
+  position: absolute;
+  pointer-events: none;
+}
+
+.login__accent-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ffc93c 0%, #2e9fe0 60%, transparent 100%);
+}
+
+.login__accent-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #ffc93c;
+  opacity: 0.6;
+}
+
+/* Marca en móvil: fila horizontal */
+.login__mobile-brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 50px 8px 0;
+}
+
+.login__mobile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.login__brand-inner {
+  display: none;
+}
+
+/* ─── Logo ─── */
+.login__school-logo {
+  width: 96px;
+  -o-object-fit: contain;
+  object-fit: contain;
+  flex: none;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
+  mix-blend-mode: screen;
+}
+
+/* ─── Textos institucionales ─── */
+.login__school-title {
+  color: #fff;
+  font-family: "Monomaniac One", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.login__school-sub {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+.login__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.login__pill {
+  color: rgba(255, 255, 255, 0.75);
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-family: "Monomaniac One", sans-serif;
+  font-size: 9px;
+}
+
+/* Responsive: marca vertical centrada en escritorio */
+@media (min-width: 768px) {
+  .login {
+    flex-direction: row;
+  }
+
+  .login__brand {
+    width: 42%;
+  }
+
+  .login__mobile-brand {
+    display: none;
+  }
+
+  .login__accent-bottom {
+    display: none;
+  }
+
+  .login__brand-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .login__school-logo {
+    width: 256px;
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.45));
+  }
+
+  .login__divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .login__divider-line {
+    flex: 1;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .login__divider-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ffc93c;
+  }
+
+  .login__school-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+
+  .login__school-title {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 40px;
+    font-weight: 500;
+  }
+
+  .login__school-sub {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+  }
+
+  .login__pills {
+    justify-content: center;
+    gap: 8px;
+    margin-top: 0;
+  }
+
+  .login__pill {
+    color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 4px 12px;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .login__brand-inner {
+    gap: 32px;
+  }
+
+  .login__school-logo {
+    width: 288px;
+  }
+}
+
+/* ─── Panel de acceso ─── */
+.login__panel {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.login__panel-glow {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .login__panel-glow {
+    position: absolute;
+    pointer-events: none;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(46, 159, 224, 0.08) 0%, transparent 65%);
+  }
+}
+
+.login__card {
+  position: relative;
+  width: 100%;
+  max-width: 448px;
+  background-color: rgba(255, 255, 255, 0.93);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 16px 40px -4px rgba(26, 58, 99, 0.18);
+  padding: clamp(28px, 5vw, 44px) clamp(24px, 5vw, 40px);
+}
+
+.login__card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(90deg, #1a3a63 0%, #2e9fe0 50%, #1e6b3c 100%);
+}
+
+.login__card-header {
+  margin-bottom: 32px;
+}
+
+.login__card-title {
+  margin: 0;
+  margin-bottom: 4px;
+  font-family: "Monomaniac One", sans-serif;
+  font-weight: 700;
+  color: #1a3a63;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+.login__card-sub {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ─── Error ─── */
+.login__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.login__error svg {
+  flex: none;
+  margin-top: 2px;
+  -o-object-fit: contain;
+  object-fit: contain;
+}
+
+/* ─── Formulario ─── */
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login__label {
+  display: block;
+  color: #1a3a63;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.login__input-wrap {
+  position: relative;
+}
+
+.login__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.login__input {
+  font: inherit;
+  font-size: 14px;
+  color: #111827;
+  background-color: #fafafa;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  outline: none;
+  padding: 12px 16px 12px 40px;
+  width: 100%;
+  -webkit-transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.login__input--pw {
+  padding-right: 44px;
+}
+
+.login__input--plain {
+  padding-left: 16px;
+}
+
+.login__input::placeholder {
+  color: #9ca3af;
+}
+
+.login__input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.login__toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #9ca3af;
+  -webkit-transition: color 0.15s;
+  transition: color 0.15s;
+}
+
+.login__toggle:hover {
+  color: #1e6b3c;
+}
+
+/* Fila: recordarme + olvidé */
+.login__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.login__check-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.login__check {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex: none;
+  cursor: pointer;
+  border: 1.5px solid #d1d5db;
+  -webkit-transition: all 0.15s;
+  transition: all 0.15s;
+}
+
+.login__check-mark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+}
+
+.login__remember {
+  color: #374151;
+  font-size: 14px;
+}
+
+.login__forgot {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #2e9fe0;
+  font-size: 14px;
+  font-weight: 500;
+  -webkit-transition: color 0.15s;
+  transition: color 0.15s;
+}
+
+.login__forgot:hover {
+  color: #1a3a63;
+}
+
+/* ─── Botón principal ─── */
+.login__submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  background-color: #1e6b3c;
+  font-family: "Monomaniac One", sans-serif;
+  font-size: 25px;
+  line-height: 30px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(30, 107, 60, 0.3);
+  cursor: pointer;
+  -webkit-transition: background-color 0.2s;
+  transition: background-color 0.2s;
+}
+
+.login__submit:hover:not(:disabled) {
+  background-color: #145c33;
+}
+
+.login__submit:disabled {
+  background-color: #4a9d70;
+  cursor: not-allowed;
+}
+
+.login__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  -webkit-animation: login-spin 0.75s linear infinite;
+  animation: login-spin 0.75s linear infinite;
+}
+
+/* ─── Divisor + SSO ─── */
+.login__or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.login__or-line {
+  flex: 1;
+  height: 1px;
+  background-color: #e5e7eb;
+}
+
+.login__or-text {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.login__sso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 0;
+  border: 1.5px solid #1a3a63;
+  border-radius: 12px;
+  color: #fff;
+  background-color: #1a3a63;
+  font-family: "Monomaniac One", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-transition: background-color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.login__sso:hover {
+  background-color: #243f6e;
+  border-color: #2e9fe0;
+}
+
+.login__demo {
+  margin: 18px 0 0;
+  color: #9ca3af;
+  font-size: 12px;
+  text-align: center;
+}
+
+.login__demo code {
+  color: #475569;
+}
+
+/* ─── Pie de página ─── */
+.login__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.login__footer-brand {
+  color: #ffc93c;
+  font-weight: 600;
+}
+
+@keyframes login-spin {
+  to {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login__spinner {
+    -webkit-animation: none;
+    animation: none;
+  }
+}
+/* ── Adaptaciones Galiservas ──
+   Galisencia resuelve el foco con estilos en línea; acá se hace en CSS. */
+.login__icon { display: flex; color: #9ca3af; transition: color 0.15s; pointer-events: none; }
+.login__input-wrap:focus-within .login__icon { color: #1e6b3c; }
+.login__input:focus { border-color: #1e6b3c; box-shadow: 0 0 0 3px rgba(30, 107, 60, 0.1); }
+.login__toggle { display: flex; }
+.login__toggle:focus-visible, .login__forgot:focus-visible, .login__submit:focus-visible, .login__sso:focus-visible { outline: 2px solid #2e9fe0; outline-offset: 2px; }
+.login__kicker { margin: 0 0 8px; color: #2e9fe0; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.login__card-title { line-height: 1.15; }
+.login__sso { text-decoration: none; }
+.login__submit { text-decoration: none; }
+.login__status-dot { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18); vertical-align: middle; }
+.login__school-logo { height: auto; }
+
+/* ── Pantallas de estado (carga, sin conexión, acceso, contraseña) ── */
+.status-screen { position: relative; overflow: hidden; }
+.status-screen .login__circuit { position: absolute; inset: 0; pointer-events: none; }
+.status-screen .login__panel { z-index: 1; min-height: 100vh; }
+.status-screen__card { text-align: center; }
+.status-screen__card .login__card-header { margin-bottom: 24px; }
+.status-screen__card .login__card-sub p { margin: 0; line-height: 1.6; }
+.status-screen__head { position: relative; width: 88px; margin: 0 auto 18px; }
+.status-screen__logo { display: block; width: 88px; height: 88px; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(26, 58, 99, 0.25)); }
+.status-screen__mark { position: absolute; right: -6px; bottom: 0; width: 28px; height: 28px; display: grid; place-items: center; color: #fff; border: 2px solid #fff; border-radius: 50%; font-weight: 800; font-size: 15px; }
+.status-screen__mark--warning { background: #f59e0b; }
+.status-screen__mark--danger { background: #e11d48; }
+.status-screen__actions { display: flex; flex-direction: column; gap: 12px; }
+.status-screen__actions .login__submit { font-size: 21px; }
+.status-screen__code { display: block; overflow-wrap: anywhere; color: #6b7280; font-family: "JetBrains Mono", monospace; font-size: 11px; }
+.status-screen__splash { position: relative; z-index: 1; min-height: 100vh; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; color: rgba(255, 255, 255, 0.8); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+.status-screen__splash p { margin: 0; }
+.status-screen__splash-logo { width: 140px; height: 140px; object-fit: contain; filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.45)); }
+.status-screen__spinner { width: 26px; height: 26px; border-width: 3px; }
