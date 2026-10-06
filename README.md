@@ -78,6 +78,8 @@ Galisencia corre en `:5173` y Galiservas en `:5174/galiservas/`. Los dos Vite re
 
 Antes de subir cambios: `npm run lint` y `npm run build` en ambos frontends, más `node tests/api.test.mjs`.
 
+La integración continua (`.github/workflows/ci.yml`) corre lo mismo en cada push a `main` y en cada pull request: lint y build de los dos frontends, `php -l` del backend y los tests de integración contra el stack Docker levantado con un `.env` de contraseñas aleatorias.
+
 Galisencia usa `/api` por defecto. Con sesión iniciada nunca muestra datos inventados: si la API no responde, muestra el aviso "Sin conexión con el servidor" con un botón para reintentar.
 
 Sin variables de entorno, `config/database.php` usa `DB_HOST=localhost`, `DB_NAME=ProyectoEstela`, `DB_USER=root` y `DB_PASSWORD` vacío, pensados solo para una instalación local de desarrollo. Docker usa el usuario de la aplicación definido en `.env`.

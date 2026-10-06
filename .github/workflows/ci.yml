@@ -1,0 +1,78 @@
+# Integración continua: lint y build de los dos frontends, sintaxis del
+# backend PHP y pruebas de integración contra el stack Docker completo.
+# Falla si algo de eso se rompe.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontends:
+    name: Lint y build (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [Galisencia, Galiservas]
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}/Frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ matrix.app }}/Frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  backend:
+    name: Sintaxis PHP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+      - name: php -l
+        run: |
+          find Galisencia/Galileo_Auth -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+
+  integracion:
+    name: Integración (Docker)
+    runs-on: ubuntu-latest
+    needs: [frontends, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Crear .env con contraseñas aleatorias
+        run: |
+          cp .env.example .env
+          sed -i "s/^MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=$(openssl rand -hex 16)/" .env
+          sed -i "s/^DB_APP_PASSWORD=.*/DB_APP_PASSWORD=$(openssl rand -hex 16)/" .env
+      - name: Levantar el stack
+        run: docker compose up --build -d --wait --wait-timeout 300
+      - name: Pruebas de integración
+        env:
+          API_URL: http://localhost:3000/api
+        run: node tests/api.test.mjs
+      - name: Logs si falló
+        if: failure()
+        run: docker compose logs --no-color --tail 200
+      - name: Bajar el stack
+        if: always()
+        run: docker compose down -v

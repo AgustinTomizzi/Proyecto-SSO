@@ -81,3 +81,7 @@ git pull
 - Nunca pushear directo a `main`.
 - Una rama = un cambio chico y enfocado. Evitá PRs gigantes que mezclan cinco cosas.
 - Si dos personas van a tocar el mismo módulo, avisen en el grupo antes para no pisarse.
+
+## Integración continua
+
+Cada pull request corre `.github/workflows/ci.yml` (lint y build de ambos frontends, `php -l` y `tests/api.test.mjs` contra Docker). No se mergea con el CI en rojo.
