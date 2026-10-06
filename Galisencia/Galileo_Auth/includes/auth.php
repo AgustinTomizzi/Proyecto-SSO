@@ -9,7 +9,14 @@ function app_es_dev()
     return strtolower(trim((string) (getenv("APP_ENV") ?: "dev"))) === "dev";
 }
 
+require_once __DIR__ . "/sesiones.php";
+
 if (session_status() === PHP_SESSION_NONE) {
+    // SESSION_STORE=db guarda las sesiones en MySQL (varias réplicas del
+    // backend comparten sesión); sin la variable, archivos locales.
+    if (strtolower((string) getenv("SESSION_STORE")) === "db" && isset($GLOBALS["pdo"])) {
+        session_set_save_handler(new SesionesMysql($GLOBALS["pdo"]), true);
+    }
     session_set_cookie_params([
         "lifetime" => 0,
         "path" => "/",

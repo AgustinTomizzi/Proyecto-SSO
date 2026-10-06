@@ -36,7 +36,7 @@ services:
     build:
       context: ./Galisencia/Galileo_Auth
       dockerfile: Dockerfile
-    container_name: galisencia-backend
+    # Sin container_name para poder escalar: docker compose up -d --scale backend=2
     environment:
       - TZ=America/Argentina/Buenos_Aires
       - DB_HOST=mysql
@@ -47,6 +47,8 @@ services:
       - APP_ENV=${APP_ENV:-dev}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}
       - SESSION_TIMEOUT_MINUTES=${SESSION_TIMEOUT_MINUTES:-30}
+      # Sesiones en MySQL: permite más de una réplica del backend.
+      - SESSION_STORE=db
     depends_on:
       mysql:
         condition: service_healthy

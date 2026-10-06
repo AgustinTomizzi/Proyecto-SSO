@@ -281,3 +281,12 @@ CREATE TABLE horario_clases (
   CONSTRAINT chk_clase_grupo CHECK (grupo IN (0, 1, 2)),
   CONSTRAINT chk_clase_vigencia CHECK (vigente_hasta IS NULL OR vigente_hasta >= vigente_desde)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Sesiones PHP compartidas entre réplicas del backend (SESSION_STORE=db).
+CREATE TABLE sesiones (
+  id VARCHAR(128) NOT NULL,
+  datos MEDIUMBLOB NOT NULL,
+  actualizada INT UNSIGNED NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_sesiones_actualizada (actualizada)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
