@@ -246,20 +246,16 @@ async function main() {
   expectStatus(await directivo.request("/horarios.php"), 403, "directivo consulta horarios sin permiso");
   expectStatus(await preceptor.request("/horarios.php"), 403, "preceptor consulta horarios sin permiso");
 
+  // La imagen quedó como histórico de solo lectura: el horario se carga en la grilla.
   const horarioPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
   const form = new FormData();
   form.append("cursoId", "10");
   form.append("imagen", new Blob([horarioPng], { type: "image/png" }), "horario-6a.png");
-  expectStatus(await academica.request("/horarios.php", { method: "POST", body: form }), 201, "administradora academica publica horario");
-
+  expectStatus(await academica.request("/horarios.php", { method: "POST", body: form }), 410, "subir imagen de horario (solo lectura)");
+  expectStatus(await admin.json("/horarios.php", "DELETE", { cursoId: 10 }), 410, "borrar imagen de horario (solo lectura)");
   const horariosAdmin = await admin.request("/horarios.php?cursoId=10");
-  expectStatus(horariosAdmin, 200, "admin consulta horario publicado");
-  assert.equal(horariosAdmin.body.cursos[0].nombreArchivo, "horario-6a.png");
-  const imagenHorario = await admin.request("/horarios.php?imagen=1&cursoId=10");
-  expectStatus(imagenHorario, 200, "admin obtiene imagen de horario");
-  assert.equal(imagenHorario.headers.get("content-type"), "image/png");
-  assert.ok(Buffer.isBuffer(imagenHorario.body) && imagenHorario.body.length > 0);
-  expectStatus(await admin.json("/horarios.php", "DELETE", { cursoId: 10 }), 200, "admin elimina horario");
+  expectStatus(horariosAdmin, 200, "consulta del histórico de imágenes");
+  assert.equal(horariosAdmin.body.cursos[0].horarioId, null);
 
   const reporteDirectivo = await directivo.request("/reportes.php");
   expectStatus(reporteDirectivo, 200, "reporte del directivo");
@@ -366,6 +362,12 @@ async function main() {
     const materiasGrilla = (await academica.request("/materias.php")).body.materias;
     const idMateria = (nombre) => materiasGrilla.find((m) => m.nombre === nombre).id;
     expectStatus(await academica.request("/horario_grilla.php"), 400, "grilla sin filtro");
+    const catalogosGrilla = await academica.request("/horario_grilla.php?catalogos=1");
+    expectStatus(catalogosGrilla, 200, "catálogos para editar la grilla");
+    assert.ok(catalogosGrilla.body.docentes.some((d) => Number(d.id) === docenteA.id), "docentes con rol Docente");
+    assert.ok(!catalogosGrilla.body.docentes.some((d) => Number(d.id) === 3), "un preceptor no aparece como docente");
+    assert.ok(catalogosGrilla.body.aulas.some((a) => a.nombre === "Aula 208"), "aulas disponibles");
+    expectStatus(await alumno.request("/horario_grilla.php?catalogos=1"), 403, "alumno no ve los catálogos de edición");
     const grillaCurso1 = await academica.request("/horario_grilla.php?cursoId=1&fecha=2026-04-06");
     expectStatus(grillaCurso1, 200, "grilla del curso 1");
     const franjas = grillaCurso1.body.franjas;

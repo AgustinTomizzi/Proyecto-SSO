@@ -80,53 +80,6 @@ if ($method === "GET") {
 
 api_requerir_permiso("horarios.gestionar");
 
-if ($method === "POST") {
-    $cursoId = api_id_positivo($_POST["cursoId"] ?? null);
-    if ($cursoId === null || !isset($_FILES["imagen"])) {
-        api_json(["ok" => false, "error" => "curso e imagen son requeridos"], 400);
-    }
-    $curso = $pdo->prepare("SELECT 1 FROM cursos WHERE id_cursos = ?");
-    $curso->execute([$cursoId]);
-    if (!$curso->fetchColumn()) {
-        api_json(["ok" => false, "error" => "curso no encontrado"], 404);
-    }
-    $archivo = $_FILES["imagen"];
-    if (($archivo["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-        api_json(["ok" => false, "error" => "no se pudo recibir la imagen"], 400);
-    }
-    $tamanio = (int) ($archivo["size"] ?? 0);
-    if ($tamanio <= 0 || $tamanio > 5 * 1024 * 1024) {
-        api_json(["ok" => false, "error" => "la imagen debe pesar hasta 5 MB"], 400);
-    }
-    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($archivo["tmp_name"]);
-    if (!in_array($mime, ["image/png", "image/jpeg", "image/webp"], true) || @getimagesize($archivo["tmp_name"]) === false) {
-        api_json(["ok" => false, "error" => "solo se aceptan imagenes PNG, JPG o WEBP validas"], 400);
-    }
-    $contenido = file_get_contents($archivo["tmp_name"]);
-    if ($contenido === false) {
-        api_json(["ok" => false, "error" => "no se pudo leer la imagen"], 400);
-    }
-    $nombre = mb_substr(basename((string) $archivo["name"]), 0, 255);
-    $stmt = $pdo->prepare("
-        INSERT INTO horarios_curso (curso_id, nombre_archivo, mime_type, tamanio, imagen, actualizado_por)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE nombre_archivo = VALUES(nombre_archivo), mime_type = VALUES(mime_type),
-          tamanio = VALUES(tamanio), imagen = VALUES(imagen), actualizado_por = VALUES(actualizado_por), actualizado_en = CURRENT_TIMESTAMP
-    ");
-    $stmt->execute([$cursoId, $nombre, $mime, $tamanio, $contenido, usuarioActual()]);
-    registrarAuditoria("horarios.gestionar", "horario_curso", $cursoId, ["accion" => "cargar", "nombre" => $nombre, "mime" => $mime, "tamanio" => $tamanio]);
-    api_json(["ok" => true, "mensaje" => "horario guardado"], 201);
-}
-
-$data = api_body();
-$cursoId = api_id_positivo($data["cursoId"] ?? null);
-if ($cursoId === null) {
-    api_json(["ok" => false, "error" => "cursoId invalido"], 400);
-}
-$stmt = $pdo->prepare("DELETE FROM horarios_curso WHERE curso_id = ?");
-$stmt->execute([$cursoId]);
-if ($stmt->rowCount() === 0) {
-    api_json(["ok" => false, "error" => "horario no encontrado"], 404);
-}
-registrarAuditoria("horarios.gestionar", "horario_curso", $cursoId, ["accion" => "eliminar"]);
-api_json(["ok" => true, "mensaje" => "horario eliminado"]);
+// La imagen por curso quedó como histórico de solo lectura: los horarios se
+// cargan en la grilla (horario_grilla.php).
+api_json(["ok" => false, "error" => "la imagen de horario es de solo lectura: cargá el horario en la grilla"], 410);

@@ -61,6 +61,14 @@ function grilla_curso_del_alumno()
     return $cursoId === false || $cursoId === null ? null : (int) $cursoId;
 }
 
+if ($method === "GET" && isset($_GET["catalogos"])) {
+    // Opciones para editar la grilla: docentes y aulas.
+    api_requerir_permiso("horarios.gestionar");
+    $docentes = $pdo->query("SELECT u.id_usuario AS id, TRIM(CONCAT(u.nombre, ' ', u.apellido)) AS nombre FROM usuarios u JOIN roles r ON r.id_rol = u.rol_id WHERE r.nombre = 'Docente' ORDER BY u.apellido, u.nombre")->fetchAll();
+    $aulas = $pdo->query("SELECT id_resource AS id, name AS nombre FROM resources WHERE type = 'desktop_pc' AND active = 1 ORDER BY name")->fetchAll();
+    api_json(["ok" => true, "docentes" => $docentes, "aulas" => $aulas]);
+}
+
 if ($method === "GET") {
     api_requerir_permiso("horarios.ver");
 
