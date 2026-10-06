@@ -54,6 +54,10 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 - **Preceptor:** al pie de "Registrar asistencia", la sección "Mis suplencias" permite cubrir un curso ajeno (desde hoy, hasta 30 días, motivo opcional) y quitar las propias. Mientras la suplencia está vigente, el curso aparece en el selector de asistencia.
 - **Administrador Académico y Administrador:** en "Gestión académica", la pestaña "Suplencias" asigna cualquier preceptor a cualquier curso y lista todas las suplencias con su estado (Vigente, Próxima, Finalizada).
 
+### Promoción de ciclo lectivo
+
+En "Gestión académica", la pestaña "Promoción" (permiso `ciclos.promover`: Administrador Académico y Administrador) muestra el ciclo (abierto o cerrado) y los alumnos pendientes. Se trabaja curso por curso: "Aplicar sugerencias del curso" propone promover a la división equivalente del año siguiente (en 7º, egresar); por alumno se puede cambiar a Repetir, Egresar (solo 7º) o Baja, y elegir otro destino. Si no hay división equivalente hay que elegirla antes de confirmar. "Confirmar curso" pide confirmación con un resumen y procesa solo los alumnos elegidos. "Cerrar ciclo" se habilita cuando no quedan pendientes, es irreversible y abre el ciclo siguiente.
+
 El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre Galiservas en `/galiservas/`, en el mismo origen: no hace falta volver a iniciar sesión.
 
 ## Galiservas React por alcance

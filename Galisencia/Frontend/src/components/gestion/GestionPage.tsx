@@ -6,8 +6,9 @@ import type { Alumno } from "../../data/types";
 import { useToast } from "../ui/Toast";
 import { useAuth } from "../../auth/AuthContext";
 import SuplenciasPanel from "../suplencias/SuplenciasPanel";
+import PromocionPanel from "../promocion/PromocionPanel";
 
-type Vista = "alumnos" | "suplencias";
+type Vista = "alumnos" | "suplencias" | "promocion";
 
 export default function GestionPage() {
   const { alumnos, cursos, agregarAlumno, editarAlumno, borrarAlumno, reintentarCarga } = useStore();
@@ -15,8 +16,15 @@ export default function GestionPage() {
   const puedeSuplencias =
     (usuario?.permisos.includes("suplencias.crear") ?? false) &&
     (usuario?.permisos.includes("cursos.asignar") ?? false);
+  const puedePromocion = usuario?.permisos.includes("ciclos.promover") ?? false;
+  const pestanas: [Vista, string][] = [
+    ["alumnos", "Alumnos"],
+    ...(puedeSuplencias ? [["suplencias", "Suplencias"] as [Vista, string]] : []),
+    ...(puedePromocion ? [["promocion", "Promoción"] as [Vista, string]] : []),
+  ];
+  const conPestanas = pestanas.length > 1;
   const [vista, setVista] = useState<Vista>("alumnos");
-  const vistaActual: Vista = puedeSuplencias ? vista : "alumnos";
+  const vistaActual: Vista = pestanas.some(([clave]) => clave === vista) ? vista : "alumnos";
   const [form, setForm] = useState<Partial<Alumno>>({});
   const [editId, setEditId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -104,18 +112,17 @@ export default function GestionPage() {
           <p className="sub">
             {vistaActual === "suplencias"
               ? "Asigná preceptores suplentes a cursos por un período."
-              : "Administrá altas, bajas y cambios de curso."}
+              : vistaActual === "promocion"
+                ? "Cerrá el año: promociones, repitencias, egresos y cierre del ciclo lectivo."
+                : "Administrá altas, bajas y cambios de curso."}
           </p>
         </div>
         {vistaActual === "alumnos" && <span className="badge badge-brand">{alumnos.length} alumnos</span>}
       </div>
 
-      {puedeSuplencias && (
+      {conPestanas && (
         <div className="suplencias-tabs" role="tablist" aria-label="Secciones de gestión académica">
-          {([
-            ["alumnos", "Alumnos"],
-            ["suplencias", "Suplencias"],
-          ] as const).map(([clave, texto]) => (
+          {pestanas.map(([clave, texto]) => (
             <button
               key={clave}
               type="button"
@@ -136,8 +143,12 @@ export default function GestionPage() {
         <div role="tabpanel" id="gestion-panel-suplencias" aria-labelledby="gestion-tab-suplencias">
           <SuplenciasPanel onCambio={reintentarCarga} />
         </div>
+      ) : vistaActual === "promocion" ? (
+        <div role="tabpanel" id="gestion-panel-promocion" aria-labelledby="gestion-tab-promocion">
+          <PromocionPanel onCambio={reintentarCarga} />
+        </div>
       ) : (
-        <div role={puedeSuplencias ? "tabpanel" : undefined} id="gestion-panel-alumnos" aria-labelledby={puedeSuplencias ? "gestion-tab-alumnos" : undefined}>
+        <div role={conPestanas ? "tabpanel" : undefined} id="gestion-panel-alumnos" aria-labelledby={conPestanas ? "gestion-tab-alumnos" : undefined}>
 
         <div className="card card-pad-lg" style={{ marginBottom: 18 }}>
           <h3 style={{ marginBottom: 14 }}>{editId ? "Editar alumno" : "Nuevo alumno"}</h3>
