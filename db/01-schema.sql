@@ -124,10 +124,11 @@ CREATE TABLE asistencias (
   fecha DATE NOT NULL,
   estado ENUM('presente','tarde','ausente') NOT NULL DEFAULT 'presente',
   alumno_id INT UNSIGNED DEFAULT NULL,
-  materia VARCHAR(255) NOT NULL,
+  materia_id INT UNSIGNED NOT NULL,
   PRIMARY KEY (id_asistencia),
   CONSTRAINT fk_asist_alumno FOREIGN KEY (alumno_id) REFERENCES alumnos (id_alumno) ON DELETE CASCADE,
-  UNIQUE KEY uq_asist (alumno_id, materia, fecha)
+  CONSTRAINT fk_asist_materia FOREIGN KEY (materia_id) REFERENCES materias (id_materia) ON DELETE RESTRICT,
+  UNIQUE KEY uq_asist_materia (alumno_id, materia_id, fecha)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE notas (
@@ -135,9 +136,11 @@ CREATE TABLE notas (
   nota DECIMAL(4,2) DEFAULT NULL,
   fecha DATE DEFAULT NULL,
   alumno_id INT UNSIGNED DEFAULT NULL,
-  materia VARCHAR(255) NOT NULL,
+  materia_id INT UNSIGNED NOT NULL,
   PRIMARY KEY (id_nota),
-  CONSTRAINT fk_nota_alumno FOREIGN KEY (alumno_id) REFERENCES alumnos (id_alumno) ON DELETE CASCADE
+  KEY idx_nota_alumno_materia (alumno_id, materia_id),
+  CONSTRAINT fk_nota_alumno FOREIGN KEY (alumno_id) REFERENCES alumnos (id_alumno) ON DELETE CASCADE,
+  CONSTRAINT fk_nota_materia FOREIGN KEY (materia_id) REFERENCES materias (id_materia) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE profesores (

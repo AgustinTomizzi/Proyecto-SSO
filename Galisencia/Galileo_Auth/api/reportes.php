@@ -22,9 +22,12 @@ $ciclo = isset($_GET["ciclo"]) ? trim((string) $_GET["ciclo"]) : "";
 if ($ciclo !== "" && !preg_match('/^\d{4}$/', $ciclo)) {
     api_json(["ok" => false, "error" => "ciclo debe ser un año de cuatro dígitos"], 400);
 }
-$materia = isset($_GET["materia"]) ? trim((string) $_GET["materia"]) : "";
-if (strlen($materia) > 255) {
-    api_json(["ok" => false, "error" => "materia no puede superar 255 caracteres"], 400);
+$materiaFiltro = null;
+if (api_pide_materia($_GET)) {
+    $materiaFiltro = api_resolver_materia($_GET["materiaId"] ?? null, $_GET["materia"] ?? null);
+    if ($materiaFiltro === null) {
+        api_json(["ok" => false, "error" => "materia inexistente"], 400);
+    }
 }
 
 if ($esPreceptor && $cursoId !== null && !in_array($cursoId, api_cursos_del_preceptor($usuarioId), true)) {
@@ -53,17 +56,17 @@ $alumnos = $stmt->fetchAll();
 $ids = array_map("intval", array_column($alumnos, "id"));
 $asistencias = [];
 if ($ids) {
-    $asistenciaWhere = ["alumno_id IN (" . implode(",", array_fill(0, count($ids), "?")) . ")"];
+    $asistenciaWhere = ["asi.alumno_id IN (" . implode(",", array_fill(0, count($ids), "?")) . ")"];
     $asistenciaParams = $ids;
-    if ($materia !== "") {
-        $asistenciaWhere[] = "materia = ?";
-        $asistenciaParams[] = $materia;
+    if ($materiaFiltro !== null) {
+        $asistenciaWhere[] = "asi.materia_id = ?";
+        $asistenciaParams[] = $materiaFiltro["id"];
     }
     if ($ciclo !== "") {
-        $asistenciaWhere[] = "YEAR(fecha) = ?";
+        $asistenciaWhere[] = "YEAR(asi.fecha) = ?";
         $asistenciaParams[] = (int) $ciclo;
     }
-    $stmt = $pdo->prepare("SELECT alumno_id, materia, estado FROM asistencias WHERE " . implode(" AND ", $asistenciaWhere));
+    $stmt = $pdo->prepare("SELECT asi.alumno_id, m.nombre AS materia, asi.estado FROM asistencias asi JOIN materias m ON m.id_materia = asi.materia_id WHERE " . implode(" AND ", $asistenciaWhere));
     $stmt->execute($asistenciaParams);
     $asistencias = $stmt->fetchAll();
 }

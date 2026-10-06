@@ -17,7 +17,8 @@ export type EstadoAsistencia = "presente" | "tarde" | "ausente";
 export interface RegistroAsistencia {
   id: string;
   alumnoId: string;
-  materia: string;
+  materiaId?: string;
+  materia: string; // nombre canónico del catálogo
   fecha: string; // YYYY-MM-DD
   estado: EstadoAsistencia;
 }
@@ -49,7 +50,20 @@ export const MATERIAS = [
   "Inglés",
   "Física",
   "Ed. Técnica",
+  "Geografía",
+  "Química",
+  "Ciudadanía",
 ];
+
+export interface Materia {
+  id: string;
+  nombre: string;
+}
+
+/** Compara un registro con una materia: por id si el registro lo trae, si no por nombre. */
+export function esMismaMateria(registro: RegistroAsistencia, materia: Materia): boolean {
+  return registro.materiaId ? registro.materiaId === materia.id : registro.materia === materia.nombre;
+}
 
 export const PESO_ASISTENCIA: Record<EstadoAsistencia, number> = {
   presente: 1,

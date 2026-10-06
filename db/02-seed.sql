@@ -137,7 +137,7 @@ INSERT INTO alumnos (nombre, apellido, dni, direccion, email, curso_id, estado) 
   ('Mia','Benitez','46000035','Italia 903','mia.benitez@galileo.edu.ar',10,1);
 
 INSERT INTO materias (nombre) VALUES
-  ('Matematica'),('Lengua'),('Historia'),('Biologia'),('Ingles'),('Fisica'),('Ed. Tecnica'),('Geografia'),('Quimica'),('Ciudadania');
+  ('Matemática'),('Lengua'),('Historia'),('Biología'),('Inglés'),('Física'),('Ed. Técnica'),('Geografía'),('Química'),('Ciudadanía');
 
 -- Modulos de 40 minutos por turno; los recreos ocupan una franja propia.
 INSERT INTO franjas_horarias (turno, orden, hora_inicio, hora_fin, es_recreo) VALUES
@@ -153,21 +153,26 @@ CREATE PROCEDURE seed_datos_academicos()
 BEGIN
   DECLARE done INT DEFAULT 0;
   DECLARE aid INT;
+  DECLARE mat, len, his, bio INT;
   DECLARE cur CURSOR FOR SELECT id_alumno FROM alumnos;
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+  SELECT id_materia INTO mat FROM materias WHERE nombre = 'Matemática';
+  SELECT id_materia INTO len FROM materias WHERE nombre = 'Lengua';
+  SELECT id_materia INTO his FROM materias WHERE nombre = 'Historia';
+  SELECT id_materia INTO bio FROM materias WHERE nombre = 'Biología';
   OPEN cur;
   carga: LOOP
     FETCH cur INTO aid;
     IF done THEN LEAVE carga; END IF;
-    INSERT INTO asistencias (fecha, estado, alumno_id, materia) VALUES
-      ('2026-08-24','presente',aid,'Matematica'),
-      ('2026-08-25',IF(MOD(aid,5)=0,'ausente','presente'),aid,'Lengua'),
-      ('2026-08-26',IF(MOD(aid,4)=0,'tarde','presente'),aid,'Historia'),
-      ('2026-08-27','presente',aid,'Biologia');
-    INSERT INTO notas (nota, fecha, alumno_id, materia) VALUES
-      (6 + MOD(aid,5), '2026-08-20', aid, 'Matematica'),
-      (5 + MOD(aid,6), '2026-08-21', aid, 'Lengua'),
-      (6 + MOD(aid + 2,5), '2026-08-22', aid, 'Historia');
+    INSERT INTO asistencias (fecha, estado, alumno_id, materia_id) VALUES
+      ('2026-08-24','presente',aid,mat),
+      ('2026-08-25',IF(MOD(aid,5)=0,'ausente','presente'),aid,len),
+      ('2026-08-26',IF(MOD(aid,4)=0,'tarde','presente'),aid,his),
+      ('2026-08-27','presente',aid,bio);
+    INSERT INTO notas (nota, fecha, alumno_id, materia_id) VALUES
+      (6 + MOD(aid,5), '2026-08-20', aid, mat),
+      (5 + MOD(aid,6), '2026-08-21', aid, len),
+      (6 + MOD(aid + 2,5), '2026-08-22', aid, his);
   END LOOP;
   CLOSE cur;
 END$$

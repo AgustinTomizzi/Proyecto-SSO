@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../../data/StoreContext";
 import { useToast } from "../../components/ui/Toast";
-import { MATERIAS } from "../../data/types";
+import { esMismaMateria } from "../../data/types";
 import type { Alumno, EstadoAsistencia } from "../../data/types";
 import { apiGet } from "../../data/apiClient";
 import { hoyLocal } from "../../data/fecha";
@@ -53,11 +53,11 @@ function mensajeError(error: unknown): string {
 }
 
 export default function PreceptorPage() {
-  const { cursos, alumnos, registros, marcarAsistencia, editarAlumno, borrarAlumno } = useStore();
+  const { cursos, alumnos, registros, materias, marcarAsistencia, editarAlumno, borrarAlumno } = useStore();
   const { push } = useToast();
   const opcionesCurso = useMemo(() => cursos.map((c) => ({ ...c, label: `${c.anio} ${c.division}` })), [cursos]);
   const [curso, setCurso] = useState("");
-  const [materia, setMateria] = useState(MATERIAS[0]);
+  const [materiaId, setMateriaId] = useState("");
   const [fecha, setFecha] = useState(hoyLocal);
   const [estado, setEstado] = useState<Record<string, EstadoAsistencia>>({});
   const [guardado, setGuardado] = useState(false);
@@ -74,6 +74,15 @@ export default function PreceptorPage() {
     if (!opcionesCurso.some((c) => c.label === curso)) setCurso(opcionesCurso[0]?.label ?? "");
   }, [curso, opcionesCurso]);
 
+  useEffect(() => {
+    if (!materias.some((m) => m.id === materiaId)) setMateriaId(materias[0]?.id ?? "");
+  }, [materiaId, materias]);
+
+  const materia = useMemo(
+    () => materias.find((m) => m.id === materiaId) ?? null,
+    [materias, materiaId]
+  );
+
   const alumnosCurso = useMemo(
     () => alumnos.filter((a) => a.curso === curso),
     [alumnos, curso]
@@ -83,7 +92,7 @@ export default function PreceptorPage() {
     const inicial: Record<string, EstadoAsistencia> = {};
     for (const alumno of alumnosCurso) {
       const registro = registros.find(
-        (r) => r.alumnoId === alumno.id && r.materia === materia && r.fecha === fecha
+        (r) => materia !== null && r.alumnoId === alumno.id && esMismaMateria(r, materia) && r.fecha === fecha
       );
       inicial[alumno.id] = registro?.estado ?? "presente";
     }
@@ -101,7 +110,7 @@ export default function PreceptorPage() {
       push("Seleccioná una fecha válida", "error");
       return;
     }
-    if (!materia || !MATERIAS.includes(materia)) {
+    if (!materia) {
       push("Seleccioná una materia válida", "error");
       return;
     }
@@ -224,8 +233,9 @@ export default function PreceptorPage() {
         </div>
         <div className="field" style={{ margin: 0 }}>
           <label>Materia</label>
-          <select className="select" value={materia} onChange={(e) => { setMateria(e.target.value); setGuardado(false); }}>
-            {MATERIAS.map((m) => <option key={m} value={m}>{m}</option>)}
+          <select className="select" value={materiaId} onChange={(e) => { setMateriaId(e.target.value); setGuardado(false); }} disabled={materias.length === 0}>
+            {materias.length === 0 && <option value="">Sin materias</option>}
+            {materias.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
           </select>
         </div>
         <div className="field" style={{ margin: 0 }}>
@@ -261,7 +271,7 @@ export default function PreceptorPage() {
         </div>
         <div className="spread row" style={{ marginTop: 18 }}>
           <span className={guardado ? "badge badge-success" : "muted text-sm"}>{guardado ? "Registro guardado" : "Los cambios se aplican después de confirmarlos en el sistema."}</span>
-          <button className={`btn ${guardado ? "btn-success" : "btn-primary"}`} onClick={guardar} disabled={guardando || guardado}>{guardando ? "Guardando..." : guardado ? "Guardado" : "Guardar registro"}</button>
+          <button className={`btn ${guardado ? "btn-success" : "btn-primary"}`} onClick={guardar} disabled={guardando || guardado || !materia}>{guardando ? "Guardando..." : guardado ? "Guardado" : "Guardar registro"}</button>
         </div>
       </div>
 

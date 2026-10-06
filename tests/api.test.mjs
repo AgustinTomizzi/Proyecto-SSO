@@ -400,6 +400,29 @@ async function main() {
     }
   }
 
+  // ---- Materias como catálogo (materia_id) ----
+  const catalogo = await preceptor.request("/materias.php");
+  expectStatus(catalogo, 200, "catálogo de materias");
+  const matematica = catalogo.body.materias.find((m) => m.nombre === "Matemática");
+  assert.ok(matematica, "el catálogo tiene Matemática con tilde");
+  const porTexto = await preceptor.json("/asistencias.php", "POST", { alumnoId: 1, materia: "matematica", fecha: "2025-09-15", estado: "presente" });
+  expectStatus(porTexto, 200, "asistencia con materia en texto (sin tilde ni mayúscula)");
+  assert.equal(porTexto.body.registro.materia, "Matemática");
+  assert.equal(String(porTexto.body.registro.materiaId), String(matematica.id));
+  const porId = await preceptor.json("/asistencias.php", "POST", { alumnoId: 1, materiaId: matematica.id, fecha: "2025-09-15", estado: "tarde" });
+  expectStatus(porId, 200, "corrección de la misma asistencia por materiaId");
+  assert.equal(porId.body.registro.id, porTexto.body.registro.id, "texto e id resuelven al mismo registro");
+  expectStatus(
+    await preceptor.json("/asistencias.php", "POST", { alumnoId: 1, materia: "Astrología", fecha: "2025-09-15", estado: "presente" }),
+    400,
+    "materia fuera del catálogo"
+  );
+  expectStatus(await preceptor.json("/asistencias.php", "POST", { alumnoId: 1, fecha: "2025-09-15", estado: "presente" }), 400, "asistencia sin materia");
+  const filtradas = await preceptor.request(`/asistencias.php?alumnoId=1&materiaId=${matematica.id}`);
+  expectStatus(filtradas, 200, "asistencias filtradas por materiaId");
+  assert.ok(filtradas.body.registros.length > 0 && filtradas.body.registros.every((r) => r.materia === "Matemática"));
+  expectStatus(await preceptor.request("/asistencias.php?materiaId=99999"), 400, "filtro con materia inexistente");
+
   // ---- Filtros por ciclo y materia en asistencias / reportes ----
   const asistenciasCiclo = await preceptor.request("/asistencias.php?ciclo=2026");
   expectStatus(asistenciasCiclo, 200, "asistencias filtradas por ciclo");

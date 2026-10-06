@@ -20,7 +20,7 @@ if (api_rol_es("Preceptor") && (int) $alumno["preceptor_id"] !== (int) usuarioAc
     api_json(["ok" => false, "error" => "el alumno no pertenece a uno de tus cursos actuales"], 403);
 }
 
-$stmt = $pdo->prepare("SELECT YEAR(fecha) AS ciclo, materia, COUNT(*) AS clases, SUM(estado='presente') AS presentes, SUM(estado='tarde') AS tardes, SUM(estado='ausente') AS ausentes, ROUND(SUM(CASE estado WHEN 'presente' THEN 1 WHEN 'tarde' THEN .5 ELSE 0 END) / COUNT(*) * 100) AS porcentaje FROM asistencias WHERE alumno_id=? GROUP BY YEAR(fecha), materia ORDER BY ciclo DESC, materia");
+$stmt = $pdo->prepare("SELECT YEAR(asi.fecha) AS ciclo, m.nombre AS materia, COUNT(*) AS clases, SUM(asi.estado='presente') AS presentes, SUM(asi.estado='tarde') AS tardes, SUM(asi.estado='ausente') AS ausentes, ROUND(SUM(CASE asi.estado WHEN 'presente' THEN 1 WHEN 'tarde' THEN .5 ELSE 0 END) / COUNT(*) * 100) AS porcentaje FROM asistencias asi JOIN materias m ON m.id_materia = asi.materia_id WHERE asi.alumno_id=? GROUP BY YEAR(asi.fecha), m.id_materia, m.nombre ORDER BY ciclo DESC, m.nombre");
 $stmt->execute([$id]);
 $asistencia = $stmt->fetchAll();
 

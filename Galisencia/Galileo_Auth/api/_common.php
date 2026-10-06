@@ -270,6 +270,40 @@ function api_requerir_contrasena($contrasena)
     api_limpiar_intentos((string) ($_SESSION["email"] ?? ""), "reauth");
 }
 
+/**
+ * Resuelve la materia de un pedido: materiaId (preferido) o, por compatibilidad
+ * durante un ciclo, el nombre en texto. La collation ignora tildes y
+ * mayusculas ("matematica" == "Matemática"). Devuelve ["id", "nombre"] o null.
+ */
+function api_resolver_materia($materiaId, $materiaTexto)
+{
+    global $pdo;
+    if ($materiaId !== null && $materiaId !== "") {
+        $id = api_id_positivo($materiaId);
+        if ($id === null) {
+            return null;
+        }
+        $stmt = $pdo->prepare("SELECT id_materia AS id, nombre FROM materias WHERE id_materia = ?");
+        $stmt->execute([$id]);
+    } else {
+        $texto = trim((string) $materiaTexto);
+        if ($texto === "" || strlen($texto) > 255) {
+            return null;
+        }
+        $stmt = $pdo->prepare("SELECT id_materia AS id, nombre FROM materias WHERE nombre = ? LIMIT 1");
+        $stmt->execute([$texto]);
+    }
+    $materia = $stmt->fetch();
+    return $materia ? ["id" => (int) $materia["id"], "nombre" => $materia["nombre"]] : null;
+}
+
+/** true si el pedido trae materiaId o materia (aunque sea invalida). */
+function api_pide_materia($fuente)
+{
+    return (isset($fuente["materiaId"]) && $fuente["materiaId"] !== "")
+        || (isset($fuente["materia"]) && trim((string) $fuente["materia"]) !== "");
+}
+
 function api_id_positivo($valor)
 {
     $id = filter_var($valor, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);

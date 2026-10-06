@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../../data/StoreContext";
-import { MATERIAS, PESO_ASISTENCIA, UMBRAL_REGULARIDAD } from "../../data/types";
+import { PESO_ASISTENCIA, UMBRAL_REGULARIDAD } from "../../data/types";
 import { useToast } from "../../components/ui/Toast";
 import EmptyState from "../../components/ui/EmptyState";
 
 type FiltroRiesgo = "todos" | "general" | "materia";
 
 export default function ReportesPage() {
-  const { alumnos, registros, cursos } = useStore();
+  const { alumnos, registros, cursos, materias } = useStore();
   const { push } = useToast();
   const [curso, setCurso] = useState("todos");
   const [materia, setMateria] = useState("todas");
@@ -95,7 +95,7 @@ export default function ReportesPage() {
         <div className="grid grid-4">
           <div className="field" style={{ margin: 0 }}><label>Ciclo</label><select className="select" value={ciclo} onChange={(e) => setCiclo(e.target.value)} disabled={!ciclos.length}>{!ciclos.length && <option value="">Sin registros</option>}{ciclos.map((a) => <option key={a} value={a}>{a}</option>)}</select></div>
           <div className="field" style={{ margin: 0 }}><label>Curso</label><select className="select" value={curso} onChange={(e) => setCurso(e.target.value)}><option value="todos">Todos los cursos</option>{cursosOpciones.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
-          <div className="field" style={{ margin: 0 }}><label>Materia</label><select className="select" value={materia} onChange={(e) => setMateria(e.target.value)}><option value="todas">Todas las materias</option>{MATERIAS.map((m) => <option key={m} value={m}>{m}</option>)}</select></div>
+          <div className="field" style={{ margin: 0 }}><label>Materia</label><select className="select" value={materia} onChange={(e) => setMateria(e.target.value)}><option value="todas">Todas las materias</option>{materias.map((m) => <option key={m.id} value={m.nombre}>{m.nombre}</option>)}</select></div>
           <div className="field" style={{ margin: 0 }}><label>Situación</label><select className="select" value={riesgo} onChange={(e) => setRiesgo(e.target.value as FiltroRiesgo)}><option value="todos">Todos</option><option value="general">En riesgo general</option><option value="materia">En riesgo por materia</option></select></div>
         </div>
         <div className="row row-wrap" style={{ marginTop: 14 }}><span className="badge">{calculo.alumnos} alumnos</span><span className="badge">{calculo.filas.length} registros</span><span className={`badge ${calculo.promedio !== null && calculo.promedio < UMBRAL_REGULARIDAD ? "badge-danger" : "badge-success"}`}>Promedio: {calculo.promedio === null ? "—" : `${calculo.promedio}%`}</span></div>

@@ -139,18 +139,28 @@ Cuando un Preceptor cambia a un alumno de curso o lo da de baja debe reenviar `c
 
 Errores del recurso: `400` dato inválido, `401` sin sesión o contraseña de reconfirmación incorrecta, `403` sin permiso/fuera de alcance, `404` alumno inexistente, `405` método no permitido, `429` demasiadas reconfirmaciones fallidas.
 
+## Materias
+
+`GET /materias.php`, cualquier usuario autenticado. Catálogo ordenado por nombre:
+
+```json
+{"ok":true,"materias":[{"id":"7","nombre":"Ed. Técnica"},{"id":"1","nombre":"Matemática"}]}
+```
+
+Asistencias, notas y reportes identifican la materia por `materiaId`. **Compatibilidad por un ciclo:** también aceptan `materia` como texto y lo resuelven contra el catálogo sin distinguir tildes ni mayúsculas (`"matematica"` → `Matemática`). Una materia que no está en el catálogo responde `400` («materia inexistente»). Las respuestas devuelven `materiaId` y `materia` (nombre canónico).
+
 ## Asistencias
 
 ### Consultar: **Implementada**
 
-`GET /asistencias.php?alumnoId=1&fecha=2026-06-09&materia=Matematica&cursoId=1&ciclo=2026`, permiso `asistencia.ver`.
+`GET /asistencias.php?alumnoId=1&fecha=2026-06-09&materiaId=1&cursoId=1&ciclo=2026`, permiso `asistencia.ver`.
 
-Todos los filtros son opcionales, combinables y validados (`400` si son inválidos): `alumnoId` y `cursoId` enteros positivos, `fecha` YYYY-MM-DD real, `materia` de hasta 255 caracteres, `ciclo` año de cuatro dígitos. Solo incluye alumnos activos y ordena por fecha.
+Todos los filtros son opcionales, combinables y validados (`400` si son inválidos): `alumnoId` y `cursoId` enteros positivos, `fecha` YYYY-MM-DD real, `materiaId` (o `materia` en texto) del catálogo, `ciclo` año de cuatro dígitos. Solo incluye alumnos activos y ordena por fecha.
 
 **Alcance:** el Alumno ve solo sus registros y el Preceptor solo los de sus cursos (un filtro fuera de alcance devuelve lista vacía). Docente, Directivo, Administrador Académico y Administrador ven todo.
 
 ```json
-{"ok":true,"registros":[{"id":"1","alumnoId":"1","materia":"Matematica","fecha":"2026-06-09","estado":"presente"}]}
+{"ok":true,"registros":[{"id":"1","alumnoId":"1","materiaId":"1","materia":"Matemática","fecha":"2026-06-09","estado":"presente"}]}
 ```
 
 ### Registrar o corregir: **Implementada**
@@ -158,16 +168,16 @@ Todos los filtros son opcionales, combinables y validados (`400` si son inválid
 `POST /asistencias.php`, permiso `asistencia.registrar`.
 
 ```json
-{"alumnoId":1,"materia":"Matematica","fecha":"2026-09-03","estado":"tarde"}
+{"alumnoId":1,"materiaId":1,"fecha":"2026-09-03","estado":"tarde"}
 ```
 
-- **Validación (`400`):** `alumnoId` entero positivo, `materia` obligatoria de hasta 255 caracteres, `fecha` YYYY-MM-DD real y `estado` en `presente`/`tarde`/`ausente`. El alumno debe existir y estar activo (`400`).
+- **Validación (`400`):** `alumnoId` entero positivo, `materiaId` (o `materia`) del catálogo, `fecha` YYYY-MM-DD real y `estado` en `presente`/`tarde`/`ausente`. El alumno debe existir y estar activo (`400`).
 - **Alcance (`403`):** el Preceptor solo opera sobre alumnos de sus cursos; el Alumno solo sobre sí mismo.
-- **Corrección:** si ya existe `(alumno, materia, fecha)` actualiza el estado, pero exige además `asistencia.editar` (`403` si falta).
+- **Corrección:** si ya existe `(alumno, materia_id, fecha)` actualiza el estado, pero exige además `asistencia.editar` (`403` si falta).
 - Bloquea alumno y registro con `FOR UPDATE` dentro de una transacción, audita `asistencia.registrar` o `asistencia.editar` con antes/después y responde `200`:
 
 ```json
-{"ok":true,"registro":{"id":"41","alumnoId":"1","materia":"Matematica","fecha":"2026-09-03","estado":"tarde"}}
+{"ok":true,"registro":{"id":"41","alumnoId":"1","materiaId":"1","materia":"Matemática","fecha":"2026-09-03","estado":"tarde"}}
 ```
 
 Otros métodos: `405`.
@@ -214,10 +224,10 @@ No existe entidad `asignaciones` separada: la asignación vigente es `cursos.pre
 
 ### Consultar: **Implementada**
 
-`GET /notas.php?alumnoId=1`, permiso `notas.ver`. El filtro es opcional. Solo incluye alumnos activos; el Alumno ve solo sus notas y el Preceptor solo las de sus cursos.
+`GET /notas.php?alumnoId=1&materiaId=2`, permiso `notas.ver`. Los filtros son opcionales y validados (`400`). Solo incluye alumnos activos; el Alumno ve solo sus notas y el Preceptor solo las de sus cursos.
 
 ```json
-{"ok":true,"notas":[{"id":"1","alumnoId":"1","materia":"Lengua","fecha":"2026-09-03","nota":"8.50"}]}
+{"ok":true,"notas":[{"id":"1","alumnoId":"1","materiaId":"2","materia":"Lengua","fecha":"2026-09-03","nota":"8.50"}]}
 ```
 
 ### Crear: **Implementada**
@@ -225,10 +235,10 @@ No existe entidad `asignaciones` separada: la asignación vigente es `cursos.pre
 `POST /notas.php`, permiso `notas.crear`.
 
 ```json
-{"alumnoId":1,"materia":"Lengua","fecha":"2026-09-03","nota":8.5}
+{"alumnoId":1,"materiaId":2,"fecha":"2026-09-03","nota":8.5}
 ```
 
-Exige alumno activo, `materia` de hasta 255 caracteres y `nota` numérica entre 1 y 10; `fecha` es opcional (si falta, la fecha del servidor en hora argentina). Cualquier dato inválido da `400`. El Preceptor solo puede cargar en sus cursos (`403`). Audita `notas.crear` y responde `200` `{"ok":true}`. Otros métodos: `405`.
+Exige alumno activo, `materiaId` (o `materia`) del catálogo y `nota` numérica entre 1 y 10; `fecha` es opcional (si falta, la fecha del servidor en hora argentina). Cualquier dato inválido da `400`. El Preceptor solo puede cargar en sus cursos (`403`). Audita `notas.crear` y responde `200` con `{"ok":true,"nota":{...}}` (incluye `id`, `materiaId` y `materia`). Otros métodos: `405`.
 
 ## Horarios
 
@@ -284,7 +294,7 @@ Los usuarios se crean solo por esta API (el formulario PHP legado se eliminó).
 
 ### Resumen institucional: **Implementada**
 
-`GET /reportes.php[?cursoId=1&ciclo=2026&materia=Matematica]`. Acceden quienes tienen `reportes.ver`, el Alumno (solo su resumen) y el Preceptor (solo sus cursos; `403` si pide un `cursoId` ajeno). Los filtros son opcionales y validados (`400`).
+`GET /reportes.php[?cursoId=1&ciclo=2026&materiaId=1]` (también acepta `materia` en texto). Acceden quienes tienen `reportes.ver`, el Alumno (solo su resumen) y el Preceptor (solo sus cursos; `403` si pide un `cursoId` ajeno). Los filtros son opcionales y validados (`400`).
 
 ```json
 {

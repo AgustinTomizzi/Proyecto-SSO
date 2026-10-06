@@ -11,8 +11,9 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 4. `db/04-horarios.sql`: imágenes de horario por curso y permisos `horarios.*`.
 5. `db/05-seguridad.sql`: tabla `login_intentos` (límite de intentos de autenticación) y columna `usuarios.debe_cambiar_password` (al crearla marca las cuentas demo). Idempotente.
 6. `db/06-horarios-grilla.sql`: grilla de horarios (`franjas_horarias` con sus módulos por turno y `horario_clases`). Idempotente.
+7. `db/07-materias-fk.sql`: `asistencias` y `notas` pasan de `materia` (texto) a `materia_id` (FK a `materias`). Pasa al catálogo cualquier nombre suelto, hace el backfill sin distinguir tildes ni mayúsculas, deduplica las asistencias que chocan en la clave nueva (queda la más reciente), cambia la clave única a (`alumno_id`, `materia_id`, `fecha`) y corrige los nombres del catálogo a su forma con tildes. Idempotente.
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `07-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `08-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -31,6 +32,8 @@ erDiagram
     CURSOS ||--o{ ALUMNOS : agrupa
     ALUMNOS ||--o{ ASISTENCIAS : registra
     ALUMNOS ||--o{ NOTAS : obtiene
+    MATERIAS ||--o{ ASISTENCIAS : de
+    MATERIAS ||--o{ NOTAS : de
     USUARIOS o|--o{ AUDITORIA : ejecuta
     USUARIOS ||--o{ RESERVATIONS : solicita
     RESOURCES ||--o{ RESERVATIONS : ocupa
@@ -102,14 +105,14 @@ erDiagram
       date fecha
       enum estado
       int alumno_id FK
-      varchar materia
+      int materia_id FK
     }
     NOTAS {
       int id_nota PK
       decimal nota
       date fecha
       int alumno_id FK
-      varchar materia
+      int materia_id FK
     }
     PROFESORES {
       int id_profesor PK
@@ -201,7 +204,7 @@ erDiagram
     }
 ```
 
-`materias` y `profesores` todavía no tienen una relación declarada con cursos, notas o asistencias: estas dos últimas guardan `materia` como texto. El diagrama evita inventar relaciones que la base no garantiza.
+`asistencias` y `notas` referencian `materias` por FK (`07-materias-fk.sql`), y `horario_clases` también. `profesores` no tiene relaciones: los docentes son `usuarios` con rol Docente. El diagrama evita inventar relaciones que la base no garantiza.
 
 ## Tablas compartidas
 
@@ -332,9 +335,9 @@ Propósito: un estado de asistencia por alumno, materia y fecha.
 | `fecha` | `DATE NOT NULL` | UNIQUE parcial | Día lectivo. |
 | `estado` | `ENUM('presente','tarde','ausente') NOT NULL DEFAULT 'presente'` | | Estado válido. |
 | `alumno_id` | `INT UNSIGNED NULL` | FK y UNIQUE parcial | Alumno; borrado en cascada. |
-| `materia` | `VARCHAR(255) NOT NULL` | UNIQUE parcial | Materia textual. |
+| `materia_id` | `INT UNSIGNED NOT NULL` | FK a `materias` (RESTRICT); UNIQUE (`alumno_id`, `materia_id`, `fecha`) | Materia del catálogo. |
 
-La clave única `(alumno_id, materia, fecha)` evita duplicados. El POST es un *upsert*: actualiza el estado si ya existe, y para actualizar exige además `asistencia.editar`. Reportes pondera presente `1`, tarde `0,5`, ausente `0`.
+La clave única `(alumno_id, materia_id, fecha)` evita duplicados. El POST es un *upsert*: actualiza el estado si ya existe, y para actualizar exige además `asistencia.editar`. Reportes pondera presente `1`, tarde `0,5`, ausente `0`.
 
 ### `notas`
 
@@ -346,7 +349,7 @@ Propósito: calificaciones por alumno y materia.
 | `nota` | `DECIMAL(4,2) NULL` | | Calificación. La BD no limita el rango; la API exige entre 1 y 10. |
 | `fecha` | `DATE NULL` | | Puede venir en el cuerpo; si falta, la API usa la fecha del servidor (hora argentina). |
 | `alumno_id` | `INT UNSIGNED NULL` | FK a `alumnos.id_alumno` | Alumno; borrado en cascada. |
-| `materia` | `VARCHAR(255) NOT NULL` | | Materia textual. |
+| `materia_id` | `INT UNSIGNED NOT NULL` | FK a `materias` (RESTRICT) | Materia del catálogo. |
 
 ### `profesores`
 

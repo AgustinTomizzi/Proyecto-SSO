@@ -26,12 +26,13 @@ if ($method === "GET") {
         $where[] = "asi.fecha = ?";
         $params[] = $fecha;
     }
-    if (isset($_GET["materia"]) && trim((string) $_GET["materia"]) !== "") {
-        if (strlen(trim((string) $_GET["materia"])) > 255) {
-            api_json(["ok" => false, "error" => "materia no puede superar 255 caracteres"], 400);
+    if (api_pide_materia($_GET)) {
+        $materiaFiltro = api_resolver_materia($_GET["materiaId"] ?? null, $_GET["materia"] ?? null);
+        if ($materiaFiltro === null) {
+            api_json(["ok" => false, "error" => "materia inexistente"], 400);
         }
-        $where[] = "asi.materia = ?";
-        $params[] = trim((string) $_GET["materia"]);
+        $where[] = "asi.materia_id = ?";
+        $params[] = $materiaFiltro["id"];
     }
     if (isset($_GET["cursoId"]) && $_GET["cursoId"] !== "") {
         $cursoId = api_id_positivo($_GET["cursoId"]);
@@ -58,7 +59,7 @@ if ($method === "GET") {
         $params[] = $usuarioId;
     }
 
-    $sql = "SELECT asi.id_asistencia AS id, asi.alumno_id AS alumnoId, asi.materia, asi.fecha, asi.estado FROM asistencias asi INNER JOIN alumnos a ON a.id_alumno = asi.alumno_id LEFT JOIN cursos c ON c.id_cursos = a.curso_id WHERE " . implode(" AND ", $where) . " ORDER BY asi.fecha, asi.id_asistencia";
+    $sql = "SELECT asi.id_asistencia AS id, asi.alumno_id AS alumnoId, asi.materia_id AS materiaId, m.nombre AS materia, asi.fecha, asi.estado FROM asistencias asi INNER JOIN alumnos a ON a.id_alumno = asi.alumno_id INNER JOIN materias m ON m.id_materia = asi.materia_id LEFT JOIN cursos c ON c.id_cursos = a.curso_id WHERE " . implode(" AND ", $where) . " ORDER BY asi.fecha, asi.id_asistencia";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     api_json(["ok" => true, "registros" => $stmt->fetchAll()]);
@@ -67,15 +68,15 @@ if ($method === "GET") {
 api_requerir_permiso("asistencia.registrar");
 $d = api_body();
 $alumnoId = api_id_positivo($d["alumnoId"] ?? null);
-$materia = trim((string) ($d["materia"] ?? ""));
+$materia = api_pide_materia($d) ? api_resolver_materia($d["materiaId"] ?? null, $d["materia"] ?? null) : null;
 $fecha = trim((string) ($d["fecha"] ?? ""));
 $estado = trim((string) ($d["estado"] ?? ""));
 
 if ($alumnoId === null) {
     api_json(["ok" => false, "error" => "alumnoId debe ser un entero positivo"], 400);
 }
-if ($materia === "" || strlen($materia) > 255) {
-    api_json(["ok" => false, "error" => "materia es requerida y no puede superar 255 caracteres"], 400);
+if ($materia === null) {
+    api_json(["ok" => false, "error" => api_pide_materia($d) ? "materia inexistente" : "materiaId es requerido"], 400);
 }
 if (!api_fecha_valida($fecha)) {
     api_json(["ok" => false, "error" => "fecha invalida; use el formato YYYY-MM-DD"], 400);
@@ -105,8 +106,8 @@ try {
         api_json(["ok" => false, "error" => "el alumno no pertenece a uno de tus cursos asignados"], 403);
     }
 
-    $stmt = $pdo->prepare("SELECT id_asistencia, alumno_id, materia, fecha, estado FROM asistencias WHERE alumno_id = ? AND materia = ? AND fecha = ? LIMIT 1 FOR UPDATE");
-    $stmt->execute([$alumnoId, $materia, $fecha]);
+    $stmt = $pdo->prepare("SELECT id_asistencia, alumno_id, materia_id, fecha, estado FROM asistencias WHERE alumno_id = ? AND materia_id = ? AND fecha = ? LIMIT 1 FOR UPDATE");
+    $stmt->execute([$alumnoId, $materia["id"], $fecha]);
     $antes = $stmt->fetch();
     if ($antes) {
         if (!api_tiene_permiso("asistencia.editar")) {
@@ -117,12 +118,12 @@ try {
         $id = $antes["id_asistencia"];
         $accion = "asistencia.editar";
     } else {
-        $pdo->prepare("INSERT INTO asistencias (fecha, estado, alumno_id, materia) VALUES (?, ?, ?, ?)")->execute([$fecha, $estado, $alumnoId, $materia]);
+        $pdo->prepare("INSERT INTO asistencias (fecha, estado, alumno_id, materia_id) VALUES (?, ?, ?, ?)")->execute([$fecha, $estado, $alumnoId, $materia["id"]]);
         $id = $pdo->lastInsertId();
         $accion = "asistencia.registrar";
     }
 
-    $despues = ["alumno_id" => $alumnoId, "materia" => $materia, "fecha" => $fecha, "estado" => $estado];
+    $despues = ["alumno_id" => $alumnoId, "materia_id" => $materia["id"], "materia" => $materia["nombre"], "fecha" => $fecha, "estado" => $estado];
     registrarAuditoria($accion, "asistencia", $id, ["antes" => $antes ?: null, "despues" => $despues]);
     $pdo->commit();
 } catch (Throwable $e) {
@@ -132,4 +133,4 @@ try {
     throw $e;
 }
 
-api_json(["ok" => true, "registro" => ["id" => (string) $id, "alumnoId" => (string) $alumnoId, "materia" => $materia, "fecha" => $fecha, "estado" => $estado]]);
+api_json(["ok" => true, "registro" => ["id" => (string) $id, "alumnoId" => (string) $alumnoId, "materiaId" => (string) $materia["id"], "materia" => $materia["nombre"], "fecha" => $fecha, "estado" => $estado]]);

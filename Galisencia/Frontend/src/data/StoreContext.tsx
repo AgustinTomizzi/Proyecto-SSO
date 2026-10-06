@@ -11,8 +11,10 @@ import type {
   Alumno,
   Curso,
   EstadoAsistencia,
+  Materia,
   RegistroAsistencia,
 } from "./types";
+import { MATERIAS, esMismaMateria } from "./types";
 import {
   CURSOS,
   buildAlumnos,
@@ -32,6 +34,7 @@ interface DatosDemo {
   alumnos: Alumno[];
   cursos: Curso[];
   registros: RegistroAsistencia[];
+  materias: Materia[];
 }
 
 function normalizarRegistros(registros: RegistroAsistencia[]): RegistroAsistencia[] {
@@ -39,7 +42,12 @@ function normalizarRegistros(registros: RegistroAsistencia[]): RegistroAsistenci
     ...r,
     id: String(r.id),
     alumnoId: String(r.alumnoId),
+    materiaId: r.materiaId === undefined || r.materiaId === null ? undefined : String(r.materiaId),
   }));
+}
+
+function normalizarMaterias(materias: Materia[]): Materia[] {
+  return materias.map((m) => ({ id: String(m.id), nombre: String(m.nombre) }));
 }
 
 function normalizarAlumno(a: Partial<Alumno> & { id: string | number }): Alumno {
@@ -62,21 +70,28 @@ function normalizarAlumno(a: Partial<Alumno> & { id: string | number }): Alumno 
 // navegador: los datos reales de alumnos no deben quedar en localStorage.
 function datosDemo(): DatosDemo {
   const alumnos = buildAlumnos();
-  return { alumnos, cursos: CURSOS, registros: buildRegistros(alumnos) };
+  return {
+    alumnos,
+    cursos: CURSOS,
+    registros: buildRegistros(alumnos),
+    materias: MATERIAS.map((nombre, i) => ({ id: `demo-${i}`, nombre })),
+  };
 }
 
 export interface StoreState {
   alumnos: Alumno[];
   cursos: Curso[];
   registros: RegistroAsistencia[];
+  /** Catálogo de materias (de la API con sesión; demo sin sesión). */
+  materias: Materia[];
   getRegistrosDeAlumno: (alumnoId: string) => RegistroAsistencia[];
   estadisticasAlumno: (alumnoId: string) => EstadisticaAlumno | null;
   resumen: ResumenInstitucional;
-  tieneRegistro: (alumnoId: string, materia: string, fecha: string) => boolean;
+  tieneRegistro: (alumnoId: string, materia: Materia, fecha: string) => boolean;
   marcarAsistencia: (
     alumnoId: string,
     fecha: string,
-    materia: string,
+    materia: Materia,
     estado: EstadoAsistencia
   ) => Promise<void>;
   agregarAlumno: (datos: Omit<Alumno, "id"> & { id?: string }) => Promise<void>;
@@ -99,6 +114,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [alumnos, setAlumnos] = useState<Alumno[]>(inicial.alumnos);
   const [cursos, setCursos] = useState<Curso[]>(inicial.cursos);
   const [registros, setRegistros] = useState<RegistroAsistencia[]>(inicial.registros);
+  const [materias, setMaterias] = useState<Materia[]>(inicial.materias);
   const { usuario } = useAuth();
   const [errorConexion, setErrorConexion] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -114,6 +130,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setAlumnos(init.alumnos);
       setCursos(init.cursos);
       setRegistros(init.registros);
+      setMaterias(init.materias);
       setErrorConexion(null);
       setCargando(false);
       return;
@@ -124,9 +141,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         if (usuario.rol === "alumno") {
-          const as = await apiGet<{ ok: true; registros: RegistroAsistencia[] }>(
-            `/asistencias.php?alumnoId=${encodeURIComponent(usuario.id)}`
-          );
+          const [as, ma] = await Promise.all([
+            apiGet<{ ok: true; registros: RegistroAsistencia[] }>(
+              `/asistencias.php?alumnoId=${encodeURIComponent(usuario.id)}`
+            ),
+            apiGet<{ ok: true; materias: Materia[] }>("/materias.php"),
+          ]);
           if (cancelled) return;
           const miAlumno: Alumno = {
             id: usuario.id,
@@ -141,16 +161,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setAlumnos([miAlumno]);
           setCursos([]);
           setRegistros(normalizarRegistros(as.registros));
+          setMaterias(normalizarMaterias(ma.materias));
         } else {
-          const [al, cu, as] = await Promise.all([
+          const [al, cu, as, ma] = await Promise.all([
             apiGet<{ ok: true; alumnos: Alumno[] }>("/alumnos.php"),
             apiGet<{ ok: true; cursos: Curso[] }>("/cursos.php"),
             apiGet<{ ok: true; registros: RegistroAsistencia[] }>("/asistencias.php"),
+            apiGet<{ ok: true; materias: Materia[] }>("/materias.php"),
           ]);
           if (cancelled) return;
           setAlumnos(al.alumnos.map(normalizarAlumno));
           setCursos(cu.cursos.map((c) => ({ ...c, id: String(c.id) })));
           setRegistros(normalizarRegistros(as.registros));
+          setMaterias(normalizarMaterias(ma.materias));
         }
         setErrorConexion(null);
       } catch (error) {
@@ -158,6 +181,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setAlumnos([]);
         setCursos([]);
         setRegistros([]);
+        setMaterias([]);
         // Error de red o timeout de apiGet: mensaje claro en lugar del técnico.
         const sinRespuesta = error instanceof TypeError || (error instanceof DOMException && error.name === "AbortError");
         setErrorConexion(sinRespuesta || !(error instanceof Error) ? "El servidor no respondió." : error.message);
@@ -191,16 +215,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const marcarAsistencia = useCallback(
-    async (alumnoId: string, fecha: string, materia: string, estado: EstadoAsistencia) => {
+    async (alumnoId: string, fecha: string, materia: Materia, estado: EstadoAsistencia) => {
       const data = await apiSend<{ ok: true; registro: RegistroAsistencia }>(
         "/asistencias.php",
         "POST",
-        { alumnoId, fecha, materia, estado }
+        { alumnoId, fecha, materiaId: materia.id, estado }
       );
       const registro = normalizarRegistros([data.registro])[0];
       setRegistros((prev) => {
         const idx = prev.findIndex(
-          (r) => r.alumnoId === alumnoId && r.fecha === fecha && r.materia === materia
+          (r) => r.alumnoId === alumnoId && r.fecha === fecha && esMismaMateria(r, materia)
         );
         if (idx >= 0) {
           const copia = [...prev];
@@ -217,9 +241,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const tieneRegistro = useCallback(
-    (alumnoId: string, materia: string, fecha: string) =>
+    (alumnoId: string, materia: Materia, fecha: string) =>
       registros.some(
-        (r) => r.alumnoId === alumnoId && r.materia === materia && r.fecha === fecha
+        (r) => r.alumnoId === alumnoId && esMismaMateria(r, materia) && r.fecha === fecha
       ),
     [registros]
   );
@@ -258,6 +282,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     alumnos,
     cursos,
     registros,
+    materias,
     getRegistrosDeAlumno,
     estadisticasAlumno,
     resumen,

@@ -18,7 +18,7 @@ docs/                     arquitectura funcional y guía de exposición
 tests/                    pruebas de integración contra el stack Docker
 ```
 
-La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esquema y el seed viven en `db/` y son la única fuente de verdad; se aplican en orden: `00-usuario-app.sh` → `01-schema.sql` → `02-seed.sql` → `03-migracion-rbac-auditoria.sql` → `04-horarios.sql` → `05-seguridad.sql` → `06-horarios-grilla.sql`.
+La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esquema y el seed viven en `db/` y son la única fuente de verdad; se aplican en orden: `00-usuario-app.sh` → `01-schema.sql` → `02-seed.sql` → `03-migracion-rbac-auditoria.sql` → `04-horarios.sql` → `05-seguridad.sql` → `06-horarios-grilla.sql` → `07-materias-fk.sql`.
 
 ## Cuentas demo
 
