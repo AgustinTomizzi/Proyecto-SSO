@@ -8,6 +8,13 @@ import { ThemeProvider } from "./theme/ThemeContext.tsx";
 import { ToastProvider } from "./components/ui/Toast.tsx";
 import { StoreProvider } from "./data/StoreContext.tsx";
 
+// PWA: service worker solo en producción (en desarrollo interfiere con Vite).
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>

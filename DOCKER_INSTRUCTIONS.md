@@ -85,6 +85,8 @@ El proxy reparte los pedidos entre las réplicas y vuelve a resolver sus IPs sol
 
 El proxy redirige HTTP a HTTPS y agrega HSTS (`proxy/https.conf`). La redirección asume el puerto 443 estándar.
 
+La PWA (instalar Galisencia en el celular y su modo sin conexión) necesita HTTPS: los navegadores solo registran service workers en HTTPS o en `localhost`.
+
 ## Zona horaria
 
 Todo el sistema usa `America/Argentina/Buenos_Aires`: PHP (`date.timezone` en `docker/php-seguridad.ini` y `config/database.php`), MySQL (`TZ` y `--default-time-zone=-03:00`, más `SET time_zone` en cada conexión) y los frontends (`hoyLocal()` en `Galisencia/Frontend/src/data/fecha.ts` y `Galiservas/Frontend/src/fecha.ts`). Así "hoy" es la fecha argentina aunque en UTC ya sea el día siguiente (desde las 21:00).

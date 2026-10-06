@@ -12,7 +12,8 @@ if [ "$PROYECTO" = "galileo" ]; then echo "El proyecto de pruebas no puede ser e
 DC="docker compose -p $PROYECTO -f docker-compose.yml -f $DIR/compose.pruebas.yml"
 case "$1" in
   up)   $DC down -v --remove-orphans >/dev/null 2>&1; $DC up --build -d --wait 2>&1 | tail -15 ;;
-  test) API_URL="${API_URL:-http://localhost:${PRUEBAS_PUERTO:-3100}/api}" node tests/api.test.mjs 2>&1 | tail -25 ;;
+  test) API_URL="${API_URL:-http://localhost:${PRUEBAS_PUERTO:-3100}/api}" node tests/api.test.mjs 2>&1 | tail -25
+        BASE_URL="http://localhost:${PRUEBAS_PUERTO:-3100}" node tests/pwa.test.mjs 2>&1 | tail -5 ;;
   down) $DC down -v --remove-orphans 2>&1 | tail -3 ;;
   dc)   shift; $DC "$@" ;;
   *)    echo "uso: $0 up|test|down|dc ..."; exit 1 ;;

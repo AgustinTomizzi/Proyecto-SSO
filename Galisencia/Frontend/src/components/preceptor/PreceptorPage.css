@@ -32,3 +32,13 @@
   .historial-modal { width: 100%; max-height: calc(100dvh - 24px); }
   .alumno-menu { position: fixed; top: auto; right: 14px; bottom: 14px; left: 14px; z-index: 90; }
 }
+
+/* PWA: aviso de asistencia pendiente de enviar (sin conexión). */
+.cola-pendiente { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding: 12px 14px; color: var(--warning-ink); background: var(--warning-bg); border-radius: var(--r-sm); font-size: 13.5px; }
+
+/* Toma de asistencia desde el celular: menos columnas y botones más grandes. */
+@media (max-width: 640px) {
+  .col-secundaria { display: none; }
+  .estado-group { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; min-width: 210px; }
+  .estado-btn { min-height: 44px; padding: 8px 6px; font-size: 13px; }
+}

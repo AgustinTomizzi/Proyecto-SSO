@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "../../data/StoreContext";
 import { useToast } from "../../components/ui/Toast";
 import { esMismaMateria } from "../../data/types";
@@ -8,6 +8,7 @@ import { hoyLocal } from "../../data/fecha";
 import { useAuth } from "../../auth/AuthContext";
 import SuplenciasPanel from "../suplencias/SuplenciasPanel";
 import JustificacionesPanel from "../justificaciones/JustificacionesPanel";
+import { alCambiarCola, encolar, esErrorDeRed, pendientes, sincronizar } from "../../data/colaAsistencia";
 import "./PreceptorPage.css";
 
 const ESTADOS: { key: EstadoCargable; label: string; cls: string }[] = [
@@ -69,6 +70,43 @@ export default function PreceptorPage() {
   const [estado, setEstado] = useState<Record<string, EstadoCargable>>({});
   const [guardado, setGuardado] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [enCola, setEnCola] = useState(0);
+  const [sincronizandoCola, setSincronizandoCola] = useState(false);
+  const usuarioId = usuario?.id ?? "";
+
+  // Cola sin conexión (PWA): contador y reenvío automático al volver la red.
+  const enviandoRef = useRef(false);
+  const enviarPendientes = useCallback(async () => {
+    // Un solo envío a la vez (el evento online y el botón pueden coincidir).
+    if (!usuarioId || enviandoRef.current) return;
+    enviandoRef.current = true;
+    setSincronizandoCola(true);
+    try {
+      const resultado = await sincronizar(usuarioId);
+      if (resultado.enviadas > 0) {
+        push(`Se enviaron ${resultado.enviadas} ${resultado.enviadas === 1 ? "marca pendiente" : "marcas pendientes"} de asistencia`);
+        reintentarCarga();
+      }
+      if (resultado.rechazadas.length > 0) {
+        push(`El servidor rechazó ${resultado.rechazadas.length} ${resultado.rechazadas.length === 1 ? "marca" : "marcas"}: ${resultado.rechazadas[0].error}`, "error");
+      }
+    } finally {
+      enviandoRef.current = false;
+      setSincronizandoCola(false);
+    }
+  }, [usuarioId, push, reintentarCarga]);
+
+  useEffect(() => {
+    if (!usuarioId) return;
+    let vigente = true;
+    const contar = () => { void pendientes(usuarioId).then((lista) => vigente && setEnCola(lista.length)).catch(() => undefined); };
+    contar();
+    const quitarSuscripcion = alCambiarCola(contar);
+    const alVolver = () => { void enviarPendientes(); };
+    window.addEventListener("online", alVolver);
+    if (navigator.onLine) alVolver();
+    return () => { vigente = false; quitarSuscripcion(); window.removeEventListener("online", alVolver); };
+  }, [usuarioId, enviarPendientes]);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [accion, setAccion] = useState<Accion>(null);
   const [nuevoCurso, setNuevoCurso] = useState("");
@@ -141,7 +179,14 @@ export default function PreceptorPage() {
       setGuardado(true);
       push("Registro de asistencia guardado");
     } catch (error) {
-      push(mensajeError(error), "error");
+      if (esErrorDeRed(error)) {
+        // Sin conexión: la clase entera queda en el teléfono (solo ids) y se reenvía sola.
+        await encolar(alumnosCurso.map((a) => ({ alumnoId: a.id, materiaId: materia.id, fecha, estado: estado[a.id] ?? "presente", usuarioId })));
+        setGuardado(true);
+        push("Sin conexión: la asistencia quedó guardada en este dispositivo y se envía sola al volver la red", "info");
+      } else {
+        push(mensajeError(error), "error");
+      }
     } finally {
       setGuardando(false);
     }
@@ -262,16 +307,16 @@ export default function PreceptorPage() {
       <div className="card card-pad-lg">
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Nombre</th><th>Apellido</th><th>DNI</th><th>Curso</th><th>División</th><th>Email</th><th>Asistencia</th><th aria-label="Acciones" /></tr></thead>
+            <thead><tr><th>Nombre</th><th>Apellido</th><th className="col-secundaria">DNI</th><th className="col-secundaria">Curso</th><th className="col-secundaria">División</th><th className="col-secundaria">Email</th><th>Asistencia</th><th aria-label="Acciones" /></tr></thead>
             <tbody>
               {alumnosCurso.map((a) => (
                 <tr key={a.id}>
                   <td style={{ fontWeight: 600 }}>{a.nombre}</td>
                   <td>{a.apellido || "—"}</td>
-                  <td>{a.dni || "—"}</td>
-                  <td>{a.curso.replace(/\s+[^\s]+$/, "") || a.curso}</td>
-                  <td>{a.division || "—"}</td>
-                  <td className="muted text-sm">{a.email}</td>
+                  <td className="col-secundaria">{a.dni || "—"}</td>
+                  <td className="col-secundaria">{a.curso.replace(/\s+[^\s]+$/, "") || a.curso}</td>
+                  <td className="col-secundaria">{a.division || "—"}</td>
+                  <td className="muted text-sm col-secundaria">{a.email}</td>
                   <td><div className="estado-group">{ESTADOS.map((e) => (
                     <button key={e.key} className={`estado-btn ${e.cls} ${(estado[a.id] ?? "presente") === e.key ? "on" : ""}`} onClick={() => { setEstado((prev) => ({ ...prev, [a.id]: e.key })); setGuardado(false); }}>{e.label}</button>
                   ))}{(estado[a.id] ?? "presente") === "ausente" && justificados.has(a.id) && <span className="badge badge-info" style={{ marginLeft: 8 }}>Justificada</span>}</div></td>
@@ -284,6 +329,12 @@ export default function PreceptorPage() {
             </tbody>
           </table>
         </div>
+        {enCola > 0 && (
+          <div className="cola-pendiente" role="status">
+            <span><strong>{enCola} {enCola === 1 ? "marca pendiente" : "marcas pendientes"} de enviar.</strong> Se envían solas cuando vuelve la conexión.</span>
+            <button type="button" className="btn btn-soft btn-sm" onClick={() => void enviarPendientes()} disabled={sincronizandoCola}>{sincronizandoCola ? "Enviando..." : "Reintentar"}</button>
+          </div>
+        )}
         <div className="spread row" style={{ marginTop: 18 }}>
           <span className={guardado ? "badge badge-success" : "muted text-sm"}>{guardado ? "Registro guardado" : "Los cambios se aplican después de confirmarlos en el sistema."}</span>
           <button className={`btn ${guardado ? "btn-success" : "btn-primary"}`} onClick={guardar} disabled={guardando || guardado || !materia}>{guardando ? "Guardando..." : guardado ? "Guardado" : "Guardar registro"}</button>

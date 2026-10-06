@@ -59,6 +59,14 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 
 Filtros por ciclo, curso, materia y situación (todos, en riesgo general o por materia). "Excel" descarga un libro con el resumen por alumno (clases, presentes, tardes, ausentes, justificadas, porcentaje y situación) y todos los registros del filtro; "CSV" baja los registros; "Imprimir / PDF" imprime en A4 el resumen por alumno con los filtros y las reglas aplicadas, sin el resto de la aplicación.
 
+### Galisencia en el celular (PWA)
+
+Galisencia se puede instalar en el celular ("Agregar a la pantalla de inicio"), con su ícono y en pantalla completa; tiene un atajo directo a "Registrar asistencia". En producción necesita HTTPS.
+
+- **Sin conexión:** la aplicación abre igual, porque el service worker guarda solo la aplicación y nunca datos de la API.
+- **Toma de asistencia con cortes de red:** si al guardar no hay conexión, la clase queda guardada en el dispositivo (solo ids de alumno y materia, fecha y estado; ningún nombre ni DNI). Aparece el aviso "N marcas pendientes de enviar", con un botón "Reintentar", y se envía sola cuando vuelve la red. La lista de alumnos tiene que haberse cargado con conexión: el padrón no se guarda en el teléfono. Al cerrar sesión, lo pendiente se borra.
+- **En pantallas angostas:** la toma de asistencia oculta DNI, curso, división y email, y agranda los botones Presente/Tarde/Ausente.
+
 ### Portal de familias
 
 - **Tutor:** entra a `/familia`. Si tiene más de un hijo vinculado, los elige con las pestañas. Por cada uno ve la misma vista de asistencia que el alumno (con textos para la familia) y sus justificaciones, con motivo y descarga del certificado. Más abajo puede apagar el aviso diario de inasistencias por email. En "Horarios" ve la grilla del curso de cada hijo.

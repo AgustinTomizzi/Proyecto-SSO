@@ -1,3 +1,4 @@
+import { vaciarCola } from "../data/colaAsistencia";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Usuario } from "../data/types";
 import { adaptadorConfigurado } from "./adaptador";
@@ -71,6 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await auth.cerrarSesion();
     } finally {
       limpiarDatosLocales();
+      // La asistencia pendiente de enviar no queda en el teléfono al salir.
+      void vaciarCola().catch(() => undefined);
       avisarCierreSesion();
       setUsuario(null);
     }

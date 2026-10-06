@@ -22,3 +22,12 @@ node tests/api.test.mjs
 ```
 
 No ejecutar `docker compose down -v` sobre una base que contenga datos que deban conservarse.
+
+## PWA
+
+`tests/pwa.test.mjs` abre Galisencia en Chrome headless con un perfil temporal y comprueba que el service worker se active y controle la página, que la caché tenga solo la aplicación (ninguna respuesta de `/api/`) y que la app cargue sin conexión. Necesita Chrome, Edge o Chromium (`CHROME_PATH` para indicar la ruta); si no los encuentra, avisa y termina sin fallar.
+
+```powershell
+$env:BASE_URL = "http://localhost:3000"
+node tests/pwa.test.mjs
+```

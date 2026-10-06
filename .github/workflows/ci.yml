@@ -70,6 +70,10 @@ jobs:
         env:
           API_URL: http://localhost:3000/api
         run: node tests/api.test.mjs
+      - name: Prueba de la PWA (Chrome headless)
+        env:
+          BASE_URL: http://localhost:3000
+        run: node tests/pwa.test.mjs
       - name: Logs si falló
         if: failure()
         run: docker compose logs --no-color --tail 200
