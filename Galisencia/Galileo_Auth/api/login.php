@@ -79,10 +79,10 @@ if ($rol === "alumno") {
         SELECT a.id_alumno AS id, CONCAT(c.anio, ' ', c.division) AS curso
         FROM alumnos a
         LEFT JOIN cursos c ON a.curso_id = c.id_cursos
-        WHERE a.email = ?
+        WHERE a.usuario_id = ? AND a.estado = 1
         LIMIT 1
     ");
-    $s->execute([$u["email"]]);
+    $s->execute([$u["id_usuario"]]);
     $a = $s->fetch();
     if ($a) {
         $usuario["id"] = (string) $a["id"];

@@ -45,7 +45,7 @@ if ($cursoId !== null) {
     $params[] = $cursoId;
 }
 if ($esAlumno) {
-    $where[] = "a.email = (SELECT u.email FROM usuarios u WHERE u.id_usuario = ?)";
+    $where[] = "a.usuario_id = ?";
     $params[] = $usuarioId;
 } elseif ($esPreceptor) {
     $where[] = "c.preceptor_id = ?";

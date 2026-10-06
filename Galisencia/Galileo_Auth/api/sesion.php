@@ -16,8 +16,8 @@ $usuario["debeCambiarPassword"] = (bool) $usuario["debe_cambiar_password"];
 unset($usuario["debe_cambiar_password"]);
 $usuarioIdSesion = usuarioActual();
 if (strcasecmp((string) $usuario["rol"], "Alumno") === 0) {
-    $alumnoStmt = $pdo->prepare("SELECT a.id_alumno AS id, CONCAT(c.anio, ' ', c.division) AS curso FROM alumnos a LEFT JOIN cursos c ON c.id_cursos=a.curso_id WHERE a.email=? AND a.estado=1 LIMIT 1");
-    $alumnoStmt->execute([$usuario["email"]]);
+    $alumnoStmt = $pdo->prepare("SELECT a.id_alumno AS id, CONCAT(c.anio, ' ', c.division) AS curso FROM alumnos a LEFT JOIN cursos c ON c.id_cursos=a.curso_id WHERE a.usuario_id=? AND a.estado=1 LIMIT 1");
+    $alumnoStmt->execute([$usuarioIdSesion]);
     $alumno = $alumnoStmt->fetch();
     if ($alumno) {
         $usuario["id"] = (string) $alumno["id"];

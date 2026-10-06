@@ -47,7 +47,7 @@ if ($method === "GET") {
                CONCAT(c.anio, ' ', c.division) AS curso,
                a.curso_id AS cursoId,
                c.anio, c.division,
-               a.email, a.dni, a.direccion, a.estado
+               a.email, a.dni, a.direccion, a.estado, a.usuario_id AS usuarioId
         FROM alumnos a
         LEFT JOIN cursos c ON a.curso_id = c.id_cursos
     ";
@@ -104,13 +104,46 @@ if ($method === "POST") {
         }
     }
 
-    $stmt = $pdo->prepare("INSERT INTO alumnos (nombre, apellido, email, dni, direccion, curso_id, estado) VALUES (?, ?, ?, ?, ?, ?, 1)");
-    $stmt->execute([$nombre, $apellido, $email !== "" ? $email : null, $dni !== "" ? $dni : null, $direccion !== "" ? $direccion : null, $curso_id]);
-    $id = $pdo->lastInsertId();
+    // Opcional: crear la cuenta de login del alumno (rol Alumno, contraseña
+    // inicial que deberá cambiar en el primer ingreso).
+    $crearUsuario = !empty($d["crearUsuario"]);
+    $passwordInicial = (string) ($d["passwordInicial"] ?? "");
+    if ($crearUsuario && ($email === "" || strlen($passwordInicial) < 8 || strlen($passwordInicial) > 72)) {
+        api_json(["ok" => false, "error" => "para crear el usuario hacen falta el email y una contraseña inicial de 8 a 72 caracteres"], 400);
+    }
 
-    registrarAuditoria("alumnos.crear", "alumno", $id, ["nombre" => $nombre, "apellido" => $apellido, "curso" => $curso, "curso_id" => $curso_id, "email" => $email, "dni" => $dni]);
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("INSERT INTO alumnos (nombre, apellido, email, dni, direccion, curso_id, estado) VALUES (?, ?, ?, ?, ?, ?, 1)");
+        $stmt->execute([$nombre, $apellido, $email !== "" ? $email : null, $dni !== "" ? $dni : null, $direccion !== "" ? $direccion : null, $curso_id]);
+        $id = (int) $pdo->lastInsertId();
+        $nuevoUsuarioId = null;
+        if ($crearUsuario) {
+            try {
+                $pdo->prepare("INSERT INTO usuarios (nombre, apellido, email, contrasena, rol_id, debe_cambiar_password) VALUES (?, ?, ?, ?, (SELECT id_rol FROM roles WHERE nombre = 'Alumno'), 1)")
+                    ->execute([$nombre, $apellido, strtolower($email), password_hash($passwordInicial, PASSWORD_DEFAULT)]);
+            } catch (PDOException $e) {
+                if ((string) $e->getCode() === "23000") {
+                    $pdo->rollBack();
+                    api_json(["ok" => false, "error" => "ya existe un usuario con ese email"], 409);
+                }
+                throw $e;
+            }
+            $nuevoUsuarioId = (int) $pdo->lastInsertId();
+            $pdo->prepare("UPDATE alumnos SET usuario_id = ? WHERE id_alumno = ?")->execute([$nuevoUsuarioId, $id]);
+            registrarAuditoria("usuarios.crear", "usuario", $nuevoUsuarioId, ["email" => strtolower($email), "rol" => "Alumno", "alumno_id" => $id]);
+        }
+        // La auditoría no guarda DNI ni dirección (datos sensibles innecesarios).
+        registrarAuditoria("alumnos.crear", "alumno", $id, ["nombre" => $nombre, "apellido" => $apellido, "curso" => $curso, "curso_id" => $curso_id, "email" => $email, "usuario_id" => $nuevoUsuarioId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
 
-    api_json(["ok" => true, "alumno" => ["id" => (string) $id, "nombre" => $nombre, "apellido" => $apellido, "curso" => $curso, "email" => $email]]);
+    api_json(["ok" => true, "alumno" => ["id" => (string) $id, "nombre" => $nombre, "apellido" => $apellido, "curso" => $curso, "email" => $email, "usuarioId" => $nuevoUsuarioId !== null ? (string) $nuevoUsuarioId : null]]);
 }
 
 if ($method === "PUT") {
@@ -177,7 +210,8 @@ if ($method === "PUT") {
                 ->execute([$id, $cursoIdActual ?: null, $curso_id, $usuarioId]);
         }
 
-        registrarAuditoria("alumnos.editar", "alumno", $id, ["antes" => $antes, "despues" => ["nombre" => $nombre, "apellido" => $apellido, "email" => $email, "dni" => $dni, "direccion" => $direccion, "curso_id" => $curso_id]]);
+        unset($antes["dni"], $antes["direccion"]);
+        registrarAuditoria("alumnos.editar", "alumno", $id, ["antes" => $antes, "despues" => ["nombre" => $nombre, "apellido" => $apellido, "email" => $email, "curso_id" => $curso_id]]);
         $pdo->commit();
         if ($reautenticado) {
             api_limpiar_intentos((string) ($_SESSION["email"] ?? ""), "reauth");
@@ -234,6 +268,7 @@ if ($method === "DELETE") {
         $pdo->prepare("INSERT INTO alumno_movimientos (alumno_id, tipo, curso_origen_id, curso_destino_id, ciclo_lectivo, realizado_por) VALUES (?, 'baja', ?, NULL, YEAR(CURDATE()), ?)")
             ->execute([$id, $cursoIdActual ?: null, $usuarioId]);
 
+        unset($antes["dni"], $antes["direccion"]);
         registrarAuditoria("alumnos.dar_baja", "alumno", $id, ["antes" => $antes, "despues" => ["estado" => 0]]);
         $pdo->commit();
         if ($reautenticado) {

@@ -11,8 +11,7 @@ function horario_curso_del_alumno()
     $stmt = $pdo->prepare("
         SELECT a.curso_id
         FROM alumnos a
-        JOIN usuarios u ON u.email = a.email
-        WHERE u.id_usuario = ? AND a.estado = 1
+        WHERE a.usuario_id = ? AND a.estado = 1
         LIMIT 1
     ");
     $stmt->execute([usuarioActual()]);

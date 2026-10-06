@@ -18,7 +18,7 @@ docs/                     arquitectura funcional y guía de exposición
 tests/                    pruebas de integración contra el stack Docker
 ```
 
-La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esquema y el seed viven en `db/` y son la única fuente de verdad; se aplican en orden: `00-usuario-app.sh` → `01-schema.sql` → `02-seed.sql` → `03-migracion-rbac-auditoria.sql` → `04-horarios.sql` → `05-seguridad.sql` → `06-horarios-grilla.sql` → `07-materias-fk.sql` → `08-alcance-docente.sql` → `09-cursos-reales.sql` → `10-horarios-reales.sql`.
+La base canónica incluye SSO/RBAC, Galisencia, Galiservas y auditoría. El esquema y el seed viven en `db/` y son la única fuente de verdad; se aplican en orden: `00-usuario-app.sh` → `01-schema.sql` → `02-seed.sql` → `03-migracion-rbac-auditoria.sql` → `04-horarios.sql` → `05-seguridad.sql` → `06-horarios-grilla.sql` → `07-materias-fk.sql` → `08-alcance-docente.sql` → `09-cursos-reales.sql` → `10-horarios-reales.sql` → `11-alumno-usuario.sql`.
 
 ## Cuentas demo
 
@@ -93,7 +93,6 @@ Sin variables de entorno, `config/database.php` usa `DB_HOST=localhost`, `DB_NAM
 ## Límites conocidos relevantes
 
 - El ciclo lectivo de asistencia se obtiene del año de la fecha; aún no se modelan períodos trimestrales independientes.
-- La relación entre alumno y usuario continúa resolviéndose por email institucional, no mediante FK.
 - Galiservas todavía tiene su propio formulario de login (el login único llega en la Fase 2).
 
 Para convenciones de colaboración, consultar [CONTRIBUTING.md](CONTRIBUTING.md).

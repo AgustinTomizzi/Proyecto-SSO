@@ -78,8 +78,11 @@ CREATE TABLE alumnos (
   estado TINYINT(1) NOT NULL DEFAULT 1,
   curso_id INT UNSIGNED DEFAULT NULL,
   email VARCHAR(255) DEFAULT NULL,
+  usuario_id INT UNSIGNED DEFAULT NULL,
   PRIMARY KEY (id_alumno),
-  CONSTRAINT fk_alumno_curso FOREIGN KEY (curso_id) REFERENCES cursos (id_cursos) ON DELETE SET NULL
+  UNIQUE KEY uq_alumno_usuario (usuario_id),
+  CONSTRAINT fk_alumno_curso FOREIGN KEY (curso_id) REFERENCES cursos (id_cursos) ON DELETE SET NULL,
+  CONSTRAINT fk_alumno_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE horarios_curso (

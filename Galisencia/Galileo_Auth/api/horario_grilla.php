@@ -57,14 +57,12 @@ function grilla_clase($id)
     return $stmt->fetch() ?: null;
 }
 
-/** Curso del alumno en sesión (por email hasta que exista alumnos.usuario_id). */
+/** Curso del alumno en sesión (alumnos.usuario_id). */
 function grilla_curso_del_alumno()
 {
     global $pdo;
-    $stmt = $pdo->prepare("SELECT a.curso_id FROM alumnos a WHERE a.email = ? AND a.estado = 1 LIMIT 1");
-    $stmt->execute([api_email_usuario(usuarioActual())]);
-    $cursoId = $stmt->fetchColumn();
-    return $cursoId === false || $cursoId === null ? null : (int) $cursoId;
+    $alumno = api_alumno_del_usuario(usuarioActual());
+    return $alumno && $alumno["curso_id"] !== null ? (int) $alumno["curso_id"] : null;
 }
 
 /** ids de un pedido: "ids" (lista) o "id". Devuelve null si alguno es inválido. */

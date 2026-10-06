@@ -516,6 +516,49 @@ async function main() {
     assert.equal(sinClases.body.alumnos.length, 0, "sin clases vigentes el docente no ve alumnos");
   }
 
+  // ---- Alumno ↔ usuario por FK (alumnos.usuario_id) ----
+  {
+    const todos = (await admin.request("/alumnos.php")).body.alumnos;
+    const sofia = todos.find((a) => a.email === "alumno@galileo.edu.ar");
+    assert.ok(sofia?.usuarioId, "el alumno demo está vinculado a su usuario");
+    const propiasAntes = (await alumno.request("/asistencias.php")).body.registros.length;
+    assert.ok(propiasAntes > 0);
+    const datosSofia = { id: sofia.id, nombre: sofia.nombre, apellido: sofia.apellido, cursoId: sofia.cursoId, dni: sofia.dni ?? "", direccion: sofia.direccion ?? "" };
+    expectStatus(await admin.json("/alumnos.php", "PUT", { ...datosSofia, email: "otro.email@example.invalid" }), 200, "admin cambia el email del alumno");
+    try {
+      const propiasDespues = await alumno.request("/asistencias.php");
+      assert.equal(propiasDespues.body.registros.length, propiasAntes, "el alcance del alumno no depende del email");
+      expectStatus(await alumno.request("/horario_grilla.php"), 200, "el alumno sigue viendo su horario");
+    } finally {
+      expectStatus(await admin.json("/alumnos.php", "PUT", { ...datosSofia, email: "alumno@galileo.edu.ar" }), 200, "restaura el email");
+    }
+
+    const emailNuevo = `alumno.nuevo.${Date.now()}@example.invalid`;
+    expectStatus(await admin.json("/alumnos.php", "POST", { nombre: "Nuevo", apellido: "Con Usuario", cursoId: 11, crearUsuario: true, passwordInicial: "Inicial-2026" }), 400, "crear usuario sin email");
+    expectStatus(await admin.json("/alumnos.php", "POST", { nombre: "Nuevo", apellido: "Con Usuario", cursoId: 11, email: emailNuevo, crearUsuario: true, passwordInicial: "corta" }), 400, "contraseña inicial corta");
+    const conUsuario = await admin.json("/alumnos.php", "POST", { nombre: "Nuevo", apellido: "Con Usuario", cursoId: 11, email: emailNuevo, dni: "40111222", crearUsuario: true, passwordInicial: "Inicial-2026" });
+    expectStatus(conUsuario, 200, "alta de alumno con su usuario");
+    assert.ok(conUsuario.body.alumno.usuarioId);
+    expectStatus(await admin.json("/alumnos.php", "POST", { nombre: "Otro", apellido: "Duplicado", cursoId: 11, email: emailNuevo, crearUsuario: true, passwordInicial: "Inicial-2026" }), 409, "email de usuario repetido");
+
+    const sesionNueva = new PhpSession();
+    const loginNuevo = await sesionNueva.login(emailNuevo, "Inicial-2026");
+    expectStatus(loginNuevo, 200, "el alumno nuevo inicia sesión");
+    assert.equal(loginNuevo.body.usuario.rol, "alumno");
+    assert.equal(loginNuevo.body.usuario.debeCambiarPassword, true, "primer ingreso con cambio obligatorio");
+    assert.equal(loginNuevo.body.usuario.id, String(conUsuario.body.alumno.id), "la sesión resuelve el alumno por FK");
+    expectStatus(await sesionNueva.json("/cambiar_password.php", "POST", { actual: "Inicial-2026", nueva: PASSWORD_PRUEBA }), 200, "el alumno nuevo cambia su contraseña");
+    const horarioNuevo = await sesionNueva.request("/horario_grilla.php");
+    expectStatus(horarioNuevo, 200, "el alumno nuevo ve el horario de su curso");
+    assert.ok(horarioNuevo.body.clases.every((c) => c.cursoId === "11"));
+    assert.equal((await sesionNueva.request("/asistencias.php")).body.registros.length, 0, "el alumno nuevo no ve asistencias ajenas");
+
+    const auditoriaAlta = await admin.request(`/auditoria.php?accion=alumnos.crear&entidad=alumno&limit=5`);
+    const registroAlta = auditoriaAlta.body.registros.find((r) => r.entidadId === String(conUsuario.body.alumno.id));
+    assert.ok(registroAlta, "alta auditada");
+    assert.ok(!JSON.stringify(registroAlta.detalle).includes("40111222"), "la auditoría no guarda el DNI");
+  }
+
   // ---- Asignacion de preceptores (cursos.php PUT + auditoria) ----
   const cursosAdmin = await admin.request("/cursos.php");
   expectStatus(cursosAdmin, 200, "admin lista cursos");

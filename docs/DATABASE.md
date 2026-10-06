@@ -15,8 +15,9 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 8. `db/08-alcance-docente.sql`: `horarios.ver` para Preceptor, Docente y Directivo. Idempotente.
 9. `db/09-cursos-reales.sql`: clave única (`anio`, `division`) y los 39 cursos del colegio (1º A-H, 2º y 3º A-F, 4º a 6º 1-5, 7º 1-4). En una base anterior agrega los que falten. Idempotente.
 10. `db/10-horarios-reales.sql`: horarios reales publicados en horarios.galileo.edu.ar (aSc Horarios, 11/03/2026), generados desde las imágenes: materias, aulas, docentes (usuarios con rol Docente, `demo1234` y cambio obligatorio, emails ficticios) y 1531 módulos-clase de 38 cursos (5º 5ª Prog. está vacío en la fuente). Idempotente (`INSERT IGNORE`).
+11. `db/11-alumno-usuario.sql`: `alumnos.usuario_id` (FK única a `usuarios`) con backfill por email para usuarios con rol Alumno. Idempotente.
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `11-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `12-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -245,7 +246,7 @@ Propósito: identidad única para autenticación y permisos de ambos sistemas.
 | `rol_id` | `INT UNSIGNED NULL` | FK a `roles.id_rol` | Perfil RBAC. |
 | `debe_cambiar_password` | `TINYINT(1) NOT NULL DEFAULT 0` | | `1` obliga a elegir contraseña propia antes de operar. El seed lo marca en todas las cuentas demo (`demo1234`). |
 
-Relación: muchos usuarios pertenecen a un rol. Al borrar el rol, `rol_id` queda `NULL`; ese usuario no puede autenticarse mediante el `INNER JOIN` actual. El alumno de login se vincula con `alumnos` por igualdad de `email`, no mediante FK.
+Relación: muchos usuarios pertenecen a un rol. Al borrar el rol, `rol_id` queda `NULL`; ese usuario no puede autenticarse mediante el `INNER JOIN` actual. El usuario de login de un alumno se vincula con `alumnos` por `alumnos.usuario_id` (FK única); el email ya no se usa para resolver el alcance.
 
 ### `sistemas`
 
@@ -321,6 +322,7 @@ Propósito: legajo académico básico.
 | `estado` | `TINYINT(1) NOT NULL DEFAULT 1` | | Activo/inactivo previsto. |
 | `curso_id` | `INT UNSIGNED NULL` | FK a `cursos.id_cursos` | Curso actual. |
 | `email` | `VARCHAR(255) NULL` | | Enlace lógico con `usuarios.email`. |
+| `usuario_id` | `INT UNSIGNED NULL` | UNIQUE, FK a `usuarios` (SET NULL) | Cuenta de login del alumno; define su alcance (asistencia, notas, horario, historial). |
 
 Al borrar un curso, `curso_id` queda nulo. `DELETE /alumnos.php` hace baja lógica (`estado=0`) y conserva asistencias/notas. Las cascadas solo actuarían ante borrado físico directo.
 

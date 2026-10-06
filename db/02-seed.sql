@@ -169,6 +169,9 @@ INSERT INTO alumnos (nombre, apellido, dni, direccion, email, curso_id, estado) 
   ('Pedro','Luna','46000034','Italia 902','pedro.luna@galileo.edu.ar',10,1),
   ('Mia','Benitez','46000035','Italia 903','mia.benitez@galileo.edu.ar',10,1);
 
+-- Vínculo alumno ↔ usuario (cuenta de login del alumno).
+UPDATE alumnos a JOIN usuarios u ON u.email = a.email SET a.usuario_id = u.id_usuario;
+
 INSERT INTO materias (nombre) VALUES
   ('Matemática'),('Lengua'),('Historia'),('Biología'),('Inglés'),('Física'),('Ed. Técnica'),('Geografía'),('Química'),('Ciudadanía');
 

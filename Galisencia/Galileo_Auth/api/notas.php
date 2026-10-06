@@ -25,7 +25,7 @@ if ($method === "GET") {
         $params[] = $materiaFiltro["id"];
     }
     if (api_rol_es("Alumno")) {
-        $where[] = "a.email = (SELECT email FROM usuarios WHERE id_usuario = ?)";
+        $where[] = "a.usuario_id = ?";
         $params[] = usuarioActual();
     } elseif (api_rol_es("Preceptor")) {
         $where[] = "c.preceptor_id = ?";

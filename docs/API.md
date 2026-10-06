@@ -61,7 +61,7 @@ No requiere sesión. Valida que email y contraseña no estén vacíos, busca ema
 
 `usuario.debeCambiarPassword` indica que la cuenta todavía tiene una contraseña inicial (por ejemplo `demo1234`): mientras sea `true`, el resto de la API responde `403` con `"codigo":"debe_cambiar_password"` y solo quedan disponibles `sesion.php`, `cambiar_password.php` y `logout.php`.
 
-Para Alumno, `id` se reemplaza por `alumnos.id_alumno` y se agrega `curso` si el email coincide. Roles de salida (`rol`): `alumno`, `preceptor`, `directivo`, `admin`. `Administrador` y `Administrador Academico` salen como `admin`, `Docente` como `preceptor` y un rol desconocido como `alumno`; `rol_backend` conserva el nombre real. La autorización nunca usa `rol`: el backend relee el rol de la base en cada request.
+Para Alumno, `id` se reemplaza por `alumnos.id_alumno` del alumno vinculado (`alumnos.usuario_id`) y se agrega `curso`. Roles de salida (`rol`): `alumno`, `preceptor`, `directivo`, `admin`. `Administrador` y `Administrador Academico` salen como `admin`, `Docente` como `preceptor` y un rol desconocido como `alumno`; `rol_backend` conserva el nombre real. La autorización nunca usa `rol`: el backend relee el rol de la base en cada request.
 
 Errores: `400` campos ausentes, `401` credenciales inválidas, `405` otro método, `429` demasiados intentos fallidos, `500` conexión a BD.
 
@@ -118,6 +118,8 @@ Preceptor: solo cursos cuyo `cursos.preceptor_id` sea su `id_usuario`. Por defec
 ```
 
 `nombre` y `apellido` son obligatorios; email, si existe, debe ser válido. Acepta `cursoId` o resuelve `curso` por año/división y rechaza cursos inexistentes. También acepta `dni` y `direccion`. Un preceptor recibe `403` fuera de sus cursos. Respuesta `200` con el alumno creado.
+
+Opción `"crearUsuario": true` con `"passwordInicial"` (8 a 72 caracteres) y `email`: crea también la cuenta de login del alumno (rol Alumno, `debe_cambiar_password = 1`) y la vincula por `alumnos.usuario_id`; responde `usuarioId`. Email ya usado por otro usuario: `409`. La auditoría de alumnos no guarda DNI ni dirección.
 
 ### Editar: **Implementada**
 

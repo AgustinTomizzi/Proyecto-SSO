@@ -367,13 +367,13 @@ function api_sql_docente_dicta($usuarioId, $columnaCurso, $columnaMateria)
     ];
 }
 
-function api_email_usuario($usuarioId)
+/** Alumno vinculado al usuario (alumnos.usuario_id); null si no hay. */
+function api_alumno_del_usuario($usuarioId)
 {
     global $pdo;
-    $stmt = $pdo->prepare("SELECT email FROM usuarios WHERE id_usuario = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT a.id_alumno, a.curso_id FROM alumnos a WHERE a.usuario_id = ? AND a.estado = 1 LIMIT 1");
     $stmt->execute([$usuarioId]);
-    $email = $stmt->fetchColumn();
-    return $email === false ? null : $email;
+    return $stmt->fetch() ?: null;
 }
 
 function api_fecha_valida($fecha)

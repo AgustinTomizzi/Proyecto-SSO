@@ -52,7 +52,7 @@ if ($method === "GET") {
     }
 
     if (api_rol_es("Alumno")) {
-        $where[] = "a.email = (SELECT u.email FROM usuarios u WHERE u.id_usuario = ?)";
+        $where[] = "a.usuario_id = ?";
         $params[] = $usuarioId;
     } elseif (api_rol_es("Preceptor")) {
         $where[] = "c.preceptor_id = ?";
@@ -91,7 +91,7 @@ if (!in_array($estado, ["presente", "tarde", "ausente"], true)) {
 
 $pdo->beginTransaction();
 try {
-    $stmt = $pdo->prepare("SELECT a.id_alumno, a.email, a.curso_id, c.preceptor_id FROM alumnos a LEFT JOIN cursos c ON c.id_cursos = a.curso_id WHERE a.id_alumno = ? AND a.estado = 1 FOR UPDATE");
+    $stmt = $pdo->prepare("SELECT a.id_alumno, a.usuario_id, a.curso_id, c.preceptor_id FROM alumnos a LEFT JOIN cursos c ON c.id_cursos = a.curso_id WHERE a.id_alumno = ? AND a.estado = 1 FOR UPDATE");
     $stmt->execute([$alumnoId]);
     $alumno = $stmt->fetch();
     if (!$alumno) {
@@ -100,8 +100,7 @@ try {
     }
 
     if (api_rol_es("Alumno")) {
-        $emailSesion = api_email_usuario($usuarioId);
-        if ($emailSesion === null || strcasecmp((string) $alumno["email"], (string) $emailSesion) !== 0) {
+        if ((int) $alumno["usuario_id"] !== $usuarioId) {
             $pdo->rollBack();
             api_json(["ok" => false, "error" => "solo podes operar sobre tu propia asistencia"], 403);
         }
