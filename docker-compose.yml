@@ -49,6 +49,8 @@ services:
       - SESSION_TIMEOUT_MINUTES=${SESSION_TIMEOUT_MINUTES:-30}
       # Sesiones en MySQL: permite más de una réplica del backend.
       - SESSION_STORE=db
+      # Proveedor de autenticación (docs/AUTENTICACION.md).
+      - AUTH_PROVIDER=${AUTH_PROVIDER:-local}
     depends_on:
       mysql:
         condition: service_healthy

@@ -33,7 +33,7 @@ La cookie representa autenticación compartida en el mismo host, pero SSO comple
 
 `POST /login.php`
 
-No requiere sesión. Valida que email y contraseña no estén vacíos, busca email exacto, verifica `password_verify`, regenera el ID de sesión y guarda identidad/rol. Si el email no existe igual ejecuta `password_verify` contra un hash falso, para que el tiempo de respuesta no revele qué cuentas existen; el mensaje de error es el mismo en ambos casos. Tras 5 intentos fallidos del mismo email en 15 minutos responde `429` con `Retry-After`, aunque la contraseña sea correcta.
+No requiere sesión. Las credenciales las verifica el proveedor configurado (`AUTH_PROVIDER`, hoy `local`; ver [AUTENTICACION.md](AUTENTICACION.md)). Valida que email y contraseña no estén vacíos, busca email exacto, verifica `password_verify`, regenera el ID de sesión y guarda identidad/rol. Si el email no existe igual ejecuta `password_verify` contra un hash falso, para que el tiempo de respuesta no revele qué cuentas existen; el mensaje de error es el mismo en ambos casos. Tras 5 intentos fallidos del mismo email en 15 minutos responde `429` con `Retry-After`, aunque la contraseña sea correcta.
 
 ```json
 {

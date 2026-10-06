@@ -6,6 +6,7 @@ require_once __DIR__ . "/../config/database.php";
 require_once __DIR__ . "/../includes/auth.php";
 require_once __DIR__ . "/../includes/permisos.php";
 require_once __DIR__ . "/../includes/auditoria.php";
+require_once __DIR__ . "/../includes/autenticacion.php";
 
 header("Content-Type: application/json; charset=utf-8");
 
@@ -192,11 +193,6 @@ function api_rol_es($rol)
 
 const API_INTENTOS_MAXIMOS = 5;
 const API_INTENTOS_VENTANA_MINUTOS = 15;
-// Hash bcrypt de un valor aleatorio descartado. Se verifica contra el cuando el
-// email no existe, para que "usuario inexistente" tarde lo mismo que
-// "contrasena incorrecta".
-const API_HASH_FALSO = '$2y$10$cpLNOwmtnvyND6.I3GGHiel5jclVML6PcIBKHL7dOu8XYgZ.U1sN6';
-
 function api_intentos_bloqueado($email, $tipo = "login")
 {
     global $pdo;

@@ -16,34 +16,15 @@ if (api_intentos_bloqueado($email)) {
     api_responder_bloqueo();
 }
 
-$stmt = $pdo->prepare("
-    SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.contrasena, u.rol_id, u.debe_cambiar_password, r.nombre AS rol
-    FROM usuarios u
-    INNER JOIN roles r ON u.rol_id = r.id_rol
-    WHERE u.email = ?
-    LIMIT 1
-");
-$stmt->execute([$email]);
-$u = $stmt->fetch();
-
-// Siempre se ejecuta password_verify (contra un hash falso si el email no
-// existe) para no revelar por tiempo de respuesta qué cuentas existen.
-$passwordValida = password_verify($password, $u ? $u["contrasena"] : API_HASH_FALSO);
-if (!$u || !$passwordValida) {
+// Paso 1: el proveedor configurado verifica las credenciales (local por
+// defecto; ver includes/autenticacion.php). Paso 2: se abre la sesión.
+$u = auth_proveedor()->autenticar($email, $password);
+if ($u === null) {
     api_registrar_intento_fallido($email);
     api_json(["ok" => false, "error" => "credenciales inválidas"], 401);
 }
 api_limpiar_intentos($email);
-
-session_regenerate_id(true);
-
-$_SESSION["id_usuario"] = $u["id_usuario"];
-$_SESSION["nombre"] = $u["nombre"];
-$_SESSION["apellido"] = $u["apellido"];
-$_SESSION["email"] = $u["email"];
-$_SESSION["rol"] = $u["rol"];
-$_SESSION["rol_id"] = $u["rol_id"];
-$_SESSION["debe_cambiar_password"] = (int) $u["debe_cambiar_password"];
+auth_iniciar_sesion($u);
 
 function normalizarRol($nombre)
 {

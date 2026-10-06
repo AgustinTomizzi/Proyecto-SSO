@@ -90,6 +90,7 @@ Sin variables de entorno, `config/database.php` usa `DB_HOST=localhost`, `DB_NAM
 - [API implementada y límites actuales](docs/API.md)
 - [Mapa de navegación y guion de 8 minutos](docs/NAVEGACION.md)
 - [Matriz exacta de roles y permisos](docs/ROLES_Y_PERMISOS.md)
+- [Autenticación intercambiable y cómo pasar a OIDC](docs/AUTENTICACION.md)
 - [Guía oral y preguntas](docs/PRESENTACION.md)
 - [Docker: variables, puertos y problemas comunes](DOCKER_INSTRUCTIONS.md)
 - [Pruebas de integración](tests/README.md)

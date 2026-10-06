@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Usuario } from "../data/types";
-import { changePassword, closeSession, login as loginService, restoreSession } from "./auth.service";
+import { adaptadorConfigurado } from "./adaptador";
 import { limpiarDatosLocales } from "../data/localData";
 import { avisarCierreSesion, escucharCierreSesion } from "./sesionCompartida";
 
@@ -16,6 +16,7 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
+const auth = adaptadorConfigurado();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    restoreSession()
+    auth.restaurarSesion()
       .then((sessionUser) => {
         if (!active) return;
         setUsuario(sessionUser);
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(email: string, password: string) {
     setLoading(true);
     try {
-      const authenticatedUser = await loginService(email, password);
+      const authenticatedUser = await auth.iniciarSesion(email, password);
       setErrorConexion(null);
       setUsuario(authenticatedUser);
       return authenticatedUser;
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function logout() {
     try {
-      await closeSession();
+      await auth.cerrarSesion();
     } finally {
       limpiarDatosLocales();
       avisarCierreSesion();
@@ -76,8 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function cambiarPassword(actual: string, nueva: string) {
-    await changePassword(actual, nueva);
-    setUsuario(await restoreSession());
+    await auth.cambiarPassword(actual, nueva);
+    setUsuario(await auth.restaurarSesion());
   }
 
   return (
