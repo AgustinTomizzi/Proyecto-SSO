@@ -470,6 +470,8 @@ api_rol_actual();
 if (
     estaLogueado()
     && !empty($_SESSION["debe_cambiar_password"])
+    // Quien entró por OIDC no usa la contraseña local: no se le pide cambiarla.
+    && ($_SESSION["auth_metodo"] ?? "local") !== "oidc"
     && !in_array(basename((string) ($_SERVER["SCRIPT_NAME"] ?? "")), ["login.php", "sesion.php", "cambiar_password.php", "logout.php"], true)
 ) {
     api_json(["ok" => false, "error" => "tenés que cambiar tu contraseña antes de continuar", "codigo" => "debe_cambiar_password"], 403);

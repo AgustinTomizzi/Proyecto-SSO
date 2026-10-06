@@ -1,3 +1,9 @@
+# Dependencias PHP (Composer): la librería OIDC. vendor/ no se versiona.
+FROM composer:2 AS dependencias
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --no-progress --optimize-autoloader
+
 FROM php:8.2-apache
 
 # Extensiones PDO + MySQL
@@ -15,6 +21,8 @@ WORKDIR /var/www/html
 # .dockerignore deja fuera Dockerfile y la documentacion; docker/ (config de
 # PHP) se borra del docroot para no servirlo.
 COPY . .
+
+COPY --from=dependencias /app/vendor /var/www/html/vendor
 
 RUN rm -rf /var/www/html/docker \
     && chown -R www-data:www-data /var/www/html \

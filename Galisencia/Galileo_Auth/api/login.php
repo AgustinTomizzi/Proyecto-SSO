@@ -12,6 +12,12 @@ if ($email === "" || $password === "") {
     api_json(["ok" => false, "error" => "email y contraseña requeridos"], 400);
 }
 
+// Con AUTH_PROVIDER=oidc solo se entra con el proveedor institucional.
+require_once __DIR__ . "/../includes/oidc.php";
+if (!oidc_login_local_habilitado()) {
+    api_json(["ok" => false, "error" => "el ingreso es con tu cuenta institucional (Google o Microsoft)", "codigo" => "login_local_deshabilitado"], 405);
+}
+
 if (api_intentos_bloqueado($email)) {
     api_responder_bloqueo();
 }

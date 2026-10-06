@@ -38,7 +38,7 @@ URL con Docker: `http://localhost:3000/` (con `npm run dev`, `http://localhost:5
 | Tutor (familias) | `/familia` | Familia, Horarios | Asistencia, justificaciones y horario de cada hijo vinculado; aviso diario de inasistencias por email. |
 | Admin (Administrador y Administrador Académico) | `/admin` | Panel, Gestión académica, Horarios, Reportes, Auditoría, Usuarios | Gestión transversal; el backend igual limita por permiso lo que cada uno puede hacer. |
 
-`/login` solo pide email y contraseña: no hay selector de rol. El rol sale siempre de la base y se relee en cada request. Si la cuenta tiene `debe_cambiar_password`, Galisencia muestra primero la pantalla para elegir una contraseña nueva. `RutaProtegida` redirige al inicio del usuario. Esto mejora UX, no reemplaza RBAC del servidor.
+`/login` pide email y contraseña (no hay selector de rol) y, si la escuela configuró Google o Microsoft, muestra "Ingresar con Google" o "Ingresar con Microsoft": solo entran cuentas que ya existen en Galisencia, y quien entra así no tiene que cambiar la contraseña inicial. El rol sale siempre de la base y se relee en cada request. Si la cuenta tiene `debe_cambiar_password`, Galisencia muestra primero la pantalla para elegir una contraseña nueva. `RutaProtegida` redirige al inicio del usuario. Esto mejora UX, no reemplaza RBAC del servidor.
 
 ### Horarios
 

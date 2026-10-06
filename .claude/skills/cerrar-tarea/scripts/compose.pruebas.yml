@@ -7,6 +7,18 @@ services:
   backend:
     container_name: !reset null
     ports: !reset []
+    # El stack de pruebas trae el proveedor OIDC de prueba (valores de prueba, no secretos).
+    environment:
+      - APP_URL=http://localhost:${PRUEBAS_PUERTO:-3100}
+      - OIDC_PRUEBA_ISSUER=http://oidc-prueba:9100
+      - OIDC_PRUEBA_CLIENT_ID=galileo-pruebas
+      - OIDC_PRUEBA_CLIENT_SECRET=secreto-de-pruebas
+  oidc-prueba:
+    profiles: !reset []
+    ports: !override
+      - "127.0.0.1:${PRUEBAS_OIDC:-9101}:9100"
+    environment:
+      - OIDC_PUBLICO=http://localhost:${PRUEBAS_OIDC:-9101}
   frontend:
     container_name: !reset null
   galiservas:

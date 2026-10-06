@@ -345,6 +345,19 @@ CREATE TABLE ciclos_lectivos (
   CONSTRAINT fk_ciclo_cerrado_por FOREIGN KEY (cerrado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Ingreso institucional (OIDC): identidad del proveedor vinculada a una cuenta.
+CREATE TABLE usuario_identidades (
+  proveedor VARCHAR(30) NOT NULL,
+  sub VARCHAR(255) NOT NULL,
+  usuario_id INT UNSIGNED NOT NULL,
+  email VARCHAR(255) NULL,
+  vinculada_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ultimo_ingreso DATETIME NULL,
+  PRIMARY KEY (proveedor, sub),
+  UNIQUE KEY uq_identidad_usuario (usuario_id, proveedor),
+  CONSTRAINT fk_identidad_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id_usuario) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Portal de familias: un tutor (rol Tutor) ve a sus alumnos vinculados.
 CREATE TABLE tutor_alumno (
   tutor_id INT UNSIGNED NOT NULL,

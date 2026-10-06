@@ -383,6 +383,16 @@ Filtros opcionales: `usuarioId`, `entidad`, `accion`, `desde`, `hasta`, `limit`.
 
 Orden descendente. `detalle` se decodifica a JSON. Si falta la tabla devuelve `500` con instrucción de migración. Otro método: `405`.
 
+## Ingreso institucional (OIDC)
+
+Ver `docs/AUTENTICACION.md`. Resumen:
+
+- `GET /oidc_proveedores.php` (público): `proveedores` (`id`, `etiqueta`) y `loginLocal`.
+- `GET /oidc_login.php?proveedor=google&next=/ruta`: redirige al proveedor (state, nonce y PKCE).
+- `GET /oidc_callback.php`: vuelta del proveedor. Si la cuenta existe (por identidad vinculada o email verificado), abre la sesión y redirige a `next`. Si no, redirige a `/login?error=oidc_<código>`. Audita `auth.oidc` y `auth.oidc_rechazado`.
+- `sesion.php` agrega `metodoIngreso` (`local` u `oidc`); con `oidc`, `debeCambiarPassword` es `false`.
+- Con `AUTH_PROVIDER=oidc`, `POST /login.php` responde `405` (`codigo: login_local_deshabilitado`).
+
 ## Portal de familias
 
 Rol **Tutor**: lectura de sus alumnos vinculados (`tutor_alumno`) y activos. `login.php` y `sesion.php` le devuelven `rol: "tutor"` y `usuario.alumnos` (id, nombre, apellido, curso, cursoId, parentesco). Alcance en cada endpoint:

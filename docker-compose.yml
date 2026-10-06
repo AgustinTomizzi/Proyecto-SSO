@@ -51,6 +51,17 @@ services:
       - SESSION_STORE=db
       # Proveedor de autenticación (docs/AUTENTICACION.md).
       - AUTH_PROVIDER=${AUTH_PROVIDER:-local}
+      # URL pública (arma el redirect_uri de OIDC) y proveedores institucionales.
+      - APP_URL=${APP_URL:-http://localhost:${PROXY_PUERTO:-3000}}
+      - OIDC_GOOGLE_CLIENT_ID=${OIDC_GOOGLE_CLIENT_ID:-}
+      - OIDC_GOOGLE_CLIENT_SECRET=${OIDC_GOOGLE_CLIENT_SECRET:-}
+      - OIDC_MICROSOFT_TENANT=${OIDC_MICROSOFT_TENANT:-}
+      - OIDC_MICROSOFT_CLIENT_ID=${OIDC_MICROSOFT_CLIENT_ID:-}
+      - OIDC_MICROSOFT_CLIENT_SECRET=${OIDC_MICROSOFT_CLIENT_SECRET:-}
+      # Solo pruebas (perfil oidc-prueba); se ignora con APP_ENV=prod.
+      - OIDC_PRUEBA_ISSUER=${OIDC_PRUEBA_ISSUER:-}
+      - OIDC_PRUEBA_CLIENT_ID=${OIDC_PRUEBA_CLIENT_ID:-}
+      - OIDC_PRUEBA_CLIENT_SECRET=${OIDC_PRUEBA_CLIENT_SECRET:-}
     depends_on:
       mysql:
         condition: service_healthy
@@ -101,6 +112,25 @@ services:
     networks:
       - galisencia-network
     restart: unless-stopped
+
+  # Solo pruebas: proveedor OIDC mínimo (tools/oidc-prueba) para probar el
+  # ingreso institucional sin Internet. Activar con --profile oidc-prueba y
+  # OIDC_PRUEBA_ISSUER=http://oidc-prueba:9100 en .env.
+  oidc-prueba:
+    image: node:22-alpine
+    profiles: ["oidc-prueba"]
+    command: ["node", "/app/servidor.mjs"]
+    environment:
+      - OIDC_ISSUER=http://oidc-prueba:9100
+      - OIDC_PUBLICO=http://localhost:${OIDC_PRUEBA_PUERTO:-9100}
+      - OIDC_CLIENT_ID=${OIDC_PRUEBA_CLIENT_ID:-galileo-pruebas}
+      - OIDC_CLIENT_SECRET=${OIDC_PRUEBA_CLIENT_SECRET:-secreto-de-pruebas}
+    volumes:
+      - ./tools/oidc-prueba:/app:ro
+    ports:
+      - "127.0.0.1:${OIDC_PRUEBA_PUERTO:-9100}:9100"
+    networks:
+      - galisencia-network
 
   # Solo desarrollo: expone la API en http://localhost:8080 (por ejemplo para
   # `npm run dev` de Galiservas). Activar con: docker compose --profile dev up

@@ -1,3 +1,5 @@
 Dockerfile
 .dockerignore
 *.md
+# Se instala en la etapa de Composer del Dockerfile.
+vendor

@@ -1188,6 +1188,69 @@ async function main() {
     expectStatus(await familia.json("/notificaciones.php", "PUT", { preferencias: { reserva_creada: false } }), 400, "la familia no tiene avisos de reservas");
   }
 
+  // ---- Ingreso institucional (OIDC) con el proveedor de prueba ----
+  {
+    const disponibles = await new PhpSession().request("/oidc_proveedores.php");
+    expectStatus(disponibles, 200, "proveedores OIDC públicos");
+    assert.equal(disponibles.body.loginLocal, true);
+    if (!disponibles.body.proveedores.some((p) => p.id === "prueba")) {
+      console.log("OIDC: NO SE EJECUTÓ (el stack no tiene el proveedor de prueba; ver .claude/skills/cerrar-tarea/scripts/compose.pruebas.yml).");
+    } else {
+      const { createHash } = await import("node:crypto");
+      const ingresar = async (email, { next = "/preceptor", sub, state } = {}) => {
+        const sesion = new PhpSession();
+        const inicio = await sesion.request(`/oidc_login.php?proveedor=prueba&next=${encodeURIComponent(next)}`);
+        expectStatus(inicio, 302, "redirige al proveedor");
+        const autorizar = new URL(inicio.headers.get("location"));
+        assert.equal(autorizar.searchParams.get("code_challenge_method"), "S256", "usa PKCE");
+        assert.ok(autorizar.searchParams.get("nonce") && autorizar.searchParams.get("state"), "manda nonce y state");
+        autorizar.searchParams.set("login_hint", email);
+        if (sub) autorizar.searchParams.set("sub", sub);
+        const vuelta = await fetch(autorizar, { redirect: "manual" });
+        const callback = new URL(vuelta.headers.get("location"));
+        if (state) callback.searchParams.set("state", state);
+        const final = await sesion.request(`${callback.pathname.replace(/^\/api/, "")}${callback.search}`);
+        expectStatus(final, 302, "el callback redirige");
+        return { sesion, destino: final.headers.get("location") };
+      };
+
+      const preceptorOidc = await ingresar("preceptor@galileo.edu.ar");
+      assert.equal(preceptorOidc.destino, "/preceptor", "vuelve al destino pedido");
+      const sesionOidc = await preceptorOidc.sesion.request("/sesion.php");
+      expectStatus(sesionOidc, 200, "sesión abierta por OIDC");
+      assert.equal(sesionOidc.body.usuario.email, "preceptor@galileo.edu.ar");
+      assert.equal(sesionOidc.body.usuario.metodoIngreso, "oidc");
+      assert.equal(sesionOidc.body.usuario.debeCambiarPassword, false, "OIDC no pide cambiar la contraseña local");
+      expectStatus(await preceptorOidc.sesion.request("/cursos.php"), 200, "el rol sale de la base");
+
+      // Segundo ingreso: entra por (proveedor, sub) aunque el proveedor informe otro email.
+      const subPreceptor = `prueba-${createHash("sha256").update("preceptor@galileo.edu.ar").digest("hex").slice(0, 20)}`;
+      const porSub = await ingresar("cambio.de.email@galileo.edu.ar", { sub: subPreceptor });
+      assert.equal((await porSub.sesion.request("/sesion.php")).body.usuario.email, "preceptor@galileo.edu.ar", "la identidad vinculada manda");
+
+      const desconocido = await ingresar("nadie@otro-dominio.test");
+      assert.equal(desconocido.destino, "/login?error=oidc_sin_cuenta", "sin cuenta no entra (sin autoregistro)");
+      expectStatus(await desconocido.sesion.request("/sesion.php"), 401, "no queda sesión");
+
+      const sinVerificar = `tutor+noverificado.${Date.now()}@familias.test`;
+      const alumnoParaVincular = (await academica.request("/alumnos.php")).body.alumnos[0];
+      expectStatus(await academica.json("/tutores.php", "POST", { alumnoId: alumnoParaVincular.id, email: sinVerificar, nombre: "Sin", apellido: "Verificar", passwordInicial: "Inicial-2026!" }), 201, "cuenta para probar email no verificado");
+      assert.equal((await ingresar(sinVerificar)).destino, "/login?error=oidc_sin_cuenta", "email no verificado no vincula");
+
+      assert.equal((await ingresar("preceptor@galileo.edu.ar", { state: "inventado" })).destino, "/login?error=oidc_estado", "state inválido");
+      assert.equal((await ingresar("preceptor@galileo.edu.ar", { next: "//evil.example/robar" })).destino, "/", "next externo se descarta");
+      const sinFlujo = await new PhpSession().request("/oidc_callback.php?code=x&state=y");
+      expectStatus(sinFlujo, 302, "callback sin flujo iniciado");
+      assert.equal(sinFlujo.headers.get("location"), "/login?error=oidc_sesion");
+      const sinProveedor = await new PhpSession().request("/oidc_login.php?proveedor=inventado");
+      assert.equal(sinProveedor.headers.get("location"), "/login?error=oidc_proveedor");
+
+      const auditoriaOidc = await admin.request("/auditoria.php?accion=auth.oidc_rechazado&limit=10");
+      assert.ok(auditoriaOidc.body.registros.length >= 3, "rechazos auditados");
+      assert.ok(auditoriaOidc.body.registros.every((r) => !JSON.stringify(r.detalle ?? {}).includes("nadie@")), "la auditoría no guarda el email rechazado");
+    }
+  }
+
   expectStatus(await admin.request("/logout.php", { method: "POST" }), 200, "logout del admin");
   expectStatus(await admin.request("/usuarios.php"), 401, "sesion destruida tras logout");
 

@@ -13,7 +13,7 @@ if [ -z "$PHP" ]; then
   echo "[php -l] NO SE EJECUTÓ: php no está en el PATH (el CI lo corre igual)"
 else
   bad=0
-  while IFS= read -r f; do "$PHP" -l "$f" >/dev/null 2>&1 || { "$PHP" -l "$f"; bad=1; }; done < <(find Galisencia/Galileo_Auth -name '*.php')
+  while IFS= read -r f; do "$PHP" -l "$f" >/dev/null 2>&1 || { "$PHP" -l "$f"; bad=1; }; done < <(find Galisencia/Galileo_Auth -name '*.php' -not -path '*/vendor/*')
   echo "[php -l] $([ $bad -eq 0 ] && echo ok || echo FALLA)"; [ $bad -ne 0 ] && rc=1
 fi
 exit $rc

@@ -1,0 +1,15 @@
+{
+    "name": "galileo/auth",
+    "description": "API de Galisencia y Galiservas (Galileo Auth)",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.2",
+        "jumbojett/openid-connect-php": "^1.0"
+    },
+    "config": {
+        "platform": { "php": "8.2.0" },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

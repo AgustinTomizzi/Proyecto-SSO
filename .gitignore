@@ -19,3 +19,6 @@ Thumbs.db
 
 # graphify: red del proyecto (se regenera con `graphify update .`; tiene rutas y caché locales)
 graphify-out/
+
+# Dependencias PHP (Composer): se instalan en el build de la imagen.
+Galisencia/Galileo_Auth/vendor/

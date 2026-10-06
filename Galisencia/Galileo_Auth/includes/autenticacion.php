@@ -61,7 +61,9 @@ function auth_proveedor(): ProveedorAutenticacion
 {
     $tipo = strtolower(trim((string) (getenv("AUTH_PROVIDER") ?: "local")));
     return match ($tipo) {
-        "local" => new AutenticacionLocal($GLOBALS["pdo"]),
+        // Con "oidc" el formulario local se rechaza en login.php; el ingreso va por
+        // api/oidc_login.php. Igual se deja el proveedor local para cambiar contraseña.
+        "local", "oidc" => new AutenticacionLocal($GLOBALS["pdo"]),
         default => throw new RuntimeException("AUTH_PROVIDER no soportado: $tipo"),
     };
 }

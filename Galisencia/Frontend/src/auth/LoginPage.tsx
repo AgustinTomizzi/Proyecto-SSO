@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiGet, apiUrl } from "../data/apiClient";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { destinoSeguro, guardarDestino } from "./sesionCompartida";
@@ -114,6 +115,22 @@ function SunGlow() {
   );
 }
 
+interface ProveedorOidc {
+  id: string;
+  etiqueta: string;
+}
+
+// Errores del ingreso institucional (api/oidc_callback.php): códigos genéricos.
+const ERRORES_OIDC: Record<string, string> = {
+  oidc_sin_cuenta: "Tu cuenta institucional no está habilitada en Galisencia. Pedile a la escuela que la dé de alta con ese email.",
+  oidc_cancelado: "Cancelaste el ingreso con tu cuenta institucional.",
+  oidc_estado: "El ingreso venció o no es válido. Probá de nuevo.",
+  oidc_sesion: "El ingreso venció. Probá de nuevo.",
+  oidc_verificacion: "No pudimos verificar tu cuenta institucional. Probá de nuevo.",
+  oidc_proveedor: "Ese proveedor de ingreso no está disponible.",
+  oidc_proveedor_no_disponible: "El proveedor de ingreso no responde. Probá en unos minutos o usá tu email y contraseña.",
+};
+
 export default function LoginPage() {
   const { login, loading, errorConexion, reintentarSesion } = useAuth();
   const navigate = useNavigate();
@@ -125,6 +142,24 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [proveedores, setProveedores] = useState<ProveedorOidc[]>([]);
+  const errorOidc = ERRORES_OIDC[params.get("error") ?? ""] ?? null;
+
+  // Botones de ingreso institucional: solo los proveedores configurados en el backend.
+  useEffect(() => {
+    let vigente = true;
+    apiGet<{ ok: true; proveedores: ProveedorOidc[] }>("/oidc_proveedores.php")
+      .then((data) => vigente && setProveedores(data.proveedores))
+      .catch(() => undefined);
+    return () => { vigente = false; };
+  }, []);
+
+  function ingresarConProveedor(id: string) {
+    // El backend solo acepta rutas internas como destino (Galiservas está en el mismo origen).
+    const url = destino ? new URL(destino, window.location.href) : null;
+    const next = url && url.origin === window.location.origin ? `${url.pathname}${url.search}` : "/";
+    window.location.assign(apiUrl(`/oidc_login.php?proveedor=${encodeURIComponent(id)}&next=${encodeURIComponent(next)}`));
+  }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -212,6 +247,11 @@ export default function LoginPage() {
             </div>
           )}
 
+          {errorOidc && !error && (
+            <div className="login__error" role="alert">
+              {errorOidc}
+            </div>
+          )}
           {error && (
             <div className="login__error" role="alert">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -337,13 +377,23 @@ export default function LoginPage() {
             <div className="login__or-line" />
           </div>
 
-          <button type="button" className="login__sso">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" />
-              <path d="M8 21h8M12 17v4" />
-            </svg>
-            Ingresar con tu cuenta galileo.
-          </button>
+          {proveedores.length > 0 ? proveedores.map((p) => (
+            <button key={p.id} type="button" className="login__sso" onClick={() => ingresarConProveedor(p.id)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <path d="M8 21h8M12 17v4" />
+              </svg>
+              Ingresar con {p.etiqueta}
+            </button>
+          )) : (
+            <button type="button" className="login__sso" onClick={() => setError("El ingreso con cuenta institucional todavía no está configurado. Entrá con tu email y contraseña.")}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <path d="M8 21h8M12 17v4" />
+              </svg>
+              Ingresar con tu cuenta galileo.
+            </button>
+          )}
 
           <p className="login__demo">
             Usuarios de demostración: contraseña <code>demo1234</code>
