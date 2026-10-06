@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { colorPorPct } from "../../data/mock";
 import { useStore } from "../../data/StoreContext";
+import { ESTADO_ASISTENCIA, type EstadoAsistencia } from "../../data/types";
 import { useCountUp } from "../../hooks/useCountUp";
 import { Bars, Donut } from "../../components/ui/Chart";
 
 export default function AdminPage() {
-  const { resumen, registros } = useStore();
+  const { resumen, registros, reglas } = useStore();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,16 +16,16 @@ export default function AdminPage() {
   }, []);
 
   const conteo = useMemo(() => {
-    const c = { presente: 0, tarde: 0, ausente: 0 };
+    const c: Record<EstadoAsistencia, number> = { presente: 0, tarde: 0, ausente: 0, justificado: 0 };
     registros.forEach((r) => (c[r.estado] += 1));
     return c;
   }, [registros]);
 
-  const donut = [
-    { label: "Presente", value: conteo.presente, color: "var(--success)" },
-    { label: "Tarde", value: conteo.tarde, color: "var(--warning)" },
-    { label: "Ausente", value: conteo.ausente, color: "var(--danger)" },
-  ];
+  const donut = (Object.keys(ESTADO_ASISTENCIA) as EstadoAsistencia[]).map((estado) => ({
+    label: ESTADO_ASISTENCIA[estado].label,
+    value: conteo[estado],
+    color: ESTADO_ASISTENCIA[estado].color,
+  }));
 
   const alumnos = useCountUp(resumen.totalAlumnos);
   const promedio = useCountUp(resumen.promedio);
@@ -69,7 +70,7 @@ export default function AdminPage() {
             <div className="stat">
               <div className="stat__icon">📈</div>
               <div className="stat__label">Asistencia prom.</div>
-              <div className="stat__value" style={{ color: colorPorPct(resumen.promedio) }}>
+              <div className="stat__value" style={{ color: colorPorPct(resumen.promedio, reglas.umbral) }}>
                 {promedio}%
               </div>
             </div>

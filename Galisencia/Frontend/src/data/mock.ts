@@ -3,8 +3,9 @@ import type {
   Curso,
   EstadoAsistencia,
   RegistroAsistencia,
+  ReglasAsistencia,
 } from "./types";
-import { MATERIAS, PESO_ASISTENCIA, UMBRAL_REGULARIDAD } from "./types";
+import { MATERIAS, REGLAS_DEMO, porcentajeAsistencia } from "./types";
 
 /* ---------- Generador determinista (para que la demo sea estable) ---------- */
 function hash(str: string): number {
@@ -90,6 +91,7 @@ export interface EstadisticaMateria {
   presentes: number;
   tardes: number;
   ausencias: number;
+  justificadas: number;
   pct: number | null;
 }
 
@@ -101,17 +103,13 @@ export interface EstadisticaAlumno {
   porMateria: EstadisticaMateria[];
 }
 
-function pctDe(regs: RegistroAsistencia[]): number | null {
-  if (!regs.length) return null;
-  const puntos = regs.reduce((s, r) => s + PESO_ASISTENCIA[r.estado], 0);
-  return Math.round((puntos / regs.length) * 100);
-}
-
 export function calcularEstadisticasAlumno(
   alumnos: Alumno[],
   registros: RegistroAsistencia[],
-  alumnoId: string
+  alumnoId: string,
+  reglas: ReglasAsistencia = REGLAS_DEMO
 ): EstadisticaAlumno {
+  const pctDe = (lista: RegistroAsistencia[]) => porcentajeAsistencia(lista, reglas);
   const alumno = alumnos.find((a) => a.id === alumnoId);
   const regs = registros.filter((r) => r.alumnoId === alumnoId);
   const materias = [...new Set(regs.map((r) => r.materia))];
@@ -123,6 +121,7 @@ export function calcularEstadisticasAlumno(
       presentes: r.filter((x) => x.estado === "presente").length,
       tardes: r.filter((x) => x.estado === "tarde").length,
       ausencias: r.filter((x) => x.estado === "ausente").length,
+      justificadas: r.filter((x) => x.estado === "justificado").length,
       pct: pctDe(r),
     };
   });
@@ -150,16 +149,17 @@ export interface ResumenInstitucional {
 export function resumenInstitucional(
   alumnos: Alumno[],
   registros: RegistroAsistencia[],
-  cursos: Curso[]
+  cursos: Curso[],
+  reglas: ReglasAsistencia = REGLAS_DEMO
 ): ResumenInstitucional {
   const porAlumno = alumnos.map((a) => {
-    const g = calcularEstadisticasAlumno(alumnos, registros, a.id).general ?? 100;
+    const g = calcularEstadisticasAlumno(alumnos, registros, a.id, reglas).general ?? 100;
     return { alumno: a, general: g };
   });
   const promedio = Math.round(
     porAlumno.reduce((s, x) => s + x.general, 0) / (porAlumno.length || 1)
   );
-  const enRiesgo = porAlumno.filter((x) => x.general < UMBRAL_REGULARIDAD);
+  const enRiesgo = porAlumno.filter((x) => x.general < reglas.umbral);
   const porCurso = cursos.map((c) => {
     const delCurso = porAlumno.filter((x) => x.alumno.curso === cursoLabel(c));
     const prom = delCurso.length
@@ -168,7 +168,7 @@ export function resumenInstitucional(
     return {
       curso: cursoLabel(c),
       promedio: prom,
-      enRiesgo: delCurso.filter((x) => x.general < UMBRAL_REGULARIDAD).length,
+      enRiesgo: delCurso.filter((x) => x.general < reglas.umbral).length,
     };
   });
   return {
@@ -186,9 +186,10 @@ export function getAlumnosPorCurso(alumnos: Alumno[], curso: string): Alumno[] {
   return alumnos.filter((a) => a.curso === curso);
 }
 
-export function colorPorPct(pct: number | null): string {
+/** Color según el porcentaje y el umbral de regularidad vigente. */
+export function colorPorPct(pct: number | null, umbral = REGLAS_DEMO.umbral): string {
   if (pct === null) return "var(--text-muted)";
-  if (pct < UMBRAL_REGULARIDAD) return "var(--danger)";
+  if (pct < umbral) return "var(--danger)";
   if (pct < 85) return "var(--warning)";
   return "var(--success)";
 }

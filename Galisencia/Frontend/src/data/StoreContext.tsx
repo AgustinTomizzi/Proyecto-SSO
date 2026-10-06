@@ -12,9 +12,11 @@ import type {
   Curso,
   EstadoAsistencia,
   Materia,
+  EstadoCargable,
   RegistroAsistencia,
+  ReglasAsistencia,
 } from "./types";
-import { MATERIAS, esMismaMateria } from "./types";
+import { MATERIAS, REGLAS_DEMO, esMismaMateria, reglasDesdeConfig } from "./types";
 import {
   CURSOS,
   buildAlumnos,
@@ -43,6 +45,7 @@ function normalizarRegistros(registros: RegistroAsistencia[]): RegistroAsistenci
     id: String(r.id),
     alumnoId: String(r.alumnoId),
     materiaId: r.materiaId === undefined || r.materiaId === null ? undefined : String(r.materiaId),
+    justificacionId: r.justificacionId === undefined || r.justificacionId === null ? null : String(r.justificacionId),
   }));
 }
 
@@ -85,6 +88,16 @@ async function cargarAsistencias(filtro = ""): Promise<RegistroAsistencia[]> {
   return todas;
 }
 
+interface ConfigInstitucion {
+  ok: true;
+  valores: Record<string, unknown>;
+}
+
+async function cargarReglas(): Promise<ReglasAsistencia> {
+  const data = await apiGet<ConfigInstitucion>("/config_institucion.php");
+  return reglasDesdeConfig(data.valores ?? {});
+}
+
 // Los datos de demostración se generan en memoria y nunca se persisten en el
 // navegador: los datos reales de alumnos no deben quedar en localStorage.
 function datosDemo(): DatosDemo {
@@ -103,6 +116,10 @@ export interface StoreState {
   registros: RegistroAsistencia[];
   /** Catálogo de materias (de la API con sesión; demo sin sesión). */
   materias: Materia[];
+  /** Reglas de cálculo (de la API con sesión; las por defecto en la demo). */
+  reglas: ReglasAsistencia;
+  /** Reemplaza las reglas después de editarlas (config_institucion.php). */
+  actualizarReglas: (reglas: ReglasAsistencia) => void;
   getRegistrosDeAlumno: (alumnoId: string) => RegistroAsistencia[];
   estadisticasAlumno: (alumnoId: string) => EstadisticaAlumno | null;
   resumen: ResumenInstitucional;
@@ -111,8 +128,8 @@ export interface StoreState {
     alumnoId: string,
     fecha: string,
     materia: Materia,
-    estado: EstadoAsistencia
-  ) => Promise<void>;
+    estado: EstadoCargable
+  ) => Promise<EstadoAsistencia>;
   agregarAlumno: (datos: Omit<Alumno, "id"> & { id?: string }) => Promise<void>;
   editarAlumno: (
     id: string,
@@ -134,6 +151,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cursos, setCursos] = useState<Curso[]>(inicial.cursos);
   const [registros, setRegistros] = useState<RegistroAsistencia[]>(inicial.registros);
   const [materias, setMaterias] = useState<Materia[]>(inicial.materias);
+  const [reglas, setReglas] = useState<ReglasAsistencia>(REGLAS_DEMO);
   const { usuario } = useAuth();
   const [errorConexion, setErrorConexion] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -150,6 +168,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setCursos(init.cursos);
       setRegistros(init.registros);
       setMaterias(init.materias);
+      setReglas(REGLAS_DEMO);
       setErrorConexion(null);
       setCargando(false);
       return;
@@ -160,9 +179,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         if (usuario.rol === "alumno") {
-          const [as, ma] = await Promise.all([
+          const [as, ma, re] = await Promise.all([
             cargarAsistencias(`alumnoId=${encodeURIComponent(usuario.id)}`),
             apiGet<{ ok: true; materias: Materia[] }>("/materias.php"),
+            cargarReglas(),
           ]);
           if (cancelled) return;
           const miAlumno: Alumno = {
@@ -179,18 +199,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setCursos([]);
           setRegistros(normalizarRegistros(as));
           setMaterias(normalizarMaterias(ma.materias));
+          setReglas(re);
         } else {
-          const [al, cu, as, ma] = await Promise.all([
+          const [al, cu, as, ma, re] = await Promise.all([
             apiGet<{ ok: true; alumnos: Alumno[] }>("/alumnos.php"),
             apiGet<{ ok: true; cursos: Curso[] }>("/cursos.php"),
             cargarAsistencias(),
             apiGet<{ ok: true; materias: Materia[] }>("/materias.php"),
+            cargarReglas(),
           ]);
           if (cancelled) return;
           setAlumnos(al.alumnos.map(normalizarAlumno));
           setCursos(cu.cursos.map((c) => ({ ...c, id: String(c.id) })));
           setRegistros(normalizarRegistros(as));
           setMaterias(normalizarMaterias(ma.materias));
+          setReglas(re);
         }
         setErrorConexion(null);
       } catch (error) {
@@ -221,18 +244,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const estadisticasAlumno = useCallback(
     (alumnoId: string) => {
       if (!alumnos.some((a) => a.id === alumnoId)) return null;
-      return calcularEstadisticasAlumno(alumnos, registros, alumnoId);
+      return calcularEstadisticasAlumno(alumnos, registros, alumnoId, reglas);
     },
-    [alumnos, registros]
+    [alumnos, registros, reglas]
   );
 
   const resumen = useMemo(
-    () => resumenInstitucional(alumnos, registros, cursos),
-    [alumnos, registros, cursos]
+    () => resumenInstitucional(alumnos, registros, cursos, reglas),
+    [alumnos, registros, cursos, reglas]
   );
 
   const marcarAsistencia = useCallback(
-    async (alumnoId: string, fecha: string, materia: Materia, estado: EstadoAsistencia) => {
+    // Devuelve el estado guardado: una ausencia dentro de una justificación
+    // vuelve como "justificado".
+    async (alumnoId: string, fecha: string, materia: Materia, estado: EstadoCargable) => {
       const data = await apiSend<{ ok: true; registro: RegistroAsistencia }>(
         "/asistencias.php",
         "POST",
@@ -253,6 +278,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           registro,
         ];
       });
+      return registro.estado;
     },
     []
   );
@@ -300,6 +326,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     cursos,
     registros,
     materias,
+    reglas,
+    actualizarReglas: setReglas,
     getRegistrosDeAlumno,
     estadisticasAlumno,
     resumen,

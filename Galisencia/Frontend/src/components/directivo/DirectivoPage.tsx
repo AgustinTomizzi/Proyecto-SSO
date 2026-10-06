@@ -1,33 +1,33 @@
 import { useMemo } from "react";
 import { colorPorPct } from "../../data/mock";
-import { UMBRAL_REGULARIDAD, PESO_ASISTENCIA } from "../../data/types";
+import { ESTADO_ASISTENCIA, pesoAsistencia, type EstadoAsistencia } from "../../data/types";
 import { useStore } from "../../data/StoreContext";
 import { useCountUp } from "../../hooks/useCountUp";
 import { Bars, Donut, Trend } from "../../components/ui/Chart";
 
 export default function DirectivoPage() {
-  const { resumen, registros } = useStore();
+  const { resumen, registros, reglas } = useStore();
 
   const conteo = useMemo(() => {
-    const c = { presente: 0, tarde: 0, ausente: 0 };
+    const c: Record<EstadoAsistencia, number> = { presente: 0, tarde: 0, ausente: 0, justificado: 0 };
     registros.forEach((r) => (c[r.estado] += 1));
     return c;
   }, [registros]);
 
-  const donut = [
-    { label: "Presente", value: conteo.presente, color: "var(--success)" },
-    { label: "Tarde", value: conteo.tarde, color: "var(--warning)" },
-    { label: "Ausente", value: conteo.ausente, color: "var(--danger)" },
-  ];
+  const donut = (Object.keys(ESTADO_ASISTENCIA) as EstadoAsistencia[]).map((estado) => ({
+    label: ESTADO_ASISTENCIA[estado].label,
+    value: conteo[estado],
+    color: ESTADO_ASISTENCIA[estado].color,
+  }));
 
   const trend = useMemo(() => {
     const fechas = [...new Set(registros.map((r) => r.fecha))].sort();
     return fechas.map((f) => {
       const regs = registros.filter((r) => r.fecha === f);
-      const puntos = regs.reduce((s, r) => s + PESO_ASISTENCIA[r.estado], 0);
+      const puntos = regs.reduce((s, r) => s + pesoAsistencia(r.estado, reglas), 0);
       return Math.round((puntos / regs.length) * 100);
     });
-  }, [registros]);
+  }, [registros, reglas]);
 
   const promedio = useCountUp(resumen.promedio);
 
@@ -44,7 +44,7 @@ export default function DirectivoPage() {
         <div className="stat">
           <div className="stat__icon">📈</div>
           <div className="stat__label">Asistencia promedio</div>
-          <div className="stat__value" style={{ color: colorPorPct(resumen.promedio) }}>
+          <div className="stat__value" style={{ color: colorPorPct(resumen.promedio, reglas.umbral) }}>
             {promedio}%
           </div>
           <div className="stat__hint">Toda la institución</div>
@@ -61,7 +61,7 @@ export default function DirectivoPage() {
           <div className="stat__value" style={{ color: "var(--danger)" }}>
             {resumen.enRiesgo}
           </div>
-          <div className="stat__hint">Debajo del {UMBRAL_REGULARIDAD}%</div>
+          <div className="stat__hint">Debajo del {reglas.umbral}%</div>
         </div>
         <div className="stat">
           <div className="stat__icon">🏫</div>
@@ -138,7 +138,7 @@ export default function DirectivoPage() {
                 {resumen.porCurso.map((c) => (
                   <tr key={c.curso}>
                     <td style={{ fontWeight: 600 }}>{c.curso}</td>
-                    <td style={{ color: colorPorPct(c.promedio), fontWeight: 700 }}>
+                    <td style={{ color: colorPorPct(c.promedio, reglas.umbral), fontWeight: 700 }}>
                       {c.promedio}%
                     </td>
                     <td>

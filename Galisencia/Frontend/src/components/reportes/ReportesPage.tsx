@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../../data/StoreContext";
-import { PESO_ASISTENCIA, UMBRAL_REGULARIDAD } from "../../data/types";
+import { ESTADO_ASISTENCIA, porcentajeAsistencia } from "../../data/types";
 import { useToast } from "../../components/ui/Toast";
 import EmptyState from "../../components/ui/EmptyState";
+import { useAuth } from "../../auth/AuthContext";
+import ReglasAsistenciaCard from "./ReglasAsistenciaCard";
 
 type FiltroRiesgo = "todos" | "general" | "materia";
 
 export default function ReportesPage() {
-  const { alumnos, registros, cursos, materias } = useStore();
+  const { alumnos, registros, cursos, materias, reglas } = useStore();
+  const { usuario } = useAuth();
+  const puedeConfigurar = usuario?.permisos.includes("config.gestionar") ?? false;
   const { push } = useToast();
+  const umbral = reglas.umbral;
   const [curso, setCurso] = useState("todos");
   const [materia, setMateria] = useState("todas");
   const [riesgo, setRiesgo] = useState<FiltroRiesgo>("todos");
@@ -24,11 +29,8 @@ export default function ReportesPage() {
   }, [ciclo, ciclos]);
 
   const alumnoMap = useMemo(() => new Map(alumnos.map((a) => [a.id, a])), [alumnos]);
-  const porcentaje = (lista: typeof registros) => lista.length
-    ? Math.round(lista.reduce((s, r) => s + PESO_ASISTENCIA[r.estado], 0) / lista.length * 100)
-    : null;
-
   const calculo = useMemo(() => {
+    const porcentaje = (lista: typeof registros) => porcentajeAsistencia(lista, reglas);
     const porCicloCurso = registros.filter((r) => {
       const alumno = alumnoMap.get(r.alumnoId);
       return (!ciclo || r.fecha.startsWith(`${ciclo}-`)) && (curso === "todos" || alumno?.curso === curso);
@@ -51,8 +53,8 @@ export default function ReportesPage() {
       porcentajes.set(alumno.id, riesgo === "general" ? general : riesgo === "materia" ? materiaElegida : valorMostrado);
 
       if (riesgo === "todos") admitidos.add(alumno.id);
-      if (riesgo === "general" && general !== null && general < UMBRAL_REGULARIDAD) admitidos.add(alumno.id);
-      if (riesgo === "materia" && materiaElegida !== null && materiaElegida < UMBRAL_REGULARIDAD) admitidos.add(alumno.id);
+      if (riesgo === "general" && general !== null && general < reglas.umbral) admitidos.add(alumno.id);
+      if (riesgo === "materia" && materiaElegida !== null && materiaElegida < reglas.umbral) admitidos.add(alumno.id);
     }
 
     const filas = porCicloCurso.filter((r) => admitidos.has(r.alumnoId) && (materia === "todas" || r.materia === materia));
@@ -63,7 +65,7 @@ export default function ReportesPage() {
       alumnos: admitidos.size,
       promedio: valores.length ? Math.round(valores.reduce((s, v) => s + v, 0) / valores.length) : null,
     };
-  }, [registros, alumnos, alumnoMap, ciclo, curso, materia, riesgo]);
+  }, [registros, alumnos, alumnoMap, ciclo, curso, materia, riesgo, reglas]);
 
   function exportarCSV() {
     if (calculo.filas.length === 0) {
@@ -73,7 +75,7 @@ export default function ReportesPage() {
     const header = "Fecha,Alumno,Curso,Materia,Estado,Porcentaje\n";
     const rows = calculo.filas.map((r) => {
       const a = alumnoMap.get(r.alumnoId);
-      return `${r.fecha},"${a ? `${a.nombre} ${a.apellido}`.trim() : r.alumnoId}",${a?.curso ?? ""},${r.materia},${r.estado},${calculo.porcentajes.get(r.alumnoId) ?? ""}`;
+      return `${r.fecha},"${a ? `${a.nombre} ${a.apellido}`.trim() : r.alumnoId}",${a?.curso ?? ""},${r.materia},${ESTADO_ASISTENCIA[r.estado]?.label ?? r.estado},${calculo.porcentajes.get(r.alumnoId) ?? ""}`;
     }).join("\n");
     const url = URL.createObjectURL(new Blob([header + rows], { type: "text/csv;charset=utf-8;" }));
     const link = document.createElement("a");
@@ -98,17 +100,19 @@ export default function ReportesPage() {
           <div className="field" style={{ margin: 0 }}><label>Materia</label><select className="select" value={materia} onChange={(e) => setMateria(e.target.value)}><option value="todas">Todas las materias</option>{materias.map((m) => <option key={m.id} value={m.nombre}>{m.nombre}</option>)}</select></div>
           <div className="field" style={{ margin: 0 }}><label>Situación</label><select className="select" value={riesgo} onChange={(e) => setRiesgo(e.target.value as FiltroRiesgo)}><option value="todos">Todos</option><option value="general">En riesgo general</option><option value="materia">En riesgo por materia</option></select></div>
         </div>
-        <div className="row row-wrap" style={{ marginTop: 14 }}><span className="badge">{calculo.alumnos} alumnos</span><span className="badge">{calculo.filas.length} registros</span><span className={`badge ${calculo.promedio !== null && calculo.promedio < UMBRAL_REGULARIDAD ? "badge-danger" : "badge-success"}`}>Promedio: {calculo.promedio === null ? "—" : `${calculo.promedio}%`}</span></div>
+        <div className="row row-wrap" style={{ marginTop: 14 }}><span className="badge">{calculo.alumnos} alumnos</span><span className="badge">{calculo.filas.length} registros</span><span className={`badge ${calculo.promedio !== null && calculo.promedio < umbral ? "badge-danger" : "badge-success"}`}>Promedio: {calculo.promedio === null ? "—" : `${calculo.promedio}%`}</span><span className="muted text-sm">Mínimo de regularidad: {umbral}% · Tarde vale {Math.round(reglas.valorTarde * 100)}% · Justificada vale {Math.round(reglas.valorJustificado * 100)}%</span></div>
       </div>
 
       <div className="card card-pad-lg">
         {calculo.filas.length === 0 ? <EmptyState icon="" title="No hay registros para este filtro" description="Probá con otro ciclo, curso, materia o situación." /> : <div className="table-wrap"><table className="table"><thead><tr><th>Fecha</th><th>Alumno</th><th>Curso</th><th>Materia</th><th>Estado</th><th>Porcentaje</th></tr></thead><tbody>{calculo.filas.slice(0, 80).map((r) => {
           const a = alumnoMap.get(r.alumnoId);
           const pct = calculo.porcentajes.get(r.alumnoId);
-          const cls = r.estado === "presente" ? "badge-success" : r.estado === "tarde" ? "badge-warning" : "badge-danger";
-          return <tr key={r.id}><td>{r.fecha}</td><td style={{ fontWeight: 600 }}>{a ? `${a.nombre} ${a.apellido}`.trim() : r.alumnoId}</td><td>{a?.curso}</td><td>{r.materia}</td><td><span className={`badge ${cls}`}>{r.estado}</span></td><td>{pct === null || pct === undefined ? "—" : `${pct}%`}</td></tr>;
+          const estado = ESTADO_ASISTENCIA[r.estado] ?? { label: r.estado, badge: "" };
+          return <tr key={r.id}><td>{r.fecha}</td><td style={{ fontWeight: 600 }}>{a ? `${a.nombre} ${a.apellido}`.trim() : r.alumnoId}</td><td>{a?.curso}</td><td>{r.materia}</td><td><span className={`badge ${estado.badge}`}>{estado.label}</span></td><td>{pct === null || pct === undefined ? "—" : `${pct}%`}</td></tr>;
         })}</tbody></table></div>}
       </div>
+
+      {puedeConfigurar && <ReglasAsistenciaCard key={`${reglas.valorTarde}-${reglas.valorJustificado}-${reglas.umbral}`} />}
     </div>
   );
 }

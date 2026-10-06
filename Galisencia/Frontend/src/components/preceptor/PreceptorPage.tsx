@@ -2,14 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../../data/StoreContext";
 import { useToast } from "../../components/ui/Toast";
 import { esMismaMateria } from "../../data/types";
-import type { Alumno, EstadoAsistencia } from "../../data/types";
+import type { Alumno, EstadoCargable } from "../../data/types";
 import { apiGet } from "../../data/apiClient";
 import { hoyLocal } from "../../data/fecha";
 import { useAuth } from "../../auth/AuthContext";
 import SuplenciasPanel from "../suplencias/SuplenciasPanel";
+import JustificacionesPanel from "../justificaciones/JustificacionesPanel";
 import "./PreceptorPage.css";
 
-const ESTADOS: { key: EstadoAsistencia; label: string; cls: string }[] = [
+const ESTADOS: { key: EstadoCargable; label: string; cls: string }[] = [
   { key: "presente", label: "Presente", cls: "presente" },
   { key: "tarde", label: "Tarde", cls: "tarde" },
   { key: "ausente", label: "Ausente", cls: "ausente" },
@@ -25,6 +26,7 @@ interface HistorialAsistencia {
   presentes: string | number;
   tardes: string | number;
   ausentes: string | number;
+  justificadas?: string | number;
 }
 
 interface HistorialMovimiento {
@@ -58,12 +60,13 @@ export default function PreceptorPage() {
   const { cursos, alumnos, registros, materias, marcarAsistencia, editarAlumno, borrarAlumno, reintentarCarga } = useStore();
   const { usuario } = useAuth();
   const puedeSuplir = usuario?.permisos.includes("suplencias.crear") ?? false;
+  const puedeJustificar = usuario?.permisos.includes("asistencia.justificar") ?? false;
   const { push } = useToast();
   const opcionesCurso = useMemo(() => cursos.map((c) => ({ ...c, label: `${c.anio} ${c.division}` })), [cursos]);
   const [curso, setCurso] = useState("");
   const [materiaId, setMateriaId] = useState("");
   const [fecha, setFecha] = useState(hoyLocal);
-  const [estado, setEstado] = useState<Record<string, EstadoAsistencia>>({});
+  const [estado, setEstado] = useState<Record<string, EstadoCargable>>({});
   const [guardado, setGuardado] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [menuId, setMenuId] = useState<string | null>(null);
@@ -93,15 +96,23 @@ export default function PreceptorPage() {
   );
 
   useEffect(() => {
-    const inicial: Record<string, EstadoAsistencia> = {};
+    const inicial: Record<string, EstadoCargable> = {};
     for (const alumno of alumnosCurso) {
       const registro = registros.find(
         (r) => materia !== null && r.alumnoId === alumno.id && esMismaMateria(r, materia) && r.fecha === fecha
       );
-      inicial[alumno.id] = registro?.estado ?? "presente";
+      // Una ausencia justificada se muestra como Ausente con la marca "Justificada".
+      inicial[alumno.id] = registro?.estado === "justificado" ? "ausente" : registro?.estado ?? "presente";
     }
     setEstado(inicial);
   }, [alumnosCurso, materia, fecha, registros]);
+
+  // Alumnos con la ausencia de ese día y materia justificada.
+  const justificados = useMemo(() => new Set(
+    registros
+      .filter((r) => materia !== null && r.fecha === fecha && r.estado === "justificado" && esMismaMateria(r, materia))
+      .map((r) => r.alumnoId)
+  ), [registros, materia, fecha]);
 
   const conteo = useMemo(() => {
     const total = { presente: 0, tarde: 0, ausente: 0 };
@@ -263,7 +274,7 @@ export default function PreceptorPage() {
                   <td className="muted text-sm">{a.email}</td>
                   <td><div className="estado-group">{ESTADOS.map((e) => (
                     <button key={e.key} className={`estado-btn ${e.cls} ${(estado[a.id] ?? "presente") === e.key ? "on" : ""}`} onClick={() => { setEstado((prev) => ({ ...prev, [a.id]: e.key })); setGuardado(false); }}>{e.label}</button>
-                  ))}</div></td>
+                  ))}{(estado[a.id] ?? "presente") === "ausente" && justificados.has(a.id) && <span className="badge badge-info" style={{ marginLeft: 8 }}>Justificada</span>}</div></td>
                   <td className="alumno-menu-cell">
                     <button className="btn btn-ghost btn-sm alumno-menu-trigger" aria-label={`Acciones para ${a.nombre} ${a.apellido}`} onClick={() => setMenuId(menuId === a.id ? null : a.id)}>⋮</button>
                     {menuId === a.id && <div className="alumno-menu"><button onClick={() => void abrirHistorial(a)}>Ver historial</button><button onClick={() => abrirAccion("curso", a)}>Cambiar curso</button><button className="danger" onClick={() => abrirAccion("baja", a)}>Dar de baja</button></div>}
@@ -288,6 +299,18 @@ export default function PreceptorPage() {
             </div>
           </div>
           <SuplenciasPanel onCambio={reintentarCarga} />
+        </section>
+      )}
+
+      {puedeJustificar && (
+        <section className="justificaciones-seccion" aria-labelledby="justificaciones-titulo">
+          <div className="page-head">
+            <div>
+              <h2 id="justificaciones-titulo">Justificaciones</h2>
+              <p className="sub">Justificá inasistencias de tus alumnos, con certificado si hace falta.</p>
+            </div>
+          </div>
+          <JustificacionesPanel onCambio={reintentarCarga} />
         </section>
       )}
 
@@ -317,7 +340,7 @@ export default function PreceptorPage() {
               <h4>Asistencia por ciclo y materia</h4>
               {asistenciaPorCiclo.length === 0 ? <p className="muted text-sm">No hay registros de asistencia.</p> : asistenciaPorCiclo.map(([ciclo, items]) => <div className="historial-ciclo" key={ciclo}>
                 <h5>Ciclo {ciclo}</h5>
-                <div className="table-wrap"><table className="table"><thead><tr><th>Materia</th><th>Porcentaje</th><th>Clases</th><th>Presentes</th><th>Tardes</th><th>Ausentes</th></tr></thead><tbody>{items.map((item) => <tr key={`${ciclo}-${item.materia}`}><td style={{ fontWeight: 600 }}>{item.materia}</td><td>{item.porcentaje}%</td><td>{item.clases}</td><td>{item.presentes}</td><td>{item.tardes}</td><td>{item.ausentes}</td></tr>)}</tbody></table></div>
+                <div className="table-wrap"><table className="table"><thead><tr><th>Materia</th><th>Porcentaje</th><th>Clases</th><th>Presentes</th><th>Tardes</th><th>Ausentes</th><th>Justificadas</th></tr></thead><tbody>{items.map((item) => <tr key={`${ciclo}-${item.materia}`}><td style={{ fontWeight: 600 }}>{item.materia}</td><td>{item.porcentaje}%</td><td>{item.clases}</td><td>{item.presentes}</td><td>{item.tardes}</td><td>{item.ausentes}</td><td>{item.justificadas ?? 0}</td></tr>)}</tbody></table></div>
               </div>)}
             </section>
 

@@ -1,5 +1,5 @@
 import type { EstadisticaAlumno } from "../../data/mock";
-import { UMBRAL_REGULARIDAD } from "../../data/types";
+import { useStore } from "../../data/StoreContext";
 import { colorPorPct } from "./attendance.service";
 
 interface Props {
@@ -8,11 +8,12 @@ interface Props {
 
 export default function AsistenciaCard({ stats }: Props) {
   const { general } = stats;
-  const enRiesgo = general !== null && general < UMBRAL_REGULARIDAD;
+  const { umbral } = useStore().reglas;
+  const enRiesgo = general !== null && general < umbral;
 
   return (
     <div className="asistencia-card">
-      <div className="asistencia-card__num" style={{ color: colorPorPct(general) }}>
+      <div className="asistencia-card__num" style={{ color: colorPorPct(general, umbral) }}>
         {general === null ? "—" : `${general}%`}
       </div>
       <div className="asistencia-card__label">Asistencia general</div>
@@ -29,8 +30,8 @@ export default function AsistenciaCard({ stats }: Props) {
 
       <p className="asistencia-card__nota">
         {enRiesgo
-          ? `Estás por debajo del ${UMBRAL_REGULARIDAD}% mínimo. Acercate a preceptoría.`
-          : `Mantené tu asistencia por encima del ${UMBRAL_REGULARIDAD}% en cada materia.`}
+          ? `Estás por debajo del ${umbral}% mínimo. Acercate a preceptoría.`
+          : `Mantené tu asistencia por encima del ${umbral}% en cada materia.`}
       </p>
     </div>
   );

@@ -1,4 +1,4 @@
-export type EstadoAsistencia = "presente" | "tarde" | "ausente";
+export type EstadoAsistencia = "presente" | "tarde" | "ausente" | "justificado";
 
 export interface RegistroAsistencia {
   id: string;
@@ -6,6 +6,7 @@ export interface RegistroAsistencia {
   materia: string;
   fecha: string; // ISO: "2026-07-01"
   estado: EstadoAsistencia;
+  justificacionId?: string | null;
 }
 
 export interface EstadisticaMateria {
@@ -14,6 +15,7 @@ export interface EstadisticaMateria {
   presentes: number;
   tardes: number;
   ausencias: number;
+  justificadas: number;
   pct: number | null; // null si no hay clases registradas aún
 }
 
@@ -26,11 +28,6 @@ export interface EstadisticaAlumno {
   ultimaActualizacion: string; // ISO datetime
 }
 
-// Peso de cada estado para el cálculo de %. Tarde = media falta.
-export const PESO_ASISTENCIA: Record<EstadoAsistencia, number> = {
-  presente: 1,
-  tarde: 0.5,
-  ausente: 0,
-};
-
-export const UMBRAL_REGULARIDAD = 75;
+// Los pesos de cada estado y el umbral de regularidad son configurables: ver
+// ReglasAsistencia en data/types.ts (con sesión se leen de la API).
+export { REGLAS_DEMO, pesoAsistencia, type ReglasAsistencia } from "../../data/types";

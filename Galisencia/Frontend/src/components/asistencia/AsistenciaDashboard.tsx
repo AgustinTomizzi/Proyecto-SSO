@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { useStore } from "../../data/StoreContext";
-import { PESO_ASISTENCIA, UMBRAL_REGULARIDAD } from "../../data/types";
+import { porcentajeAsistencia } from "../../data/types";
 import type { EstadisticaAlumno } from "../../data/mock";
 import "./attendance.css";
 
@@ -17,7 +17,8 @@ function horaActualizada(iso: string) {
 }
 
 export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) {
-  const { getRegistrosDeAlumno } = useStore();
+  const { getRegistrosDeAlumno, reglas } = useStore();
+  const umbral = reglas.umbral;
   const [ciclo, setCiclo] = useState("");
   const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date().toISOString());
   const [actualizando, setActualizando] = useState(false);
@@ -40,9 +41,7 @@ export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) 
   const materias = useMemo(() => [...new Set(registrosCiclo.map((registro) => registro.materia))], [registrosCiclo]);
 
   const stats = useMemo<EstadisticaAlumno>(() => {
-    const porcentaje = (items: typeof registrosCiclo) => items.length
-      ? Math.round(items.reduce((total, registro) => total + PESO_ASISTENCIA[registro.estado], 0) / items.length * 100)
-      : null;
+    const porcentaje = (items: typeof registrosCiclo) => porcentajeAsistencia(items, reglas);
     return {
       alumnoId,
       nombre,
@@ -56,15 +55,16 @@ export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) 
           presentes: items.filter((registro) => registro.estado === "presente").length,
           tardes: items.filter((registro) => registro.estado === "tarde").length,
           ausencias: items.filter((registro) => registro.estado === "ausente").length,
+          justificadas: items.filter((registro) => registro.estado === "justificado").length,
           pct: porcentaje(items),
         };
       }),
     };
-  }, [alumnoId, nombre, curso, registrosCiclo, materias]);
+  }, [alumnoId, nombre, curso, registrosCiclo, materias, reglas]);
 
   const resumen = useMemo(() => stats.porMateria.reduce(
-    (total, materia) => ({ presentes: total.presentes + materia.presentes, tardes: total.tardes + materia.tardes, ausencias: total.ausencias + materia.ausencias, clases: total.clases + materia.total }),
-    { presentes: 0, tardes: 0, ausencias: 0, clases: 0 }
+    (total, materia) => ({ presentes: total.presentes + materia.presentes, tardes: total.tardes + materia.tardes, ausencias: total.ausencias + materia.ausencias, justificadas: total.justificadas + materia.justificadas, clases: total.clases + materia.total }),
+    { presentes: 0, tardes: 0, ausencias: 0, justificadas: 0, clases: 0 }
   ), [stats.porMateria]);
 
   useEffect(() => setUltimaActualizacion(new Date().toISOString()), [registros]);
@@ -76,7 +76,7 @@ export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) 
   }
 
   const general = stats.general ?? 0;
-  const regular = stats.general !== null && general >= UMBRAL_REGULARIDAD;
+  const regular = stats.general !== null && general >= umbral;
 
   return (
     <div className="asistencia-dashboard">
@@ -96,7 +96,7 @@ export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) 
 
       <section className="asistencia-hero">
         <div className="asistencia-ring" style={{ "--progress": `${general}` } as CSSProperties}><svg viewBox="0 0 110 110" aria-hidden="true"><circle cx="55" cy="55" r="46" className="track"/><circle cx="55" cy="55" r="46" className="progress"/></svg><strong>{stats.general === null ? "—" : `${general}%`}</strong></div>
-        <div className="asistencia-hero__copy"><h2>Asistencia general</h2><p>Mantené tu asistencia por encima del <strong>{UMBRAL_REGULARIDAD}%</strong> en cada materia para conservar la regularidad.</p><span className={`asistencia-status ${regular ? "ok" : "risk"}`}><i />{stats.general === null ? "Sin clases registradas" : regular ? "Regular · Cumpliendo el mínimo requerido" : "En riesgo · Por debajo del mínimo"}</span></div>
+        <div className="asistencia-hero__copy"><h2>Asistencia general</h2><p>Mantené tu asistencia por encima del <strong>{umbral}%</strong> en cada materia para conservar la regularidad.</p><span className={`asistencia-status ${regular ? "ok" : "risk"}`}><i />{stats.general === null ? "Sin clases registradas" : regular ? "Regular · Cumpliendo el mínimo requerido" : "En riesgo · Por debajo del mínimo"}</span></div>
         <div className="asistencia-mini-chart" aria-label="Asistencia por materia">{stats.porMateria.slice(0, 7).map((materia) => <div key={materia.materia}><span><i style={{ height: `${materia.pct ?? 0}%` }}/></span><small>{materia.materia.slice(0, 3).toUpperCase()}</small></div>)}</div>
       </section>
 
@@ -106,11 +106,11 @@ export default function AsistenciaDashboard({ alumnoId, nombre, curso }: Props) 
           <div className="materia-list">{stats.porMateria.map((materia, index) => {
             const abierta = expandida === materia.materia;
             const pct = materia.pct ?? 0;
-            const ok = materia.pct !== null && pct >= UMBRAL_REGULARIDAD;
+            const ok = materia.pct !== null && pct >= umbral;
             const color = COLORS[index % COLORS.length];
             return <article className={`materia-card${abierta ? " open" : ""}`} key={materia.materia}>
               <button className="materia-card__summary" onClick={() => setExpandida(abierta ? null : materia.materia)} aria-expanded={abierta}><span className="materia-card__mark" style={{ "--subject-color": color } as CSSProperties}><i/></span><strong className="materia-card__name">{materia.materia}</strong><span className="materia-card__quick"><QuickStat label="Pres." value={materia.presentes} tone="success"/><QuickStat label="Tard." value={materia.tardes} tone="warning"/><QuickStat label="Aus." value={materia.ausencias} tone="danger"/><QuickStat label="Cls." value={materia.total} tone="muted"/></span><span className={`materia-card__pct ${ok ? "ok" : "risk"}`}><strong>{materia.pct === null ? "—" : `${pct}%`}</strong><i><b style={{ width: `${pct}%` }}/></i></span><svg className="materia-card__chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg></button>
-              {abierta && <div className="materia-card__detail"><DetailCard label="Asistencias" value={materia.presentes} total={materia.total} tone="success" icon={<CheckIcon/>}/><DetailCard label="Tardanzas" value={materia.tardes} total={materia.total} tone="warning" icon={<ClockIcon/>}/><DetailCard label="Ausencias" value={materia.ausencias} total={materia.total} tone="danger" icon={<XIcon/>}/><DetailCard label="Clases totales" value={materia.total} total={materia.total} tone="sky" icon={<CalendarIcon/>}/><div className={`materia-card__note ${ok ? "ok" : "risk"}`}><strong>{ok ? "✓ Regular" : "✕ En riesgo"}</strong><span>{ok ? `Superás el mínimo con ${pct}% de asistencia.` : `Estás al ${pct}%; el mínimo requerido es ${UMBRAL_REGULARIDAD}%.`}</span></div></div>}
+              {abierta && <div className="materia-card__detail"><DetailCard label="Asistencias" value={materia.presentes} total={materia.total} tone="success" icon={<CheckIcon/>}/><DetailCard label="Tardanzas" value={materia.tardes} total={materia.total} tone="warning" icon={<ClockIcon/>}/><DetailCard label="Ausencias" value={materia.ausencias} total={materia.total} tone="danger" icon={<XIcon/>}/>{materia.justificadas > 0 && <DetailCard label="Justificadas" value={materia.justificadas} total={materia.total} tone="sky" icon={<CheckIcon/>}/>}<DetailCard label="Clases totales" value={materia.total} total={materia.total} tone="sky" icon={<CalendarIcon/>}/><div className={`materia-card__note ${ok ? "ok" : "risk"}`}><strong>{ok ? "✓ Regular" : "✕ En riesgo"}</strong><span>{ok ? `Superás el mínimo con ${pct}% de asistencia.` : `Estás al ${pct}%; el mínimo requerido es ${umbral}%.`}</span></div></div>}
             </article>;
           })}</div>
         )}

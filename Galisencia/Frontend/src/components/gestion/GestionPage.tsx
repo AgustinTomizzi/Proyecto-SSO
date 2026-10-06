@@ -7,8 +7,9 @@ import { useToast } from "../ui/Toast";
 import { useAuth } from "../../auth/AuthContext";
 import SuplenciasPanel from "../suplencias/SuplenciasPanel";
 import PromocionPanel from "../promocion/PromocionPanel";
+import JustificacionesPanel from "../justificaciones/JustificacionesPanel";
 
-type Vista = "alumnos" | "suplencias" | "promocion";
+type Vista = "alumnos" | "suplencias" | "justificaciones" | "promocion";
 
 export default function GestionPage() {
   const { alumnos, cursos, agregarAlumno, editarAlumno, borrarAlumno, reintentarCarga } = useStore();
@@ -17,9 +18,11 @@ export default function GestionPage() {
     (usuario?.permisos.includes("suplencias.crear") ?? false) &&
     (usuario?.permisos.includes("cursos.asignar") ?? false);
   const puedePromocion = usuario?.permisos.includes("ciclos.promover") ?? false;
+  const puedeJustificar = usuario?.permisos.includes("asistencia.justificar") ?? false;
   const pestanas: [Vista, string][] = [
     ["alumnos", "Alumnos"],
     ...(puedeSuplencias ? [["suplencias", "Suplencias"] as [Vista, string]] : []),
+    ...(puedeJustificar ? [["justificaciones", "Justificaciones"] as [Vista, string]] : []),
     ...(puedePromocion ? [["promocion", "Promoción"] as [Vista, string]] : []),
   ];
   const conPestanas = pestanas.length > 1;
@@ -112,6 +115,8 @@ export default function GestionPage() {
           <p className="sub">
             {vistaActual === "suplencias"
               ? "Asigná preceptores suplentes a cursos por un período."
+              : vistaActual === "justificaciones"
+                ? "Justificá inasistencias de cualquier curso, con certificado si hace falta."
               : vistaActual === "promocion"
                 ? "Cerrá el año: promociones, repitencias, egresos y cierre del ciclo lectivo."
                 : "Administrá altas, bajas y cambios de curso."}
@@ -142,6 +147,10 @@ export default function GestionPage() {
       {vistaActual === "suplencias" ? (
         <div role="tabpanel" id="gestion-panel-suplencias" aria-labelledby="gestion-tab-suplencias">
           <SuplenciasPanel onCambio={reintentarCarga} />
+        </div>
+      ) : vistaActual === "justificaciones" ? (
+        <div role="tabpanel" id="gestion-panel-justificaciones" aria-labelledby="gestion-tab-justificaciones">
+          <JustificacionesPanel onCambio={reintentarCarga} />
         </div>
       ) : vistaActual === "promocion" ? (
         <div role="tabpanel" id="gestion-panel-promocion" aria-labelledby="gestion-tab-promocion">
