@@ -16,3 +16,6 @@ Thumbs.db
 # Claude Code: estado local (los hooks, skills y agentes de .claude/ sí se versionan)
 .claude/worktrees/
 .claude/settings.local.json
+
+# graphify: red del proyecto (se regenera con `graphify update .`; tiene rutas y caché locales)
+graphify-out/
