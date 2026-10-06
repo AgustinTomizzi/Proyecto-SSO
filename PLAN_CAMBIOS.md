@@ -149,9 +149,11 @@ Aislar login/sesión detrás de un `AuthProvider` y un adaptador PHP, documentan
 ---
 
 ## Fase 4: hoja de ruta comercial (requiere diseño previo, no implementar a ciegas)
-- **Multi-colegio:** `institucion_id` en todas las tablas, configuración y dominio por institución.
+Diseño de lo que se implementa ahora (OIDC, portal de familias, PWA y medidas técnicas de protección de datos): [docs/DISENO_FASE_4.md](docs/DISENO_FASE_4.md). Lo marcado *(a futuro)* queda fuera de esta etapa.
+
+- **Multi-colegio:** `institucion_id` en todas las tablas, configuración y dominio por institución. *(a futuro)*
 - **OIDC / SSO institucional** con Google o Microsoft Workspace.
 - **Portal de familias:** rol Tutor con alumnos vinculados, notificaciones de inasistencia.
 - **PWA** para que el preceptor tome asistencia desde el celular.
-- **Planes y facturación**, backups automáticos, monitoreo.
+- **Planes y facturación**, backups automáticos, monitoreo. *(a futuro)*
 - **Protección de datos:** revisar con un abogado la Ley 25.326 (datos de menores), política de retención y consentimiento.
