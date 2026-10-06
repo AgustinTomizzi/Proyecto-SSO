@@ -5,6 +5,10 @@ import { useToast } from "../../components/ui/Toast";
 import EmptyState from "../../components/ui/EmptyState";
 import { useAuth } from "../../auth/AuthContext";
 import ReglasAsistenciaCard from "./ReglasAsistenciaCard";
+import { exportarReporteAsistencia, type ResumenAlumnoReporte } from "./exportarReporte";
+import { useImpresionReporte } from "./useImpresionReporte";
+import { hoyLocal } from "../../data/fecha";
+import "./reportes.css";
 
 type FiltroRiesgo = "todos" | "general" | "materia";
 
@@ -18,6 +22,8 @@ export default function ReportesPage() {
   const [materia, setMateria] = useState("todas");
   const [riesgo, setRiesgo] = useState<FiltroRiesgo>("todos");
   const [ciclo, setCiclo] = useState("");
+  const [exportando, setExportando] = useState(false);
+  useImpresionReporte();
 
   const cursosOpciones = useMemo(() => cursos.map((c) => `${c.anio} ${c.division}`), [cursos]);
   const ciclos = useMemo(
@@ -59,8 +65,28 @@ export default function ReportesPage() {
 
     const filas = porCicloCurso.filter((r) => admitidos.has(r.alumnoId) && (materia === "todas" || r.materia === materia));
     const valores = [...admitidos].map((id) => porcentajes.get(id)).filter((v): v is number => v !== null && v !== undefined);
+    // Resumen por alumno (para Excel e impresión) con los registros del filtro.
+    const resumenAlumnos: ResumenAlumnoReporte[] = alumnosDelCurso
+      .filter((a) => admitidos.has(a.id))
+      .map((a) => {
+        const propios = filas.filter((r) => r.alumnoId === a.id);
+        const pct = porcentajes.get(a.id) ?? null;
+        return {
+          nombre: `${a.apellido}, ${a.nombre}`.replace(/^, /, ""),
+          curso: a.curso,
+          total: propios.length,
+          presentes: propios.filter((r) => r.estado === "presente").length,
+          tardes: propios.filter((r) => r.estado === "tarde").length,
+          ausentes: propios.filter((r) => r.estado === "ausente").length,
+          justificadas: propios.filter((r) => r.estado === "justificado").length,
+          pct,
+          enRiesgo: pct !== null && pct < reglas.umbral,
+        };
+      })
+      .sort((x, y) => x.curso.localeCompare(y.curso, "es", { numeric: true }) || x.nombre.localeCompare(y.nombre, "es"));
     return {
       filas,
+      resumenAlumnos,
       porcentajes,
       alumnos: admitidos.size,
       promedio: valores.length ? Math.round(valores.reduce((s, v) => s + v, 0) / valores.length) : null,
@@ -86,11 +112,42 @@ export default function ReportesPage() {
     push("Reporte exportado en CSV");
   }
 
+  const descripcion = [
+    ciclo ? `Ciclo ${ciclo}` : "Todos los ciclos",
+    curso === "todos" ? "todos los cursos" : curso,
+    materia === "todas" ? "todas las materias" : materia,
+    riesgo === "general" ? "en riesgo general" : riesgo === "materia" ? "en riesgo por materia" : "todos los alumnos",
+  ].join(" · ") + `. Mínimo ${reglas.umbral}%, tarde ${Math.round(reglas.valorTarde * 100)}%, justificada ${Math.round(reglas.valorJustificado * 100)}%.`;
+
+  async function exportarExcel() {
+    if (calculo.resumenAlumnos.length === 0) {
+      push("No hay datos para exportar", "info");
+      return;
+    }
+    setExportando(true);
+    try {
+      const filas = calculo.filas.map((r) => {
+        const a = alumnoMap.get(r.alumnoId);
+        return { fecha: r.fecha, alumno: a ? `${a.apellido}, ${a.nombre}`.replace(/^, /, "") : r.alumnoId, curso: a?.curso ?? "", materia: r.materia, estado: ESTADO_ASISTENCIA[r.estado]?.label ?? r.estado, pct: calculo.porcentajes.get(r.alumnoId) ?? null };
+      });
+      await exportarReporteAsistencia(descripcion, calculo.resumenAlumnos, filas, `reporte-asistencia-${ciclo || "sin-ciclo"}-${hoyLocal()}.xlsx`);
+      push("Reporte exportado en Excel");
+    } catch (e) {
+      push(e instanceof Error ? `No se pudo exportar: ${e.message}` : "No se pudo exportar el reporte", "error");
+    } finally {
+      setExportando(false);
+    }
+  }
+
   return (
-    <div className="page">
+    <div className="page reportes-page">
       <div className="page-head">
         <div><h1>Reportes de asistencia</h1><p className="sub">Filtrá por ciclo y situación de regularidad.</p></div>
-        <button className="btn btn-primary" onClick={exportarCSV}>Exportar CSV</button>
+        <div className="row row-wrap reportes-acciones">
+          <button className="btn btn-ghost" onClick={() => window.print()} disabled={calculo.resumenAlumnos.length === 0}>Imprimir / PDF</button>
+          <button className="btn btn-soft" onClick={exportarCSV}>CSV</button>
+          <button className="btn btn-primary" onClick={() => void exportarExcel()} disabled={exportando}>{exportando ? "Exportando..." : "Excel"}</button>
+        </div>
       </div>
 
       <div className="card card-pad-lg" style={{ marginBottom: 18 }}>
@@ -111,6 +168,15 @@ export default function ReportesPage() {
           return <tr key={r.id}><td>{r.fecha}</td><td style={{ fontWeight: 600 }}>{a ? `${a.nombre} ${a.apellido}`.trim() : r.alumnoId}</td><td>{a?.curso}</td><td>{r.materia}</td><td><span className={`badge ${estado.badge}`}>{estado.label}</span></td><td>{pct === null || pct === undefined ? "—" : `${pct}%`}</td></tr>;
         })}</tbody></table></div>}
       </div>
+
+      <section className="reporte-hoja" aria-hidden="true">
+        <h2>Reporte de asistencia</h2>
+        <p>{descripcion} Generado el {hoyLocal().split("-").reverse().join("/")}. {calculo.resumenAlumnos.length} alumnos, promedio {calculo.promedio === null ? "—" : `${calculo.promedio}%`}.</p>
+        <table>
+          <thead><tr><th>Alumno</th><th>Curso</th><th>Clases</th><th>Pres.</th><th>Tardes</th><th>Aus.</th><th>Just.</th><th>Asistencia</th><th>Situación</th></tr></thead>
+          <tbody>{calculo.resumenAlumnos.map((r) => <tr key={`${r.curso}-${r.nombre}`}><td>{r.nombre}</td><td>{r.curso}</td><td>{r.total}</td><td>{r.presentes}</td><td>{r.tardes}</td><td>{r.ausentes}</td><td>{r.justificadas}</td><td>{r.pct === null ? "—" : `${r.pct}%`}</td><td>{r.pct === null ? "Sin datos" : r.enRiesgo ? "En riesgo" : "Regular"}</td></tr>)}</tbody>
+        </table>
+      </section>
 
       {puedeConfigurar && <ReglasAsistenciaCard key={`${reglas.valorTarde}-${reglas.valorJustificado}-${reglas.umbral}`} />}
     </div>

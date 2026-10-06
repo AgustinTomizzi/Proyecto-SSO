@@ -54,6 +54,10 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 - **Preceptor:** al pie de "Registrar asistencia", la sección "Mis suplencias" permite cubrir un curso ajeno (desde hoy, hasta 30 días, motivo opcional) y quitar las propias. Mientras la suplencia está vigente, el curso aparece en el selector de asistencia.
 - **Administrador Académico y Administrador:** en "Gestión académica", la pestaña "Suplencias" asigna cualquier preceptor a cualquier curso y lista todas las suplencias con su estado (Vigente, Próxima, Finalizada).
 
+### Reportes de asistencia
+
+Filtros por ciclo, curso, materia y situación (todos, en riesgo general o por materia). "Excel" descarga un libro con el resumen por alumno (clases, presentes, tardes, ausentes, justificadas, porcentaje y situación) y todos los registros del filtro; "CSV" baja los registros; "Imprimir / PDF" imprime en A4 el resumen por alumno con los filtros y las reglas aplicadas, sin el resto de la aplicación.
+
 ### Justificaciones y reglas de asistencia
 
 - **Preceptor:** al pie de "Registrar asistencia", la sección "Justificaciones" permite justificar inasistencias de sus alumnos por rango de fechas (hasta 60 días y hasta 30 días por adelantado), con motivo y certificado opcional (PDF, JPG o PNG de hasta 5 MB). Las ausencias del rango, y las que se carguen después, quedan marcadas como "Justificada" en la toma de asistencia. Desde la lista se descarga el adjunto o se quita la justificación (las ausencias vuelven a quedar sin justificar).

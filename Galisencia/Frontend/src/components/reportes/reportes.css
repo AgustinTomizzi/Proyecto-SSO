@@ -1,0 +1,17 @@
+/* Reportes de asistencia: acciones y hoja de impresión (A4, blanco y negro). */
+.reportes-acciones { gap: 8px; }
+.reporte-hoja { display: none; }
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html.reporte-imprimiendo, html.reporte-imprimiendo body { background: #fff !important; }
+  html.reporte-imprimiendo .reporte-print-camino > :not(.reporte-print-camino):not(.reporte-hoja) { display: none !important; }
+  html.reporte-imprimiendo .reporte-print-camino { display: block !important; position: static !important; width: auto !important; max-width: none !important; height: auto !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; border: 0 !important; box-shadow: none !important; background: #fff !important; transform: none !important; }
+  html.reporte-imprimiendo .reporte-hoja { display: block; color: #000; font-family: Arial, Helvetica, sans-serif; }
+  .reporte-hoja h2 { margin: 0 0 2mm; font-size: 16pt; font-weight: 700; }
+  .reporte-hoja p { margin: 0 0 4mm; font-size: 9pt; }
+  .reporte-hoja table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  .reporte-hoja th, .reporte-hoja td { padding: 1.2mm 1.6mm; border: .5pt solid #000; text-align: left; }
+  .reporte-hoja thead { display: table-header-group; }
+  .reporte-hoja tr { break-inside: avoid; }
+}
