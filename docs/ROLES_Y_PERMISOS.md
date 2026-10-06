@@ -37,7 +37,7 @@ Los seis roles están asociados a **Galisencia**. Galiservas está asociado excl
 | `reservas.cancelar` | No | Sí | No | No | Sí | Sí |
 | `reservas.administrar` | No | No | No | No | No | Sí |
 | `galiservas.acceder` | No | Sí | No | No | Sí | Sí |
-| `horarios.ver` | Sí | No | No | Sí | No | Sí |
+| `horarios.ver` | Sí | Sí | Sí | Sí | Sí | Sí |
 | `horarios.gestionar` | No | No | No | Sí | No | Sí |
 
 `Administrador` recibe todos los permisos con un `CROSS JOIN`, de modo que también recibirá futuros permisos al regenerar un seed adaptado. La migración eleva `admin@galileo.edu.ar` a este rol.
@@ -70,7 +70,7 @@ No puede acceder a Galiservas ni gestionar recursos, usuarios/roles o auditoría
 
 ### Docente
 
-Puede ver alumnos/cursos/asistencia/notas, tomar asistencia, cargar notas y operar reservas propias. Hoy no tiene alcance por curso: puede registrar asistencia y notas de cualquier alumno activo (el alcance por las materias que dicta llega en la Fase 1).
+Puede ver alumnos/cursos/asistencia/notas, tomar asistencia, cargar notas y operar reservas propias. Su alcance sale de la grilla vigente (`horario_clases`): solo ve alumnos y cursos donde tiene clases, y solo registra asistencia o notas, consulta historial y reportes de las materias que dicta en cada curso (`403` fuera de eso). Sin clases asignadas no ve alumnos.
 
 No puede modificar alumnos/cursos, ver reportes globales, administrar reservas ajenas/recursos/usuarios/auditoría. El login Galisencia lo normaliza visualmente a `preceptor`; Galiservas conserva el rol textual de `sesion.php`.
 
@@ -86,7 +86,7 @@ No puede violar validaciones: capacidad, solapamientos, FKs y protección del ú
 |---|---|---|
 | Alumnos de preceptor | Solo cursos con `preceptor_id` propio | Según permiso. |
 | Cursos de preceptor | Solo asignados | Todos según permiso. |
-| Asistencia/notas | Alumno: solo lo suyo. Preceptor: sus cursos. Docente, Directivo y Admin. Académico: sin restricción de curso | Según permiso. |
+| Asistencia/notas | Alumno: solo lo suyo. Preceptor: sus cursos. Docente: los pares curso/materia que dicta según la grilla. Directivo y Admin. Académico: sin restricción de curso | Según permiso. |
 | Reservas | Solo `user_id` propio | Todas con `reservas.administrar`. |
 | Edición de reserva | Propia y activa | Cualquiera; puede finalizar/cancelar. |
 | Cancelación | Propia pendiente/confirmada | Cualquiera. |

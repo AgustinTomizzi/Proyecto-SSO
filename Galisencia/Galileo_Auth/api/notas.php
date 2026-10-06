@@ -30,6 +30,10 @@ if ($method === "GET") {
     } elseif (api_rol_es("Preceptor")) {
         $where[] = "c.preceptor_id = ?";
         $params[] = usuarioActual();
+    } elseif (api_rol_es("Docente")) {
+        [$condicion, $extra] = api_sql_docente_dicta(usuarioActual(), "a.curso_id", "n.materia_id");
+        $where[] = $condicion;
+        array_push($params, ...$extra);
     }
     $sql = "SELECT n.id_nota AS id, n.alumno_id AS alumnoId, n.materia_id AS materiaId, m.nombre AS materia, n.fecha, n.nota FROM notas n JOIN alumnos a ON a.id_alumno=n.alumno_id JOIN materias m ON m.id_materia = n.materia_id LEFT JOIN cursos c ON c.id_cursos=a.curso_id WHERE " . implode(" AND ", $where) . " ORDER BY n.fecha, n.id_nota";
     $stmt = $pdo->prepare($sql);
@@ -47,12 +51,15 @@ if ($method === "POST") {
     if ($alumnoId <= 0 || $materia === null || !api_fecha_valida($fecha) || !is_numeric($nota) || (float) $nota < 1 || (float) $nota > 10) {
         api_json(["ok" => false, "error" => "alumno, materia existente, fecha válida y nota entre 1 y 10 son requeridos"], 400);
     }
-    $stmt = $pdo->prepare("SELECT a.id_alumno, c.preceptor_id FROM alumnos a LEFT JOIN cursos c ON c.id_cursos=a.curso_id WHERE a.id_alumno=? AND a.estado=1");
+    $stmt = $pdo->prepare("SELECT a.id_alumno, a.curso_id, c.preceptor_id FROM alumnos a LEFT JOIN cursos c ON c.id_cursos=a.curso_id WHERE a.id_alumno=? AND a.estado=1");
     $stmt->execute([$alumnoId]);
     $alumno = $stmt->fetch();
     if (!$alumno) api_json(["ok" => false, "error" => "alumno inexistente o inactivo"], 400);
     if (api_rol_es("Preceptor") && (int) $alumno["preceptor_id"] !== (int) usuarioActual()) {
         api_json(["ok" => false, "error" => "el alumno no pertenece a uno de tus cursos"], 403);
+    }
+    if (api_rol_es("Docente") && !api_docente_dicta(usuarioActual(), $alumno["curso_id"], $materia["id"])) {
+        api_json(["ok" => false, "error" => "no dictás esa materia en el curso del alumno"], 403);
     }
     $pdo->prepare("INSERT INTO notas (nota, fecha, alumno_id, materia_id) VALUES (?, ?, ?, ?)")
         ->execute([(float) $nota, $fecha, $alumnoId, $materia["id"]]);

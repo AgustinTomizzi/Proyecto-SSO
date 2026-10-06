@@ -322,6 +322,51 @@ function api_cursos_del_preceptor($usuarioId, $bloquear = false)
     return array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN));
 }
 
+// ---- Alcance del Docente: lo que dicta según la grilla vigente hoy ----
+
+const API_CLASE_VIGENTE = "hc.vigente_desde <= CURDATE() AND (hc.vigente_hasta IS NULL OR hc.vigente_hasta >= CURDATE())";
+
+/** Cursos en los que el docente tiene al menos una clase vigente. */
+function api_cursos_del_docente($usuarioId)
+{
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT DISTINCT hc.curso_id FROM horario_clases hc WHERE hc.docente_id = ? AND " . API_CLASE_VIGENTE);
+    $stmt->execute([$usuarioId]);
+    return array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
+/** Materias que el docente dicta (en un curso, si se indica). */
+function api_materias_del_docente($usuarioId, $cursoId = null)
+{
+    global $pdo;
+    $sql = "SELECT DISTINCT hc.materia_id FROM horario_clases hc WHERE hc.docente_id = ? AND " . API_CLASE_VIGENTE;
+    $params = [$usuarioId];
+    if ($cursoId !== null) {
+        $sql .= " AND hc.curso_id = ?";
+        $params[] = $cursoId;
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
+function api_docente_dicta($usuarioId, $cursoId, $materiaId)
+{
+    return $cursoId !== null && in_array((int) $materiaId, api_materias_del_docente($usuarioId, (int) $cursoId), true);
+}
+
+/**
+ * Condición SQL: el par (curso, materia) de la fila lo dicta el docente.
+ * Devuelve [sql, params] para sumar a un WHERE.
+ */
+function api_sql_docente_dicta($usuarioId, $columnaCurso, $columnaMateria)
+{
+    return [
+        "EXISTS (SELECT 1 FROM horario_clases hc WHERE hc.docente_id = ? AND hc.curso_id = $columnaCurso AND hc.materia_id = $columnaMateria AND " . API_CLASE_VIGENTE . ")",
+        [$usuarioId],
+    ];
+}
+
 function api_email_usuario($usuarioId)
 {
     global $pdo;

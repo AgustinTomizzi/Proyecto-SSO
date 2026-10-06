@@ -55,11 +55,11 @@ WHERE r.nombre = 'Alumno' AND p.nombre IN ('asistencia.ver','notas.ver','horario
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Preceptor' AND p.nombre IN ('alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','reportes.ver','recursos.ver','reservas.ver','reservas.crear','reservas.editar','reservas.cancelar','galiservas.acceder');
+WHERE r.nombre = 'Preceptor' AND p.nombre IN ('horarios.ver','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','reportes.ver','recursos.ver','reservas.ver','reservas.crear','reservas.editar','reservas.cancelar','galiservas.acceder');
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Directivo' AND p.nombre IN ('alumnos.ver','cursos.ver','asistencia.ver','notas.ver','reportes.ver');
+WHERE r.nombre = 'Directivo' AND p.nombre IN ('alumnos.ver','cursos.ver','asistencia.ver','notas.ver','reportes.ver','horarios.ver');
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
@@ -67,7 +67,7 @@ WHERE r.nombre = 'Administrador Academico' AND p.nombre IN ('alumnos.ver','alumn
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Docente' AND p.nombre IN ('alumnos.ver','cursos.ver','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','recursos.ver','reservas.ver','reservas.crear','reservas.editar','reservas.cancelar','galiservas.acceder');
+WHERE r.nombre = 'Docente' AND p.nombre IN ('horarios.ver','alumnos.ver','cursos.ver','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','recursos.ver','reservas.ver','reservas.crear','reservas.editar','reservas.cancelar','galiservas.acceder');
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p

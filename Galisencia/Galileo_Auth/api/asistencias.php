@@ -57,6 +57,10 @@ if ($method === "GET") {
     } elseif (api_rol_es("Preceptor")) {
         $where[] = "c.preceptor_id = ?";
         $params[] = $usuarioId;
+    } elseif (api_rol_es("Docente")) {
+        [$condicion, $extra] = api_sql_docente_dicta($usuarioId, "a.curso_id", "asi.materia_id");
+        $where[] = $condicion;
+        array_push($params, ...$extra);
     }
 
     $sql = "SELECT asi.id_asistencia AS id, asi.alumno_id AS alumnoId, asi.materia_id AS materiaId, m.nombre AS materia, asi.fecha, asi.estado FROM asistencias asi INNER JOIN alumnos a ON a.id_alumno = asi.alumno_id INNER JOIN materias m ON m.id_materia = asi.materia_id LEFT JOIN cursos c ON c.id_cursos = a.curso_id WHERE " . implode(" AND ", $where) . " ORDER BY asi.fecha, asi.id_asistencia";
@@ -104,6 +108,9 @@ try {
     } elseif (api_rol_es("Preceptor") && (int) $alumno["preceptor_id"] !== $usuarioId) {
         $pdo->rollBack();
         api_json(["ok" => false, "error" => "el alumno no pertenece a uno de tus cursos asignados"], 403);
+    } elseif (api_rol_es("Docente") && !api_docente_dicta($usuarioId, $alumno["curso_id"], $materia["id"])) {
+        $pdo->rollBack();
+        api_json(["ok" => false, "error" => "no dictás esa materia en el curso del alumno"], 403);
     }
 
     $stmt = $pdo->prepare("SELECT id_asistencia, alumno_id, materia_id, fecha, estado FROM asistencias WHERE alumno_id = ? AND materia_id = ? AND fecha = ? LIMIT 1 FOR UPDATE");

@@ -56,8 +56,9 @@ if ($method === "GET") {
     if (!empty($_GET["incluirInactivos"]) && api_es_administrador()) {
         $where = [];
     }
-    if (esPreceptor($rolSesion)) {
-        $misCursos = cursosDelPreceptor($pdo, $usuarioId);
+    $esDocente = api_rol_es("Docente");
+    if (esPreceptor($rolSesion) || $esDocente) {
+        $misCursos = $esDocente ? api_cursos_del_docente($usuarioId) : cursosDelPreceptor($pdo, $usuarioId);
         if (empty($misCursos)) {
             api_json(["ok" => true, "alumnos" => []]);
         }

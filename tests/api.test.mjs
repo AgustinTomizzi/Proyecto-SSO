@@ -243,8 +243,8 @@ async function main() {
   expectStatus(horarioAlumno, 200, "alumno consulta horario");
   assert.deepEqual(horarioAlumno.body.cursos.map((curso) => Number(curso.id)), [1]);
   expectStatus(await alumno.request("/horarios.php?imagen=1&cursoId=2"), 403, "alumno consulta horario ajeno");
-  expectStatus(await directivo.request("/horarios.php"), 403, "directivo consulta horarios sin permiso");
-  expectStatus(await preceptor.request("/horarios.php"), 403, "preceptor consulta horarios sin permiso");
+  expectStatus(await directivo.request("/horarios.php"), 200, "directivo consulta horarios (horarios.ver)");
+  expectStatus(await preceptor.request("/horarios.php"), 200, "preceptor consulta horarios (horarios.ver)");
 
   // La imagen quedó como histórico de solo lectura: el horario se carga en la grilla.
   const horarioPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
@@ -436,6 +436,63 @@ async function main() {
       }
     }
     expectStatus(await academica.json("/horario_grilla.php", "DELETE", { id: claseId }), 404, "clase ya borrada");
+  }
+
+  // ---- Alcance del Docente según la grilla (cursos y materias que dicta) ----
+  {
+    const docenteId = Number((await docente.request("/sesion.php")).body.usuario.id);
+    const materiasCat = (await academica.request("/materias.php")).body.materias;
+    const idMat = (nombre) => materiasCat.find((m) => m.nombre === nombre).id;
+    const modulo = (await academica.request("/horario_grilla.php?cursoId=1")).body.franjas.find((f) => f.orden === 4);
+    const clase = await academica.json("/horario_grilla.php", "POST", {
+      cursoId: 1, dia: 3, franjaId: modulo.id, materiaId: idMat("Matemática"), docenteId, vigenteDesde: "2026-01-01",
+    });
+    expectStatus(clase, 201, "asigna al docente Matemática en 1 A");
+    try {
+      const todos = (await admin.request("/alumnos.php")).body.alumnos;
+      const deCurso1 = todos.filter((a) => Number(a.cursoId) === 1);
+      const deOtroCurso = todos.find((a) => Number(a.cursoId) === 2);
+
+      const alumnosDocente = await docente.request("/alumnos.php");
+      expectStatus(alumnosDocente, 200, "docente lista alumnos");
+      assert.equal(alumnosDocente.body.alumnos.length, deCurso1.length, "solo los alumnos de los cursos que dicta");
+      assert.ok(alumnosDocente.body.alumnos.every((a) => Number(a.cursoId) === 1));
+      const cursosDocente = await docente.request("/cursos.php");
+      assert.deepEqual(cursosDocente.body.cursos.map((c) => Number(c.id)), [1], "docente ve solo sus cursos");
+
+      const fecha = "2025-10-20";
+      expectStatus(await docente.json("/asistencias.php", "POST", { alumnoId: deCurso1[0].id, materiaId: idMat("Matemática"), fecha, estado: "presente" }), 200, "docente registra en la materia que dicta");
+      expectStatus(await docente.json("/asistencias.php", "POST", { alumnoId: deCurso1[0].id, materiaId: idMat("Lengua"), fecha, estado: "presente" }), 403, "docente registra en una materia que no dicta");
+      expectStatus(await docente.json("/asistencias.php", "POST", { alumnoId: deOtroCurso.id, materiaId: idMat("Matemática"), fecha, estado: "presente" }), 403, "docente registra en un curso que no dicta");
+      expectStatus(await docente.json("/notas.php", "POST", { alumnoId: deCurso1[0].id, materiaId: idMat("Lengua"), fecha, nota: 8 }), 403, "docente carga nota en una materia que no dicta");
+      expectStatus(await docente.json("/notas.php", "POST", { alumnoId: deOtroCurso.id, materiaId: idMat("Matemática"), fecha, nota: 8 }), 403, "docente carga nota en un curso que no dicta");
+      expectStatus(await docente.json("/notas.php", "POST", { alumnoId: deCurso1[0].id, materiaId: idMat("Matemática"), fecha, nota: 8 }), 200, "docente carga nota en la materia que dicta");
+
+      const asistenciasDocente = await docente.request("/asistencias.php");
+      expectStatus(asistenciasDocente, 200, "docente lista asistencias");
+      assert.ok(asistenciasDocente.body.registros.length > 0);
+      assert.ok(asistenciasDocente.body.registros.every((r) => r.materia === "Matemática" && deCurso1.some((a) => String(a.id) === String(r.alumnoId))), "solo sus pares curso/materia");
+      const notasDocente = await docente.request("/notas.php");
+      assert.ok(notasDocente.body.notas.every((n) => n.materia === "Matemática"));
+
+      expectStatus(await docente.request(`/historial_alumno.php?id=${deOtroCurso.id}`), 403, "docente ve historial de un curso que no dicta");
+      const historial = await docente.request(`/historial_alumno.php?id=${deCurso1[0].id}`);
+      expectStatus(historial, 200, "docente ve historial de su alumno");
+      assert.ok(historial.body.asistencia.every((h) => h.materia === "Matemática"));
+
+      const reporte = await docente.request("/reportes.php");
+      expectStatus(reporte, 200, "docente consulta reportes de sus cursos");
+      assert.equal(reporte.body.resumen.totalAlumnos, deCurso1.length);
+      expectStatus(await docente.request("/reportes.php?cursoId=2"), 403, "docente pide reporte de otro curso");
+
+      const misClases = await docente.request(`/horario_grilla.php?docenteId=${docenteId}`);
+      expectStatus(misClases, 200, "docente consulta sus clases (horarios.ver)");
+      assert.equal(misClases.body.clases.length, 1);
+    } finally {
+      expectStatus(await academica.json("/horario_grilla.php", "DELETE", { id: clase.body.clase.id }), 200, "borra la clase del docente");
+    }
+    const sinClases = await docente.request("/alumnos.php");
+    assert.equal(sinClases.body.alumnos.length, 0, "sin clases vigentes el docente no ve alumnos");
   }
 
   // ---- Asignacion de preceptores (cursos.php PUT + auditoria) ----

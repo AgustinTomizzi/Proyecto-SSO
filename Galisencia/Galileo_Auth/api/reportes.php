@@ -6,7 +6,8 @@ api_metodo(["GET"]);
 
 $esAlumno = api_rol_es("Alumno");
 $esPreceptor = api_rol_es("Preceptor");
-if (!api_tiene_permiso("reportes.ver") && !$esAlumno && !$esPreceptor) {
+$esDocente = api_rol_es("Docente");
+if (!api_tiene_permiso("reportes.ver") && !$esAlumno && !$esPreceptor && !$esDocente) {
     api_json(["ok" => false, "error" => "sin permiso"], 403);
 }
 
@@ -33,6 +34,9 @@ if (api_pide_materia($_GET)) {
 if ($esPreceptor && $cursoId !== null && !in_array($cursoId, api_cursos_del_preceptor($usuarioId), true)) {
     api_json(["ok" => false, "error" => "el curso no esta entre tus cursos asignados"], 403);
 }
+if ($esDocente && $cursoId !== null && !in_array($cursoId, api_cursos_del_docente($usuarioId), true)) {
+    api_json(["ok" => false, "error" => "el curso no esta entre los cursos que dictás"], 403);
+}
 
 $where = ["a.estado = 1"];
 $params = [];
@@ -45,6 +49,9 @@ if ($esAlumno) {
     $params[] = $usuarioId;
 } elseif ($esPreceptor) {
     $where[] = "c.preceptor_id = ?";
+    $params[] = $usuarioId;
+} elseif ($esDocente) {
+    $where[] = "a.curso_id IN (SELECT hc.curso_id FROM horario_clases hc WHERE hc.docente_id = ? AND " . API_CLASE_VIGENTE . ")";
     $params[] = $usuarioId;
 }
 
@@ -66,7 +73,13 @@ if ($ids) {
         $asistenciaWhere[] = "YEAR(asi.fecha) = ?";
         $asistenciaParams[] = (int) $ciclo;
     }
-    $stmt = $pdo->prepare("SELECT asi.alumno_id, m.nombre AS materia, asi.estado FROM asistencias asi JOIN materias m ON m.id_materia = asi.materia_id WHERE " . implode(" AND ", $asistenciaWhere));
+    if ($esDocente) {
+        // Solo las materias que dicta en el curso de cada alumno.
+        [$condicion, $extra] = api_sql_docente_dicta($usuarioId, "al.curso_id", "asi.materia_id");
+        $asistenciaWhere[] = $condicion;
+        array_push($asistenciaParams, ...$extra);
+    }
+    $stmt = $pdo->prepare("SELECT asi.alumno_id, m.nombre AS materia, asi.estado FROM asistencias asi JOIN materias m ON m.id_materia = asi.materia_id JOIN alumnos al ON al.id_alumno = asi.alumno_id WHERE " . implode(" AND ", $asistenciaWhere));
     $stmt->execute($asistenciaParams);
     $asistencias = $stmt->fetchAll();
 }
