@@ -78,7 +78,7 @@ if ($method === "GET") {
 
     // limit y offset son enteros validados: se interpolan para evitar que el
     // driver los envíe como texto.
-    $stmt = $pdo->prepare("SELECT asi.id_asistencia AS id, asi.alumno_id AS alumnoId, asi.materia_id AS materiaId, m.nombre AS materia, asi.fecha, asi.estado" . $desde . " ORDER BY asi.fecha, asi.id_asistencia LIMIT " . (int) $limite . " OFFSET " . (int) (($pagina - 1) * $limite));
+    $stmt = $pdo->prepare("SELECT asi.id_asistencia AS id, asi.alumno_id AS alumnoId, asi.materia_id AS materiaId, m.nombre AS materia, asi.fecha, asi.estado, asi.justificacion_id AS justificacionId" . $desde . " ORDER BY asi.fecha, asi.id_asistencia LIMIT " . (int) $limite . " OFFSET " . (int) (($pagina - 1) * $limite));
     $stmt->execute($params);
     api_json(["ok" => true, "registros" => $stmt->fetchAll(), "total" => $total, "page" => $pagina, "limit" => $limite]);
 }
@@ -99,6 +99,7 @@ if ($materia === null) {
 if (!api_fecha_valida($fecha)) {
     api_json(["ok" => false, "error" => "fecha invalida; use el formato YYYY-MM-DD"], 400);
 }
+// "justificado" no se carga a mano: sale de una justificación (justificaciones.php).
 if (!in_array($estado, ["presente", "tarde", "ausente"], true)) {
     api_json(["ok" => false, "error" => "estado debe ser presente, tarde o ausente"], 400);
 }
@@ -126,6 +127,17 @@ try {
         api_json(["ok" => false, "error" => "no dictás esa materia en el curso del alumno"], 403);
     }
 
+    // Una ausencia en una fecha cubierta por una justificación queda justificada.
+    $justificacionId = null;
+    if ($estado === "ausente") {
+        $stmt = $pdo->prepare("SELECT id_justificacion FROM justificaciones WHERE alumno_id = ? AND ? BETWEEN desde AND hasta ORDER BY id_justificacion DESC LIMIT 1");
+        $stmt->execute([$alumnoId, $fecha]);
+        $justificacionId = $stmt->fetchColumn() ?: null;
+        if ($justificacionId !== null) {
+            $estado = "justificado";
+        }
+    }
+
     $stmt = $pdo->prepare("SELECT id_asistencia, alumno_id, materia_id, fecha, estado FROM asistencias WHERE alumno_id = ? AND materia_id = ? AND fecha = ? LIMIT 1 FOR UPDATE");
     $stmt->execute([$alumnoId, $materia["id"], $fecha]);
     $antes = $stmt->fetch();
@@ -134,11 +146,11 @@ try {
             $pdo->rollBack();
             api_json(["ok" => false, "error" => "sin permiso para editar una asistencia existente"], 403);
         }
-        $pdo->prepare("UPDATE asistencias SET estado = ? WHERE id_asistencia = ?")->execute([$estado, $antes["id_asistencia"]]);
+        $pdo->prepare("UPDATE asistencias SET estado = ?, justificacion_id = ? WHERE id_asistencia = ?")->execute([$estado, $justificacionId, $antes["id_asistencia"]]);
         $id = $antes["id_asistencia"];
         $accion = "asistencia.editar";
     } else {
-        $pdo->prepare("INSERT INTO asistencias (fecha, estado, alumno_id, materia_id) VALUES (?, ?, ?, ?)")->execute([$fecha, $estado, $alumnoId, $materia["id"]]);
+        $pdo->prepare("INSERT INTO asistencias (fecha, estado, justificacion_id, alumno_id, materia_id) VALUES (?, ?, ?, ?, ?)")->execute([$fecha, $estado, $justificacionId, $alumnoId, $materia["id"]]);
         $id = $pdo->lastInsertId();
         $accion = "asistencia.registrar";
     }

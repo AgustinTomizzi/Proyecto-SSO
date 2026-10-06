@@ -383,6 +383,15 @@ Filtros opcionales: `usuarioId`, `entidad`, `accion`, `desde`, `hasta`, `limit`.
 
 Orden descendente. `detalle` se decodifica a JSON. Si falta la tabla devuelve `500` con instrucción de migración. Otro método: `405`.
 
+## Justificaciones de inasistencias
+
+Una justificación cubre un rango de fechas de un alumno. Al crearla, sus ausencias de ese rango pasan a `justificado` (con `justificacion_id`), y una ausencia que se cargue después dentro del rango queda justificada sola. `justificado` no se puede cargar a mano en `asistencias.php` (`400`).
+
+- `GET /justificaciones.php?alumnoId=12` o `?cursoId=4`, permiso `asistencia.ver` y el mismo alcance que la asistencia (Alumno: la propia; Preceptor: sus cursos y suplencias vigentes; Docente: los cursos que dicta). Cada una trae `desde`, `hasta`, `tieneAdjunto`, `ausenciasJustificadas`, `creadoPor` y `puedeEliminar`. `motivo` y `adjuntoNombre` pueden ser datos de salud: solo los reciben quien puede justificar a ese alumno y el propio alumno; para el resto llegan en `null`.
+- `GET /justificaciones.php?id=7&adjunto=1`: descarga el adjunto (`Content-Disposition: attachment`, `nosniff`). Mismo criterio que el motivo (`403` para el resto, `404` sin adjunto o fuera de alcance).
+- `POST /justificaciones.php`, permiso `asistencia.justificar` (Preceptor en sus cursos, Administrador Académico, Administrador). JSON `{"alumnoId":12,"desde":"2026-06-01","hasta":"2026-06-03","motivo":"Certificado médico"}` o `multipart/form-data` con los mismos campos y `archivo` (PDF, JPG o PNG según su contenido, hasta 5 MB). Hasta 60 días por justificación y hasta 30 días por adelantado. Errores: `400` validación o tipo de adjunto, `403` alumno fuera de alcance, `409` superposición con otra justificación del alumno, `413` adjunto grande. Responde `201` con `justificacion` y `ausenciasJustificadas`. Audita `asistencia.justificar` sin el motivo.
+- `DELETE /justificaciones.php` con `{"id":7}`: misma regla de permiso y alcance. Sus asistencias vuelven a `ausente`. Audita `asistencia.justificacion_eliminar`.
+
 ## Configuración institucional
 
 Claves, tipos, límites y valores por defecto en `includes/config.php`; la tabla `config_institucion` guarda solo los valores modificados y se lee en cada request.
@@ -402,6 +411,14 @@ Reglas de reserva:
 | `reservas.duracion_maxima_min` | `240` (15 a 900) | Duración máxima de una reserva. |
 | `reservas.anticipacion_minima_horas` | `0` (0 a 168) | Horas mínimas entre ahora y el inicio; `0` = sin mínimo. |
 | `reservas.anticipacion_maxima_dias` | `90` (0 a 365) | Días máximos hacia adelante; `0` = sin límite. |
+
+Reglas de asistencia (las usan `reportes.php` e `historial_alumno.php`, que las devuelven en `reglas`):
+
+| Clave | Por defecto | Uso |
+|---|---|---|
+| `asistencia.valor_tarde_pct` | `50` (0 a 100) | Cuánto vale una llegada tarde respecto de un presente. |
+| `asistencia.valor_justificado_pct` | `0` (0 a 100) | Cuánto vale una inasistencia justificada; `0` = cuenta como ausencia. |
+| `asistencia.umbral_regularidad_pct` | `75` (1 a 100) | Porcentaje mínimo; por debajo, `enRiesgo`. |
 
 ## Galiservas: recursos y reservas
 

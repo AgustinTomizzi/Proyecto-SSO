@@ -61,6 +61,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $alumnos = $stmt->fetchAll();
 
+$reglas = config_reglas_asistencia();
 $ids = array_map("intval", array_column($alumnos, "id"));
 $asistencias = [];
 if ($ids) {
@@ -80,19 +81,21 @@ if ($ids) {
         $asistenciaWhere[] = $condicion;
         array_push($asistenciaParams, ...$extra);
     }
-    // Totales por alumno y materia calculados en la base (presente 1, tarde 0,5).
+    // Totales por alumno y materia calculados en la base. Presente vale 1;
+    // tarde y justificado, lo que diga config_institucion.
+    [$puntosSql, $puntosParams] = config_sql_puntos_asistencia($reglas);
     $stmt = $pdo->prepare("
         SELECT asi.alumno_id, m.nombre AS materia, COUNT(*) AS total,
                SUM(asi.estado = 'presente') AS presentes, SUM(asi.estado = 'tarde') AS tardes,
-               SUM(asi.estado = 'ausente') AS ausencias,
-               SUM(CASE asi.estado WHEN 'presente' THEN 1 WHEN 'tarde' THEN 0.5 ELSE 0 END) AS puntos
+               SUM(asi.estado = 'ausente') AS ausencias, SUM(asi.estado = 'justificado') AS justificadas,
+               SUM($puntosSql) AS puntos
         FROM asistencias asi
         JOIN materias m ON m.id_materia = asi.materia_id
         JOIN alumnos al ON al.id_alumno = asi.alumno_id
         WHERE " . implode(" AND ", $asistenciaWhere) . "
         GROUP BY asi.alumno_id, m.id_materia, m.nombre
     ");
-    $stmt->execute($asistenciaParams);
+    $stmt->execute(array_merge($puntosParams, $asistenciaParams));
     $asistencias = $stmt->fetchAll();
 }
 
@@ -108,10 +111,11 @@ foreach ($asistencias as $fila) {
         "presentes" => (int) $fila["presentes"],
         "tardes" => (int) $fila["tardes"],
         "ausencias" => (int) $fila["ausencias"],
+        "justificadas" => (int) $fila["justificadas"],
     ];
 }
 
-$umbral = 75;
+$umbral = $reglas["umbral"];
 $estadisticas = [];
 $riesgo = [];
 $porCurso = [];
@@ -131,6 +135,7 @@ foreach ($alumnos as $alumno) {
             "presentes" => $detalle["presentes"],
             "tardes" => $detalle["tardes"],
             "ausencias" => $detalle["ausencias"],
+            "justificadas" => $detalle["justificadas"],
             "pct" => $pct,
             "enRiesgo" => $pct < $umbral,
         ];
@@ -180,7 +185,7 @@ usort($riesgo, function ($a, $b) {
     return $a["general"] <=> $b["general"];
 });
 
-api_json(["ok" => true, "resumen" => [
+api_json(["ok" => true, "reglas" => $reglas, "resumen" => [
     "promedio" => $conDatos > 0 ? round($sumaGeneral / $conDatos) : null,
     "totalAlumnos" => count($alumnos),
     "alumnosConDatos" => $conDatos,

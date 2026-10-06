@@ -25,7 +25,33 @@ function config_esquema()
         "reservas.duracion_maxima_min" => ["tipo" => "int", "min" => 15, "max" => 900, "defecto" => 240, "etiqueta" => "Duración máxima de una reserva (minutos)"],
         "reservas.anticipacion_minima_horas" => ["tipo" => "int", "min" => 0, "max" => 168, "defecto" => 0, "etiqueta" => "Anticipación mínima (horas; 0 = sin mínimo)"],
         "reservas.anticipacion_maxima_dias" => ["tipo" => "int", "min" => 0, "max" => 365, "defecto" => 90, "etiqueta" => "Anticipación máxima (días; 0 = sin límite)"],
+        "asistencia.valor_tarde_pct" => ["tipo" => "int", "min" => 0, "max" => 100, "defecto" => 50, "etiqueta" => "Valor de una llegada tarde (% de un presente)"],
+        "asistencia.valor_justificado_pct" => ["tipo" => "int", "min" => 0, "max" => 100, "defecto" => 0, "etiqueta" => "Valor de una inasistencia justificada (% de un presente)"],
+        "asistencia.umbral_regularidad_pct" => ["tipo" => "int", "min" => 1, "max" => 100, "defecto" => 75, "etiqueta" => "Asistencia mínima para la regularidad (%)"],
     ];
+}
+
+/**
+ * Reglas de cálculo de asistencia: valor de cada estado (0 a 1) y umbral de
+ * regularidad (%). Para usar en SQL: config_sql_puntos_asistencia().
+ */
+function config_reglas_asistencia(?array $valores = null)
+{
+    $valores ??= config_institucion();
+    return [
+        "valorTarde" => $valores["asistencia.valor_tarde_pct"] / 100,
+        "valorJustificado" => $valores["asistencia.valor_justificado_pct"] / 100,
+        "umbral" => $valores["asistencia.umbral_regularidad_pct"],
+    ];
+}
+
+/**
+ * Expresión SQL con los puntos de un registro de asistencia (presente 1, tarde
+ * y justificado según la configuración, ausente 0) y sus parámetros, en orden.
+ */
+function config_sql_puntos_asistencia(array $reglas, $columna = "asi.estado")
+{
+    return ["CASE $columna WHEN 'presente' THEN 1 WHEN 'tarde' THEN ? WHEN 'justificado' THEN ? ELSE 0 END", [$reglas["valorTarde"], $reglas["valorJustificado"]]];
 }
 
 /** Convierte el valor guardado (texto) al tipo de la clave. */

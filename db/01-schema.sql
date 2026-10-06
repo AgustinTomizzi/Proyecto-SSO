@@ -123,15 +123,37 @@ CREATE TABLE materias (
   PRIMARY KEY (id_materia)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Justificacion de inasistencias: cubre un rango de fechas de un alumno; las
+-- ausencias del rango pasan a 'justificado'. Adjunto opcional en la base.
+CREATE TABLE justificaciones (
+  id_justificacion INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  alumno_id INT UNSIGNED NOT NULL,
+  desde DATE NOT NULL,
+  hasta DATE NOT NULL,
+  motivo VARCHAR(255) NOT NULL,
+  adjunto MEDIUMBLOB NULL,
+  adjunto_nombre VARCHAR(255) NULL,
+  adjunto_tipo VARCHAR(64) NULL,
+  creado_por INT UNSIGNED NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_justificacion),
+  KEY idx_justif_alumno (alumno_id, desde, hasta),
+  CONSTRAINT fk_justif_alumno FOREIGN KEY (alumno_id) REFERENCES alumnos (id_alumno) ON DELETE CASCADE,
+  CONSTRAINT fk_justif_creado_por FOREIGN KEY (creado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL,
+  CONSTRAINT chk_justif_rango CHECK (hasta >= desde)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE asistencias (
   id_asistencia INT UNSIGNED NOT NULL AUTO_INCREMENT,
   fecha DATE NOT NULL,
-  estado ENUM('presente','tarde','ausente') NOT NULL DEFAULT 'presente',
+  estado ENUM('presente','tarde','ausente','justificado') NOT NULL DEFAULT 'presente',
+  justificacion_id INT UNSIGNED DEFAULT NULL,
   alumno_id INT UNSIGNED DEFAULT NULL,
   materia_id INT UNSIGNED NOT NULL,
   PRIMARY KEY (id_asistencia),
   CONSTRAINT fk_asist_alumno FOREIGN KEY (alumno_id) REFERENCES alumnos (id_alumno) ON DELETE CASCADE,
   CONSTRAINT fk_asist_materia FOREIGN KEY (materia_id) REFERENCES materias (id_materia) ON DELETE RESTRICT,
+  CONSTRAINT fk_asist_justificacion FOREIGN KEY (justificacion_id) REFERENCES justificaciones (id_justificacion) ON DELETE SET NULL,
   UNIQUE KEY uq_asist_materia (alumno_id, materia_id, fecha)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

@@ -32,12 +32,14 @@ if ($esDocente) {
     array_push($paramsAsistencia, ...$materiasDocente);
 }
 
-$stmt = $pdo->prepare("SELECT YEAR(asi.fecha) AS ciclo, m.nombre AS materia, COUNT(*) AS clases, SUM(asi.estado='presente') AS presentes, SUM(asi.estado='tarde') AS tardes, SUM(asi.estado='ausente') AS ausentes, ROUND(SUM(CASE asi.estado WHEN 'presente' THEN 1 WHEN 'tarde' THEN .5 ELSE 0 END) / COUNT(*) * 100) AS porcentaje FROM asistencias asi JOIN materias m ON m.id_materia = asi.materia_id WHERE asi.alumno_id=?" . $filtroDocente . " GROUP BY YEAR(asi.fecha), m.id_materia, m.nombre ORDER BY ciclo DESC, m.nombre");
-$stmt->execute($paramsAsistencia);
+$reglas = config_reglas_asistencia();
+[$puntosSql, $puntosParams] = config_sql_puntos_asistencia($reglas);
+$stmt = $pdo->prepare("SELECT YEAR(asi.fecha) AS ciclo, m.nombre AS materia, COUNT(*) AS clases, SUM(asi.estado='presente') AS presentes, SUM(asi.estado='tarde') AS tardes, SUM(asi.estado='ausente') AS ausentes, SUM(asi.estado='justificado') AS justificadas, ROUND(SUM($puntosSql) / COUNT(*) * 100) AS porcentaje FROM asistencias asi JOIN materias m ON m.id_materia = asi.materia_id WHERE asi.alumno_id=?" . $filtroDocente . " GROUP BY YEAR(asi.fecha), m.id_materia, m.nombre ORDER BY ciclo DESC, m.nombre");
+$stmt->execute(array_merge($puntosParams, $paramsAsistencia));
 $asistencia = $stmt->fetchAll();
 
 $stmt = $pdo->prepare("SELECT m.id_movimiento AS id, m.tipo, m.ciclo_lectivo AS ciclo, m.fecha, CONCAT(co.anio, ' ', co.division) AS cursoOrigen, CONCAT(cd.anio, ' ', cd.division) AS cursoDestino, CONCAT(u.nombre, ' ', u.apellido) AS realizadoPor FROM alumno_movimientos m LEFT JOIN cursos co ON co.id_cursos=m.curso_origen_id LEFT JOIN cursos cd ON cd.id_cursos=m.curso_destino_id JOIN usuarios u ON u.id_usuario=m.realizado_por WHERE m.alumno_id=? ORDER BY m.fecha DESC");
 $stmt->execute([$id]);
 
 unset($alumno["usuario_id"], $alumno["preceptor_id"]);
-api_json(["ok" => true, "alumno" => $alumno, "asistencia" => $asistencia, "movimientos" => $stmt->fetchAll()]);
+api_json(["ok" => true, "alumno" => $alumno, "asistencia" => $asistencia, "movimientos" => $stmt->fetchAll(), "reglas" => $reglas]);

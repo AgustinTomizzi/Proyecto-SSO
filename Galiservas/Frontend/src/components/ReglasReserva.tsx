@@ -42,10 +42,12 @@ export function ReglasReserva({ config, busy, onSave, onReset }: {
     if (!Object.keys(cambios).length) return setError('No hay cambios para guardar.')
     setError(await onSave(cambios))
   }
+  // Solo las claves de reservas: la configuración también tiene las reglas de asistencia de Galisencia.
+  const camposReserva = config.esquema.filter((campo) => campo.clave.startsWith('reservas.'))
   const restablecer = async () => {
-    const error = await onReset(config.esquema.map((campo) => campo.clave))
+    const error = await onReset(camposReserva.map((campo) => campo.clave))
     setError(error)
-    if (!error) setForm(Object.fromEntries(config.esquema.map((campo) => [campo.clave, campo.defecto])))
+    if (!error) setForm((actual) => ({ ...actual, ...Object.fromEntries(camposReserva.map((campo) => [campo.clave, campo.defecto])) }))
   }
 
   return <form className="gform reglas" onSubmit={(event) => void guardar(event)} noValidate>

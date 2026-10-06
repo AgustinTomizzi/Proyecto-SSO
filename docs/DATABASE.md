@@ -21,8 +21,9 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 14. `db/14-suplencias.sql`: tabla `cursos_suplencias` y permiso `suplencias.crear` (Preceptor, Administrador Académico, Administrador). Idempotente.
 15. `db/15-ciclos-lectivos.sql`: tabla `ciclos_lectivos` (abre el año en curso), tipos `promocion`, `repitencia` y `egreso` en `alumno_movimientos` y permiso `ciclos.promover`. Idempotente.
 16. `db/16-config-institucion.sql`: tabla `config_institucion` (clave/valor) y permiso `config.gestionar` (Administrador). Idempotente.
+17. `db/17-justificaciones.sql`: tabla `justificaciones`, estado `justificado` y columna `justificacion_id` en `asistencias`, y permiso `asistencia.justificar` (Preceptor, Administrador Académico, Administrador). Idempotente.
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `17-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `18-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -352,11 +353,12 @@ Propósito: un estado de asistencia por alumno, materia y fecha.
 |---|---|---|---|
 | `id_asistencia` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
 | `fecha` | `DATE NOT NULL` | UNIQUE parcial | Día lectivo. |
-| `estado` | `ENUM('presente','tarde','ausente') NOT NULL DEFAULT 'presente'` | | Estado válido. |
+| `estado` | `ENUM('presente','tarde','ausente','justificado') NOT NULL DEFAULT 'presente'` | | `justificado` solo lo pone una justificación. |
+| `justificacion_id` | `INT UNSIGNED NULL` | FK a `justificaciones` (SET NULL) | Justificación que cubre la ausencia. |
 | `alumno_id` | `INT UNSIGNED NULL` | FK y UNIQUE parcial | Alumno; borrado en cascada. |
 | `materia_id` | `INT UNSIGNED NOT NULL` | FK a `materias` (RESTRICT); UNIQUE (`alumno_id`, `materia_id`, `fecha`) | Materia del catálogo. |
 
-La clave única `(alumno_id, materia_id, fecha)` evita duplicados. El POST es un *upsert*: actualiza el estado si ya existe, y para actualizar exige además `asistencia.editar`. Reportes pondera presente `1`, tarde `0,5`, ausente `0`.
+La clave única `(alumno_id, materia_id, fecha)` evita duplicados. El POST es un *upsert*: actualiza el estado si ya existe, y para actualizar exige además `asistencia.editar`. Reportes pondera presente `1`, ausente `0`, y tarde y justificado según `config_institucion` (por defecto `0,5` y `0`).
 
 ### `notas`
 
@@ -439,9 +441,24 @@ Propósito: la grilla. Una fila por curso, día, módulo y grupo, con vigencia. 
 
 Únicos e índices: (`curso_id`, `dia_semana`, `franja_id`, `grupo`, `vigente_desde`); `idx_clase_docente` e `idx_clase_aula`. La API valida lo que la base no puede expresar: con vigencias superpuestas, el curso completo choca con cualquier grupo del mismo módulo, y un docente o un aula no compartida no pueden estar en dos clases en el mismo día y módulo. El horario real del colegio ya trae un caso (aula 201, jueves 17:30–19:30, 6º 4ª y 7º 3ª): se cargó tal cual y la API lo marcaría al editar esas celdas.
 
+### `justificaciones`
+
+Propósito: justificación de inasistencias por rango de fechas (`db/17-justificaciones.sql`). Las ausencias del rango quedan en `asistencias.estado = 'justificado'` con `justificacion_id`. El adjunto se guarda en la base (no en el disco del backend) para que funcione con varias réplicas.
+
+| Campo | Tipo y nulabilidad | Clave | Significado |
+|---|---|---|---|
+| `id_justificacion` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
+| `alumno_id` | `INT UNSIGNED NOT NULL` | FK a `alumnos` (CASCADE) | Alumno. |
+| `desde`, `hasta` | `DATE NOT NULL` | CHECK hasta ≥ desde | Rango cubierto. |
+| `motivo` | `VARCHAR(255) NOT NULL` | | Puede ser un dato de salud: no se audita y solo lo ve quien justifica o el alumno. |
+| `adjunto` | `MEDIUMBLOB NULL` | | PDF, JPG o PNG de hasta 5 MB. |
+| `adjunto_nombre`, `adjunto_tipo` | `VARCHAR NULL` | | Nombre saneado y tipo detectado por contenido. |
+| `creado_por` | `INT UNSIGNED NULL` | FK a `usuarios` (SET NULL) | Quién la registró. |
+| `creado_en` | `DATETIME NOT NULL` | | Alta. |
+
 ### `config_institucion`
 
-Propósito: configuración institucional editable por la administración (`db/16-config-institucion.sql`). Las claves válidas, sus tipos, límites y valores por defecto se definen en `Galisencia/Galileo_Auth/includes/config.php`; la tabla guarda solo los valores cambiados. Hoy contiene las reglas de reserva de Galiservas (ver `docs/API.md`).
+Propósito: configuración institucional editable por la administración (`db/16-config-institucion.sql`). Las claves válidas, sus tipos, límites y valores por defecto se definen en `Galisencia/Galileo_Auth/includes/config.php`; la tabla guarda solo los valores cambiados. Contiene las reglas de reserva de Galiservas y las de cálculo de asistencia (ver `docs/API.md`).
 
 | Campo | Tipo y nulabilidad | Clave | Significado |
 |---|---|---|---|

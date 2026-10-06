@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
 
 // CSRF: toda escritura exige el header X-Requested-With: galileo (un formulario
 // de otro sitio no puede enviarlo, y un fetch cruzado necesita preflight CORS)
-// y un cuerpo JSON (multipart solo en horarios.php, que sube imagenes).
+// y un cuerpo JSON (multipart solo en los endpoints que suben archivos).
 if (in_array($_SERVER["REQUEST_METHOD"] ?? "GET", ["POST", "PUT", "PATCH", "DELETE"], true)) {
     if (($_SERVER["HTTP_X_REQUESTED_WITH"] ?? "") !== "galileo") {
         http_response_code(403);
@@ -62,7 +62,7 @@ if (in_array($_SERVER["REQUEST_METHOD"] ?? "GET", ["POST", "PUT", "PATCH", "DELE
     }
     $tipoContenido = strtolower(trim(explode(";", (string) ($_SERVER["CONTENT_TYPE"] ?? ""))[0]));
     $tieneCuerpo = $tipoContenido !== "" || (int) ($_SERVER["CONTENT_LENGTH"] ?? 0) > 0;
-    $tiposPermitidos = basename((string) ($_SERVER["SCRIPT_NAME"] ?? "")) === "horarios.php"
+    $tiposPermitidos = in_array(basename((string) ($_SERVER["SCRIPT_NAME"] ?? "")), ["horarios.php", "justificaciones.php"], true)
         ? ["application/json", "multipart/form-data"]
         : ["application/json"];
     if ($tieneCuerpo && !in_array($tipoContenido, $tiposPermitidos, true)) {

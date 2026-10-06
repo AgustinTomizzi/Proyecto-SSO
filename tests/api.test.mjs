@@ -967,6 +967,93 @@ async function main() {
     assert.ok(auditoriaCiclo.body.registros.length >= 2, "promociones auditadas");
   }
 
+  // ---- Justificaciones y reglas de asistencia configurables ----
+  {
+    const diaArg = (dias) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + dias * 24 * 3600 * 1000));
+    const [d1, d2, d3] = [diaArg(-100), diaArg(-99), diaArg(-98)];
+    const propios = (await preceptor.request("/alumnos.php")).body.alumnos;
+    const alumnoJ = propios[0];
+    const cursosPreceptor = new Set(propios.map((a) => String(a.cursoId)));
+    const ajeno = (await academica.request("/alumnos.php")).body.alumnos.find((a) => !cursosPreceptor.has(String(a.cursoId)));
+    const materiaJ = (await preceptor.request("/materias.php")).body.materias[0];
+    const asistir = (fecha, estado, materiaId = materiaJ.id) => preceptor.json("/asistencias.php", "POST", { alumnoId: alumnoJ.id, materiaId, fecha, estado });
+    for (const fecha of [d1, d2, d3]) expectStatus(await asistir(fecha, "ausente"), 200, `ausencia del ${fecha}`);
+    expectStatus(await asistir(d1, "justificado"), 400, "justificado no se carga a mano");
+
+    const justificar = (sesion, cuerpo) => sesion.json("/justificaciones.php", "POST", { alumnoId: alumnoJ.id, desde: d1, hasta: d2, motivo: "Certificado médico", ...cuerpo });
+    expectStatus(await justificar(directivo, {}), 403, "directivo no justifica");
+    expectStatus(await justificar(preceptor, { alumnoId: ajeno.id }), 403, "preceptor no justifica alumnos de otros cursos");
+    expectStatus(await justificar(preceptor, { motivo: "x" }), 400, "motivo demasiado corto");
+    expectStatus(await justificar(preceptor, { desde: d2, hasta: d1 }), 400, "rango invertido");
+    expectStatus(await justificar(preceptor, { desde: diaArg(-200), hasta: d1 }), 400, "más de 60 días");
+    const justificacion = await justificar(preceptor, {});
+    expectStatus(justificacion, 201, "preceptor justifica dos días");
+    assert.equal(justificacion.body.justificacion.ausenciasJustificadas, 2, "justifica las ausencias del rango y no las de afuera");
+    const idJ = justificacion.body.justificacion.id;
+    expectStatus(await justificar(preceptor, { desde: d2, hasta: d3 }), 409, "justificación superpuesta");
+
+    // Una ausencia cargada después dentro del rango queda justificada sola.
+    const otraMateria = (await preceptor.request("/materias.php")).body.materias[1];
+    const posterior = await asistir(d1, "ausente", otraMateria.id);
+    expectStatus(posterior, 200, "ausencia posterior dentro del rango");
+    assert.equal(posterior.body.registro.estado, "justificado");
+    const registros = (await preceptor.request(`/asistencias.php?alumnoId=${alumnoJ.id}&limit=500`)).body.registros;
+    const delRango = registros.filter((r) => [d1, d2, d3].includes(r.fecha));
+    assert.deepEqual(delRango.map((r) => `${r.fecha}:${r.estado}`).sort(), [`${d1}:justificado`, `${d1}:justificado`, `${d2}:justificado`, `${d3}:ausente`].sort());
+
+    // Adjunto: el tipo se valida por contenido; solo lo ve quien justifica (o el alumno).
+    const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+    const conAdjunto = (contenido, tipo, nombre) => {
+      const form = new FormData();
+      form.append("alumnoId", alumnoJ.id);
+      form.append("desde", d3);
+      form.append("hasta", d3);
+      form.append("motivo", "Turno médico");
+      form.append("archivo", new Blob([contenido], { type: tipo }), nombre);
+      return preceptor.request("/justificaciones.php", { method: "POST", body: form });
+    };
+    expectStatus(await conAdjunto("no soy una imagen", "image/png", "trucho.png"), 400, "adjunto que no es PDF, JPG ni PNG");
+    const justificacionAdjunto = await conAdjunto(png, "image/png", "certificado.png");
+    expectStatus(justificacionAdjunto, 201, "justificación con adjunto");
+    const idAdjunto = justificacionAdjunto.body.justificacion.id;
+    const descarga = await preceptor.request(`/justificaciones.php?id=${idAdjunto}&adjunto=1`);
+    expectStatus(descarga, 200, "descarga del adjunto");
+    assert.equal(descarga.headers.get("content-type"), "image/png");
+    assert.ok(Buffer.compare(descarga.body, png) === 0, "el adjunto se devuelve intacto");
+    expectStatus(await directivo.request(`/justificaciones.php?id=${idAdjunto}&adjunto=1`), 403, "directivo no ve el adjunto");
+    const listaDirectivo = await directivo.request(`/justificaciones.php?alumnoId=${alumnoJ.id}`);
+    expectStatus(listaDirectivo, 200, "directivo ve las justificaciones");
+    assert.ok(listaDirectivo.body.justificaciones.length >= 2 && listaDirectivo.body.justificaciones.every((j) => j.motivo === null), "sin el motivo");
+    const listaPreceptor = await preceptor.request(`/justificaciones.php?alumnoId=${alumnoJ.id}`);
+    assert.ok(listaPreceptor.body.justificaciones.some((j) => j.id === idJ && j.motivo === "Certificado médico" && j.ausenciasJustificadas === 3));
+    const auditoriaJ = await admin.request("/auditoria.php?accion=asistencia.justificar&limit=5");
+    assert.ok(auditoriaJ.body.registros.length >= 2 && auditoriaJ.body.registros.every((r) => r.detalle?.motivo === undefined), "la auditoría no guarda el motivo");
+
+    // Reglas configurables: el valor del justificado cambia el porcentaje.
+    const materiaReporte = (cuerpo) => cuerpo.resumen.alumnos.find((a) => a.alumno.id === String(alumnoJ.id)).porMateria.find((m) => m.materia === materiaJ.nombre);
+    const reporteAntes = await preceptor.request(`/reportes.php?cursoId=${alumnoJ.cursoId}`);
+    expectStatus(reporteAntes, 200, "reporte con justificadas");
+    assert.deepEqual(reporteAntes.body.reglas, { valorTarde: 0.5, valorJustificado: 0, umbral: 75 });
+    assert.ok(materiaReporte(reporteAntes.body).justificadas >= 2);
+    expectStatus(await admin.json("/config_institucion.php", "PUT", { valores: { "asistencia.valor_justificado_pct": 150 } }), 400, "valor fuera de rango");
+    expectStatus(await admin.json("/config_institucion.php", "PUT", { valores: { "asistencia.valor_justificado_pct": 100, "asistencia.umbral_regularidad_pct": 80 } }), 200, "cambia las reglas de asistencia");
+    const reporteDespues = await preceptor.request(`/reportes.php?cursoId=${alumnoJ.cursoId}`);
+    assert.deepEqual(reporteDespues.body.reglas, { valorTarde: 0.5, valorJustificado: 1, umbral: 80 });
+    assert.ok(materiaReporte(reporteDespues.body).pct > materiaReporte(reporteAntes.body).pct, "con justificado = presente sube el porcentaje");
+    const historial = await preceptor.request(`/historial_alumno.php?id=${alumnoJ.id}`);
+    assert.equal(historial.body.reglas.valorJustificado, 1);
+    expectStatus(await admin.json("/config_institucion.php", "DELETE", { claves: ["asistencia.valor_justificado_pct", "asistencia.umbral_regularidad_pct"] }), 200, "restablece las reglas de asistencia");
+
+    // Quitar una justificación devuelve sus ausencias a "ausente".
+    expectStatus(await directivo.json("/justificaciones.php", "DELETE", { id: idJ }), 403, "directivo no quita justificaciones");
+    const quitada = await preceptor.json("/justificaciones.php", "DELETE", { id: idJ });
+    expectStatus(quitada, 200, "quita la justificación");
+    assert.equal(quitada.body.ausenciasRevertidas, 3);
+    const despues = (await preceptor.request(`/asistencias.php?alumnoId=${alumnoJ.id}&limit=500`)).body.registros.filter((r) => [d1, d2].includes(r.fecha));
+    assert.ok(despues.every((r) => r.estado === "ausente" && r.justificacionId === null));
+    expectStatus(await preceptor.json("/justificaciones.php", "DELETE", { id: idAdjunto }), 200, "quita la justificación con adjunto");
+  }
+
   expectStatus(await admin.request("/logout.php", { method: "POST" }), 200, "logout del admin");
   expectStatus(await admin.request("/usuarios.php"), 401, "sesion destruida tras logout");
 
