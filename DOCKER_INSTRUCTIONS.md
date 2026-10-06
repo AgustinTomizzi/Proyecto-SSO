@@ -4,8 +4,8 @@
 
 | Servicio | Build | Puertos | Rol |
 |---|---|---|---|
-| `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` en orden (00-usuario-app → 01-schema → 02-seed → 03 → … → 12) |
-| `backend` | `Galisencia/Galileo_Auth` | interno | API JSON PHP + sesión compartida. Se conecta con el usuario `DB_APP_USER`, no con root |
+| `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` en orden (00-usuario-app → 01-schema → 02-seed → 03 → … → 13) |
+| `backend` | `Galisencia/Galileo_Auth` | interno | API JSON PHP. Se conecta con el usuario `DB_APP_USER`, no con root. Sesiones en MySQL (`SESSION_STORE=db`), así que admite varias réplicas |
 | `backend-dev-port` | imagen `nginx:alpine` | `127.0.0.1:8080` | Solo con `--profile dev`: expone la API para desarrollo local |
 | `frontend` | `Galisencia/Frontend` | interno | React de Galisencia servido por nginx |
 | `galiservas` | `Galiservas/Frontend` | interno | React de Galiservas (base `/galiservas/`) servido por nginx |
@@ -63,6 +63,16 @@ docker compose up --build -d
 - Backend directo: <http://localhost:8080> solo con `--profile dev`
 
 Las dos apps están en el mismo origen, así que comparten la cookie de sesión. El enlace lateral "Galiservas" abre `/galiservas/` y "Volver a Galisencia" abre `/`.
+
+## Varias réplicas del backend
+
+Las sesiones se guardan en MySQL (tabla `sesiones`), no en el disco del contenedor, así que el backend se puede escalar sin perder la sesión:
+
+```bash
+docker compose up -d --scale backend=2
+```
+
+El proxy reparte los pedidos entre las réplicas y vuelve a resolver sus IPs solo.
 
 ## HTTPS
 
