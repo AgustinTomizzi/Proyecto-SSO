@@ -406,7 +406,7 @@ Nombre, tipo, categoría (`hardware_pc` o `audiovisual`), ubicación y capacidad
 
 ### Reservas: **Implementada**
 
-`GET /reservas.php`, permiso `reservas.ver`. Quien tiene `reservas.administrar` ve todas; los demás solo `user_id` propio. La consulta `?mias=1` enviada por el frontend no cambia la lógica porque el backend ya aplica el alcance. En la respuesta, `confirmada` se muestra como `aprobada` y `completada` como `finalizada`; el `PUT` acepta esos alias.
+`GET /reservas.php[?desde=2026-10-05&hasta=2026-10-11][&categoria=audiovisual]`, permiso `reservas.ver`. Quien tiene `reservas.administrar` ve todas; los demás solo `user_id` propio. Filtros opcionales (los usa el calendario): rango de fechas inclusivo, con `desde` y `hasta` juntos y hasta 93 días, y `categoria` (`hardware_pc` o `audiovisual`); valores inválidos dan `400`. La consulta `?mias=1` enviada por el frontend no cambia la lógica porque el backend ya aplica el alcance. En la respuesta, `confirmada` se muestra como `aprobada` y `completada` como `finalizada`; el `PUT` acepta esos alias.
 
 `POST /reservas.php`, permiso `reservas.crear`:
 

@@ -9,6 +9,7 @@ import type { Page, Reservation, ReservationInput, ReservationReport, Resource, 
 import { AppLayout, type NavItem } from './components/AppLayout'
 import { Icon, type IconName } from './components/Icon'
 import { SplashScreen, StatusScreen } from './components/StatusScreen'
+import { Calendario } from './components/Calendario'
 import { avisarCierreSesion, canAccessGaliservas, escucharCierreSesion, GALISENCIA_URL, messageOf, normalize, urlLoginGalisencia } from './utils'
 import { useTheme } from './theme'
 import './App.css'
@@ -686,6 +687,7 @@ function App() {
     { id: 'dashboard', label: 'Panel general', icon: 'grid' },
     { id: 'aulas', label: 'Aulas', icon: 'monitor' },
     { id: 'panol', label: 'Pañol', icon: 'box' },
+    { id: 'calendar', label: 'Calendario', icon: 'clock' },
     ...(admin ? [{ id: 'reservations' as Page, label: 'Reservas', icon: 'calendar' as const }] : []),
     ...(admin ? [{ id: 'resources' as Page, label: 'Recursos', icon: 'layers' as const }] : []),
     ...(admin ? [{ id: 'reports' as Page, label: 'Reportes', icon: 'chart' as const }] : []),
@@ -734,6 +736,11 @@ function App() {
       {(page === 'reservations' || page === 'mine') && <>
         <PageHead title={page === 'mine' ? 'Mis reservas' : 'Todas las reservas'} sub={page === 'mine' ? 'Seguí y administrá tus solicitudes.' : 'Supervisá solicitudes y actualizá sus estados.'}/>
         {dataLoading && !reservations.length ? <LoadingLine>Cargando reservas...</LoadingLine> : <ReservationsList reservations={visibleReservations} admin={admin} userId={session.user.id} busyId={busyId} onEdit={setEditing} onCancel={setCancelling} onStatus={(item, status) => void mutate(() => setReservationStatus(item.id, status), 'Estado actualizado.', item.id)}/>}
+      </>}
+      {page === 'calendar' && <>
+        <PageHead title="Calendario" sub={admin ? 'Todas las reservas por día, semana o mes.' : 'Tus reservas por día, semana o mes.'}/>
+        <Calendario scope={admin ? undefined : 'mine'} admin={admin} userId={session.user.id} version={reservations}
+          puedeModificar={canChange} onEditar={setEditing} onCancelar={setCancelling}/>
       </>}
       {page === 'reports' && <><PageHead title="Reportes de reservas" sub="Recursos más utilizados, categorías y horarios de mayor demanda."/><Reports report={report}/></>}
       {page === 'resources' && <><PageHead title="Recursos" sub="Agregá aulas y objetos nuevos, o sumá cantidad a los que ya existen."/><ResourcesAdmin resources={resources} reservations={reservations} busyId={busyId} onCreate={createResourceItem} onAddQuantity={addResourceQuantity}/></>}

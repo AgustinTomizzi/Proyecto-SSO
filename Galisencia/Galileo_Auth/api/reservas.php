@@ -50,10 +50,33 @@ function validarDisponibilidad($pdo, $datos, $excluirId = 0)
 if ($method === "GET") {
     api_requerir_permiso("reservas.ver");
     $sql = "SELECT rv.id_reservation AS id, rv.user_id AS userId, COALESCE(a.id_alumno, rv.user_id) AS usuario_id, CONCAT(u.nombre, ' ', u.apellido) AS usuario_nombre, rv.resource_id AS resourceId, rv.resource_id AS recurso_id, r.name AS recurso_nombre, r.type, r.category, r.location, rv.reservation_date AS date, rv.reservation_date AS fecha, rv.start_time AS startTime, rv.start_time AS hora_inicio, rv.end_time AS endTime, rv.end_time AS hora_fin, rv.quantity, rv.quantity AS cantidad, rv.reason, rv.reason AS motivo, CASE rv.status WHEN 'confirmada' THEN 'aprobada' WHEN 'completada' THEN 'finalizada' ELSE rv.status END AS status, rv.created_at AS createdAt, rv.updated_at AS updatedAt FROM reservations rv JOIN usuarios u ON u.id_usuario = rv.user_id LEFT JOIN alumnos a ON a.usuario_id = u.id_usuario JOIN resources r ON r.id_resource = rv.resource_id";
+    $where = [];
     $params = [];
     if (!$administra) {
-        $sql .= " WHERE rv.user_id = ?";
+        $where[] = "rv.user_id = ?";
         $params[] = usuarioActual();
+    }
+    // Filtros opcionales del calendario: rango de fechas (hasta 93 días) y categoría.
+    $desde = trim((string) ($_GET["desde"] ?? ""));
+    $hasta = trim((string) ($_GET["hasta"] ?? ""));
+    if ($desde !== "" || $hasta !== "") {
+        if (!api_fecha_valida($desde) || !api_fecha_valida($hasta) || $desde > $hasta
+            || (new DateTimeImmutable($desde))->diff(new DateTimeImmutable($hasta))->days > 92) {
+            api_json(["ok" => false, "error" => "desde y hasta deben ser fechas YYYY-MM-DD, en orden y con hasta 93 días de rango"], 400);
+        }
+        $where[] = "rv.reservation_date BETWEEN ? AND ?";
+        array_push($params, $desde, $hasta);
+    }
+    $categoria = trim((string) ($_GET["categoria"] ?? ""));
+    if ($categoria !== "") {
+        if (!in_array($categoria, ["hardware_pc", "audiovisual"], true)) {
+            api_json(["ok" => false, "error" => "categoria debe ser hardware_pc o audiovisual"], 400);
+        }
+        $where[] = "r.category = ?";
+        $params[] = $categoria;
+    }
+    if ($where) {
+        $sql .= " WHERE " . implode(" AND ", $where);
     }
     $sql .= " ORDER BY rv.reservation_date DESC, rv.start_time DESC";
     $stmt = $pdo->prepare($sql);

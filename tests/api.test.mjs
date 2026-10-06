@@ -747,6 +747,19 @@ async function main() {
     "No se encontro la reserva recien creada en el listado"
   );
 
+  // Filtros del calendario: rango de fechas y categoría.
+  const delDia = await preceptor.request(`/reservas.php?desde=${fechaReserva}&hasta=${fechaReserva}`);
+  expectStatus(delDia, 200, "reservas filtradas por rango");
+  assert.ok(delDia.body.reservas.length > 0 && delDia.body.reservas.every((r) => r.fecha === fechaReserva), "el rango solo trae reservas de esas fechas");
+  const audiovisual = await preceptor.request(`/reservas.php?desde=${fechaReserva}&hasta=${fechaReserva}&categoria=audiovisual`);
+  expectStatus(audiovisual, 200, "reservas filtradas por categoría");
+  assert.ok(audiovisual.body.reservas.every((r) => r.category === "audiovisual"), "el filtro de categoría se respeta");
+  assert.ok(!audiovisual.body.reservas.some((r) => r.recurso_nombre === "Aula 208"), "el Aula 208 no es audiovisual");
+  expectStatus(await preceptor.request("/reservas.php?desde=2026-01-01&hasta=2026-12-31"), 400, "rango de más de 93 días");
+  expectStatus(await preceptor.request("/reservas.php?desde=2026-02-10&hasta=2026-02-01"), 400, "rango invertido");
+  expectStatus(await preceptor.request("/reservas.php?desde=2026-02-01"), 400, "rango incompleto");
+  expectStatus(await preceptor.request("/reservas.php?categoria=muebles"), 400, "categoría inexistente");
+
   const auditoriaReservas = await admin.request("/auditoria.php?accion=reservas.crear&limit=10");
   expectStatus(auditoriaReservas, 200, "auditoria de reservas");
   assert.ok(

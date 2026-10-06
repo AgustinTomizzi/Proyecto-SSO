@@ -171,6 +171,7 @@ function parseReservation(value: unknown): Reservation {
     id: text(item.id, item.id_reserva, item.reserva_id),
     resourceId: text(item.recurso_id, item.id_recurso, resource.id, resource.id_recurso),
     resourceName: text(item.recurso_nombre, item.nombre_recurso, resource.nombre, resource.name),
+    category: (['hardware_pc', 'audiovisual'] as const).find((value) => value === normalize(text(item.category, item.categoria, resource.category))) ?? '',
     userId: text(item.usuario_id, item.id_usuario, user.id, user.id_usuario),
     userName: text(item.usuario_nombre, item.nombre_usuario, user.nombre, user.name, item.email),
     date: text(item.fecha, item.date).slice(0, 10),
@@ -182,8 +183,16 @@ function parseReservation(value: unknown): Reservation {
   }
 }
 
-export async function getReservations(scope?: 'mine'): Promise<Reservation[]> {
-  const data = await request(`reservas.php${scope ? '?mias=1' : ''}`)
+export interface ReservationFilters { from?: string, to?: string, category?: Resource['category'] }
+
+/** Reservas visibles para la sesión. El rango (from/to, hasta 93 días) y la categoría se filtran en el servidor. */
+export async function getReservations(scope?: 'mine', filters: ReservationFilters = {}): Promise<Reservation[]> {
+  const params = new URLSearchParams()
+  if (scope) params.set('mias', '1')
+  if (filters.from && filters.to) { params.set('desde', filters.from); params.set('hasta', filters.to) }
+  if (filters.category) params.set('categoria', filters.category)
+  const query = params.toString()
+  const data = await request(`reservas.php${query ? `?${query}` : ''}`)
   const list = data.reservas ?? data.reservations ?? data.data
   return Array.isArray(list) ? list.map(parseReservation).filter((item) => item.id) : []
 }

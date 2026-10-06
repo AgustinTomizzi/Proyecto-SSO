@@ -1,4 +1,4 @@
-export type Page = 'dashboard' | 'aulas' | 'panol' | 'reservations' | 'resources' | 'reports' | 'mine' | 'new'
+export type Page = 'dashboard' | 'aulas' | 'panol' | 'calendar' | 'reservations' | 'resources' | 'reports' | 'mine' | 'new'
 
 export interface User {
   id: string
@@ -37,6 +37,7 @@ export interface Reservation {
   id: string
   resourceId: string
   resourceName: string
+  category: Resource['category'] | ''
   userId: string
   userName: string
   date: string
