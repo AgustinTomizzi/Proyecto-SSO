@@ -1,15 +1,16 @@
 import { useEffect, useEffectEvent, useState, type FormEvent, type ReactNode } from 'react'
 import {
   API_URL,
-  ApiError, cancelReservation, createReservation, createResource, getConfig, getReservationReport, getReservations, getResources,
+  ApiError, cancelReservation, createReservation, createResource, getConfig, getReservations, getResources,
   logout, resetConfig, restoreSession, setReservationStatus, updateConfig, updateReservation, updateResource,
 } from './api'
 import { hoyLocal, horaLocal, ZONA_HORARIA } from './fecha'
-import type { InstitutionConfig, Page, Reservation, ReservationInput, ReservationReport, Resource, ResourceInput, Session } from './types'
+import type { InstitutionConfig, Page, Reservation, ReservationInput, Resource, ResourceInput, Session } from './types'
 import { AppLayout, type NavItem } from './components/AppLayout'
 import { Icon, type IconName } from './components/Icon'
 import { SplashScreen, StatusScreen } from './components/StatusScreen'
 import { Calendario } from './components/Calendario'
+import { ReportesReservas } from './components/ReportesReservas'
 import { ReglasReserva } from './components/ReglasReserva'
 import { errorReglas, fechaMaxima, resumenReglas } from './reglas'
 import { avisarCierreSesion, canAccessGaliservas, escucharCierreSesion, GALISENCIA_URL, messageOf, normalize, urlLoginGalisencia } from './utils'
@@ -525,32 +526,6 @@ function ResourcesInventoryOverview({ resources, reservations }: { resources: Re
   </>
 }
 
-function ReportBars({ rows }: { rows: { key: string, label: string, main: string, detail: string, value: number }[] }) {
-  if (!rows.length) return <p className="cart-empty">Todavía no hay datos para mostrar.</p>
-  const max = Math.max(...rows.map((row) => row.value), 1)
-  return <div className="report-bars">{rows.map((row) => <div className="report-bar" key={row.key}>
-    <div className="report-bar__top"><span className="report-bar__label">{row.label}</span><b>{row.main}</b></div>
-    <div className="report-bar__track"><span style={{ width: `${Math.round(row.value / max * 100)}%` }}/></div>
-    <small>{row.detail}</small>
-  </div>)}</div>
-}
-
-function Reports({ report }: { report: ReservationReport | null }) {
-  if (!report) return <LoadingLine>Cargando reportes...</LoadingLine>
-  const categoryName = (category: Resource['category']) => category === 'audiovisual' ? 'Recursos audiovisuales' : 'Hardware de PC'
-  return <div className="grid grid-3 reports-grid">
-    <section className="card card-pad-lg"><p className="card-kicker">Por categoría</p><h3 className="card-title">Uso del inventario</h3>
-      <ReportBars rows={report.byCategory.map((item) => ({ key: item.category, label: categoryName(item.category), main: `${item.units} unidades`, detail: `${item.reservations} reservas`, value: item.units }))}/>
-    </section>
-    <section className="card card-pad-lg"><p className="card-kicker">Más utilizados</p><h3 className="card-title">Recursos</h3>
-      <ReportBars rows={report.byResource.map((item) => ({ key: item.resourceId, label: item.resourceName, main: `${item.units} unidades`, detail: `${item.reservations} reservas`, value: item.units }))}/>
-    </section>
-    <section className="card card-pad-lg"><p className="card-kicker">Horarios</p><h3 className="card-title">Franjas más solicitadas</h3>
-      <ReportBars rows={report.byHour.map((item) => ({ key: String(item.hour), label: `${String(item.hour).padStart(2, '0')}:00`, main: `${item.reservations} reservas`, detail: `${item.units} unidades`, value: item.reservations }))}/>
-    </section>
-  </div>
-}
-
 function formatDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
   const date = new Date(`${value}T12:00:00`)
@@ -574,7 +549,6 @@ function App() {
   const [page, setPage] = useState<Page>('dashboard')
   const [resources, setResources] = useState<Resource[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
-  const [report, setReport] = useState<ReservationReport | null>(null)
   const [config, setConfig] = useState<InstitutionConfig | null>(null)
   const [category, setCategory] = useState<'all' | Resource['category']>('all')
   const [dataLoading, setDataLoading] = useState(false)
@@ -620,11 +594,10 @@ function App() {
     if (!session) return
     setDataLoading(true); setDataError('')
     try {
-      const [nextResources, nextReservations, nextReport, nextConfig] = await Promise.all([
-        getResources(), getReservations(admin ? undefined : 'mine'), admin ? getReservationReport() : Promise.resolve(null), getConfig(),
+      const [nextResources, nextReservations, nextConfig] = await Promise.all([
+        getResources(), getReservations(admin ? undefined : 'mine'), getConfig(),
       ])
-      setResources(nextResources); setReservations(nextReservations)
-      setReport(nextReport); setConfig(nextConfig)
+      setResources(nextResources); setReservations(nextReservations); setConfig(nextConfig)
     } catch (error) { setDataError(messageOf(error)) }
     finally { setDataLoading(false) }
   }
@@ -769,7 +742,7 @@ function App() {
             onReset={(claves) => saveConfig(() => resetConfig(claves), 'Se restablecieron los valores por defecto.')}/>
         </FormCard>
       </>}
-      {page === 'reports' && <><PageHead title="Reportes de reservas" sub="Recursos más utilizados, categorías y horarios de mayor demanda."/><Reports report={report}/></>}
+      {page === 'reports' && <><PageHead title="Reportes de reservas" sub="Recursos más utilizados, categorías y horarios de mayor demanda en el período."/><ReportesReservas onError={setToast}/></>}
       {page === 'resources' && <><PageHead title="Recursos" sub="Agregá aulas y objetos nuevos, o sumá cantidad a los que ya existen."/><ResourcesAdmin resources={resources} reservations={reservations} busyId={busyId} onCreate={createResourceItem} onAddQuantity={addResourceQuantity}/></>}
       {page === 'new' && <>
         <PageHead title="Reservar recursos" sub="Indicá cuándo, y sumá todas las aulas y objetos que necesites para esa reserva."/>

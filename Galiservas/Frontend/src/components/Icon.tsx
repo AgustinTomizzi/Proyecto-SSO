@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 export type IconName = 'grid' | 'calendar' | 'user' | 'plus' | 'logout' | 'monitor' | 'box' | 'clock' | 'menu' | 'close' | 'laptop' | 'camera'
   | 'mic' | 'speaker' | 'cable' | 'chevron' | 'chevron-left' | 'chevron-right' | 'layers' | 'sun' | 'moon' | 'bell' | 'school' | 'arrow-right'
-  | 'refresh' | 'lock' | 'eye' | 'eye-off' | 'alert' | 'chart' | 'check' | 'sliders'
+  | 'refresh' | 'lock' | 'eye' | 'eye-off' | 'alert' | 'chart' | 'check' | 'sliders' | 'printer' | 'download'
 
 const paths: Record<IconName, ReactNode> = {
   grid: <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></>,
@@ -36,6 +36,8 @@ const paths: Record<IconName, ReactNode> = {
   alert: <><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></>,
   chart: <path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>,
   check: <path d="M20 6 9 17l-5-5"/>,
+  printer: <><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></>,
+  download: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>,
   sliders: <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>,
 }
 

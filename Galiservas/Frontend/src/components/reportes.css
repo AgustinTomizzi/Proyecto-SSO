@@ -1,0 +1,29 @@
+/* Reportes de reservas: filtros por período e impresión (PDF). Usa los tokens del tema. */
+.reportes-reservas { display: grid; gap: 16px; }
+.reportes-filtros { display: grid; gap: 14px; }
+.reportes-filtros .seg { margin: 0; }
+.gform.reportes-filtros__fechas { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; padding: 0; }
+.reportes-filtros__fechas label { min-width: 170px; }
+.reportes-filtros__acciones { display: flex; gap: 10px; margin-left: auto; }
+.reportes-periodo { font-size: 22px; }
+.print-only { display: none; }
+
+@media (max-width: 640px) {
+  .reportes-filtros__fechas label { flex: 1 1 140px; min-width: 0; }
+  .reportes-filtros__acciones { width: 100%; margin-left: 0; }
+  .reportes-filtros__acciones .btn { flex: 1; }
+}
+
+@media print {
+  @page { size: A4; margin: 14mm; }
+  .app__sidebar, .app__topbar, .no-print, .toast-stack, .app__offline, .page-head .sub { display: none !important; }
+  .print-only { display: block; }
+  .gdash, .gdash .app__main, .gdash .app__content, .gdash .page { color: #000 !important; background: #fff !important; padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .gdash .card { color: #000; background: #fff !important; border: 1px solid #999 !important; box-shadow: none !important; break-inside: avoid; }
+  .gdash .card-kicker, .gdash .report-bar small, .gdash .report-bar__label { color: #333 !important; }
+  .gdash .report-bar__track { background: #e5e5e5 !important; }
+  .gdash .report-bar__track span { background: #555 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .reports-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .reportes-print-head h1 { margin: 0 0 4px; font-size: 18px; }
+  .reportes-print-head p { margin: 0 0 12px; font-size: 12px; }
+}

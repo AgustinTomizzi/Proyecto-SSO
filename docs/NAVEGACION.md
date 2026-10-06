@@ -54,6 +54,13 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 - **Preceptor:** al pie de "Registrar asistencia", la sección "Mis suplencias" permite cubrir un curso ajeno (desde hoy, hasta 30 días, motivo opcional) y quitar las propias. Mientras la suplencia está vigente, el curso aparece en el selector de asistencia.
 - **Administrador Académico y Administrador:** en "Gestión académica", la pestaña "Suplencias" asigna cualquier preceptor a cualquier curso y lista todas las suplencias con su estado (Vigente, Próxima, Finalizada).
 
+### Justificaciones y reglas de asistencia
+
+- **Preceptor:** al pie de "Registrar asistencia", la sección "Justificaciones" permite justificar inasistencias de sus alumnos por rango de fechas (hasta 60 días y hasta 30 días por adelantado), con motivo y certificado opcional (PDF, JPG o PNG de hasta 5 MB). Las ausencias del rango, y las que se carguen después, quedan marcadas como "Justificada" en la toma de asistencia. Desde la lista se descarga el adjunto o se quita la justificación (las ausencias vuelven a quedar sin justificar).
+- **Administrador Académico y Administrador:** lo mismo para cualquier curso, en la pestaña "Justificaciones" de "Gestión académica".
+- El motivo y el adjunto solo los ven quienes pueden justificar y el propio alumno; el resto ve "Reservado".
+- Los paneles, reportes e historiales muestran el estado "Justificada" y calculan el porcentaje con las reglas de `config_institucion` (valor de la tarde y de la justificada, y mínimo de regularidad). El **Administrador** las edita en la tarjeta "Reglas de asistencia", al pie de "Reportes", o las restablece a los valores por defecto (50 %, 0 % y 75 %).
+
 ### Promoción de ciclo lectivo
 
 En "Gestión académica", la pestaña "Promoción" (permiso `ciclos.promover`: Administrador Académico y Administrador) muestra el ciclo (abierto o cerrado) y los alumnos pendientes. Se trabaja curso por curso: "Aplicar sugerencias del curso" propone promover a la división equivalente del año siguiente (en 7º, egresar); por alumno se puede cambiar a Repetir, Egresar (solo 7º) o Baja, y elegir otro destino. Si no hay división equivalente hay que elegirla antes de confirmar. "Confirmar curso" pide confirmación con un resumen y procesa solo los alumnos elegidos. "Cerrar ciclo" se habilita cuando no quedan pendientes, es irreversible y abre el ciclo siguiente.
@@ -69,6 +76,8 @@ El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre
 | Alumno, Directivo, Administrador Académico | Sin acceso | UI y API rechazan la sesión para Galiservas. |
 
 **Calendario:** vistas de día, semana (lunes a domingo, grilla de 07:00 a 22:00 que se estira si hay reservas fuera de ese horario) y mes, con navegación anterior/hoy/siguiente y filtro por categoría (Hardware de PC o Audiovisuales), que aplica el servidor. Las canceladas se ocultan salvo que se marque "Mostrar canceladas". Al elegir una reserva se ve su detalle (el administrador ve además quién reservó) y, si sigue activa y es propia o se administra, se puede editar o cancelar. El Administrador ve todas las reservas; el resto, solo las propias.
+
+**Reportes:** por período (este mes, últimos 30 días, ciclo lectivo u otro rango), con totales de reservas, unidades y días, y las barras por categoría, recurso y hora. "Excel" descarga un libro con una hoja por cada vista y el detalle de las reservas (para períodos de hasta 93 días); "Imprimir / PDF" usa una versión de impresión sin menú ni botones.
 
 **Reglas:** el Administrador (`config.gestionar`) habilita o deshabilita cada turno, define su horario de apertura y cierre, la duración máxima y la anticipación mínima y máxima, o las restablece a los valores por defecto. Los formularios de reserva muestran las reglas vigentes debajo del horario y avisan antes de enviar; la validación que vale es la del servidor.
 

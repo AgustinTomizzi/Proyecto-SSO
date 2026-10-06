@@ -152,8 +152,13 @@ export async function getResources(filters: { date?: string, start?: string, end
   return Array.isArray(list) ? list.map(parseResource).filter((item) => item.id && item.name) : []
 }
 
-export async function getReservationReport(): Promise<ReservationReport> {
-  const data = await request('reportes_reservas.php')
+/** Reporte de reservas confirmadas y finalizadas; from/to (YYYY-MM-DD) acotan el período. */
+export async function getReservationReport(filters: { from?: string, to?: string } = {}): Promise<ReservationReport> {
+  const params = new URLSearchParams()
+  if (filters.from) params.set('desde', filters.from)
+  if (filters.to) params.set('hasta', filters.to)
+  const query = params.toString()
+  const data = await request(`reportes_reservas.php${query ? `?${query}` : ''}`)
   const report = record(data.report)
   const rows = (value: unknown) => Array.isArray(value) ? value.map(record) : []
   return {
