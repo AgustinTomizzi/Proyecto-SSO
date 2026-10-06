@@ -359,6 +359,83 @@ async function main() {
     expectStatus(await admin.json("/cursos.php", "PUT", { id: 2, preceptorId: preceptorOriginalCurso2 }), 200, "restaura preceptor del curso 2");
   }
 
+  // ---- Grilla de horarios (horario_grilla.php) ----
+  {
+    const docenteA = await crearUsuario("docente.a", "Docente");
+    const docenteB = await crearUsuario("docente.b", "Docente");
+    const materiasGrilla = (await academica.request("/materias.php")).body.materias;
+    const idMateria = (nombre) => materiasGrilla.find((m) => m.nombre === nombre).id;
+    expectStatus(await academica.request("/horario_grilla.php"), 400, "grilla sin filtro");
+    const grillaCurso1 = await academica.request("/horario_grilla.php?cursoId=1&fecha=2026-04-06");
+    expectStatus(grillaCurso1, 200, "grilla del curso 1");
+    const franjas = grillaCurso1.body.franjas;
+    assert.ok(franjas.length === 8 && franjas.every((f) => f.turno === "Mañana"), "franjas del turno del curso");
+    const modulo1 = franjas.find((f) => f.orden === 1);
+    const recreo = franjas.find((f) => f.esRecreo);
+    const franjaTarde = (await academica.request("/horario_grilla.php?cursoId=4")).body.franjas.find((f) => f.orden === 1);
+    const AULA_208 = 3;
+    const base = { cursoId: 1, dia: 1, franjaId: modulo1.id, materiaId: idMateria("Matemática"), docenteId: docenteA.id, aulaId: AULA_208, vigenteDesde: "2026-03-01" };
+
+    const creada = await academica.json("/horario_grilla.php", "POST", base);
+    expectStatus(creada, 201, "alta de clase en la grilla");
+    assert.equal(creada.body.clase.materia, "Matemática");
+    assert.equal(creada.body.clase.horaInicio, modulo1.horaInicio);
+    const claseId = creada.body.clase.id;
+    const creadas = [claseId];
+    try {
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, materiaId: idMateria("Lengua"), docenteId: docenteB.id, aulaId: null }), 409, "misma celda del curso");
+      const choqueDocente = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, aulaId: null });
+      expectStatus(choqueDocente, 409, "docente en dos cursos a la vez");
+      assert.match(choqueDocente.body.error, /docente/);
+      const choqueAula = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, docenteId: docenteB.id });
+      expectStatus(choqueAula, 409, "aula ocupada por dos clases");
+      assert.match(choqueAula.body.error, /aula/);
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, franjaId: recreo.id }), 400, "clase en un recreo");
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, franjaId: franjaTarde.id }), 400, "franja de otro turno");
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, dia: 6 }), 400, "día fuera de lunes a viernes");
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, docenteId: 3, aulaId: null }), 400, "docente sin rol Docente");
+      expectStatus(await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, docenteId: null, aulaId: 4 }), 400, "recurso que no es un aula");
+
+      // Otro curso en otro módulo con el mismo docente y aula: no hay choque.
+      const modulo2 = franjas.find((f) => f.orden === 2);
+      const otraClase = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, franjaId: modulo2.id });
+      expectStatus(otraClase, 201, "mismo docente y aula en otro módulo");
+      creadas.push(otraClase.body.clase.id);
+
+      // Cerrar la vigencia libera el horario para el ciclo siguiente.
+      const cerrada = await academica.json("/horario_grilla.php", "PUT", { id: claseId, vigenteHasta: "2026-12-31" });
+      expectStatus(cerrada, 200, "cerrar la vigencia de una clase");
+      assert.equal(cerrada.body.clase.vigenteHasta, "2026-12-31");
+      const siguiente = await academica.json("/horario_grilla.php", "POST", { ...base, cursoId: 3, aulaId: null, vigenteDesde: "2027-03-01" });
+      expectStatus(siguiente, 201, "mismo docente en otro curso con vigencia posterior");
+      creadas.push(siguiente.body.clase.id);
+      expectStatus(await academica.json("/horario_grilla.php", "PUT", { id: claseId, vigenteHasta: "2026-01-01" }), 400, "vigencia hasta anterior a desde");
+
+      const porDocente = await academica.request(`/horario_grilla.php?docenteId=${docenteA.id}&fecha=2026-04-06`);
+      expectStatus(porDocente, 200, "grilla por docente");
+      assert.deepEqual(porDocente.body.clases.map((c) => c.cursoId).sort(), ["1", "3"]);
+      const porAula = await academica.request(`/horario_grilla.php?aulaId=${AULA_208}&fecha=2026-04-06`);
+      expectStatus(porAula, 200, "grilla por aula");
+      assert.equal(porAula.body.clases.length, 2);
+
+      // Alumno: solo su curso (seed: 1 A).
+      expectStatus(await alumno.request("/horario_grilla.php?cursoId=3"), 403, "alumno pide la grilla de otro curso");
+      const grillaAlumno = await alumno.request("/horario_grilla.php?fecha=2026-04-06");
+      expectStatus(grillaAlumno, 200, "alumno ve la grilla de su curso");
+      assert.ok(grillaAlumno.body.clases.length > 0 && grillaAlumno.body.clases.every((c) => c.cursoId === "1"));
+      expectStatus(await alumno.json("/horario_grilla.php", "POST", { ...base, cursoId: 1, dia: 2 }), 403, "alumno no gestiona la grilla");
+
+      const auditoriaGrilla = await admin.request("/auditoria.php?accion=horarios.gestionar&entidad=horario_clase&limit=20");
+      expectStatus(auditoriaGrilla, 200, "auditoría de la grilla");
+      assert.ok(auditoriaGrilla.body.registros.some((r) => r.entidadId === String(claseId) && r.detalle?.accion === "editar"));
+    } finally {
+      for (const id of creadas) {
+        expectStatus(await academica.json("/horario_grilla.php", "DELETE", { id }), 200, `borra la clase ${id}`);
+      }
+    }
+    expectStatus(await academica.json("/horario_grilla.php", "DELETE", { id: claseId }), 404, "clase ya borrada");
+  }
+
   // ---- Asignacion de preceptores (cursos.php PUT + auditoria) ----
   const cursosAdmin = await admin.request("/cursos.php");
   expectStatus(cursosAdmin, 200, "admin lista cursos");

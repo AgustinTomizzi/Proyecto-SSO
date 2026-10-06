@@ -256,6 +256,32 @@ Exige alumno activo, `materiaId` (o `materia`) del catálogo y `nota` numérica 
 
 `DELETE /horarios.php` con `{"cursoId":1}`, permiso `horarios.gestionar`. Audita y responde `200`; sin horario, `404`.
 
+## Grilla de horarios
+
+Cada celda (`horario_clases`) es curso + día (1 = lunes … 5 = viernes) + franja, con materia, docente y aula opcionales y una vigencia.
+
+### Consultar: **Implementada**
+
+`GET /horario_grilla.php?cursoId=1[&fecha=2026-04-06]`, permiso `horarios.ver`. También acepta `docenteId` o `aulaId` en lugar de `cursoId` (al menos uno es obligatorio, `400`). Devuelve las clases vigentes a `fecha` (por defecto hoy, en hora argentina) y las franjas del turno del curso (o de todos los turnos si se filtra por docente o aula). El Alumno solo ve su curso: sin filtro recibe el suyo y otro curso da `403`.
+
+```json
+{"ok":true,"fecha":"2026-04-06",
+ "franjas":[{"id":"1","turno":"Mañana","orden":1,"horaInicio":"07:30","horaFin":"08:10","esRecreo":false}],
+ "clases":[{"id":"12","cursoId":"1","curso":"1 A","dia":1,"franjaId":"1","horaInicio":"07:30","horaFin":"08:10","materiaId":"1","materia":"Matemática","docenteId":"6","docente":"Diego Medina","aulaId":"3","aula":"Aula 208","vigenteDesde":"2026-03-01","vigenteHasta":null}]}
+```
+
+### Crear, editar y eliminar celdas: **Implementada**
+
+Permiso `horarios.gestionar` (Administrador Académico y Administrador).
+
+- `POST /horario_grilla.php` con `{"cursoId":1,"dia":1,"franjaId":1,"materiaId":1,"docenteId":6,"aulaId":3,"vigenteDesde":"2026-03-01","vigenteHasta":null}`. `docenteId`, `aulaId` y `vigenteHasta` son opcionales; `vigenteDesde` por defecto es hoy. Responde `201` con la `clase`.
+- `PUT /horario_grilla.php` con `id` y los campos a cambiar (los omitidos se conservan; `null` borra docente, aula o fin de vigencia). Por ejemplo, cerrar una clase al fin del ciclo: `{"id":12,"vigenteHasta":"2026-12-31"}`.
+- `DELETE /horario_grilla.php` con `{"id":12}`.
+
+Validaciones (`400`): día 1 a 5, franja del turno del curso y que no sea recreo, materia del catálogo, docente con rol Docente, aula que sea un recurso tipo aula activo, vigencia con `hasta >= desde`. Curso, franja, docente, aula o clase inexistentes: `404`.
+
+Choques (`409`), considerando solo vigencias superpuestas: la celda del curso ya tiene clase; el docente ya tiene clase en otro curso a la misma hora; el aula ya está ocupada a la misma hora. Para docente y aula se comparan los horarios reales, así que también se detectan choques entre turnos distintos. Cada alta, edición o baja se audita como `horarios.gestionar` sobre la entidad `horario_clase` con antes/después.
+
 ## Usuarios y roles
 
 ### Listar: **Implementada**
