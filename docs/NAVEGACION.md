@@ -33,11 +33,21 @@ URL con Docker: `http://localhost:3000` (con `npm run dev`, `http://localhost:51
 | Rol UI | Inicio | Navegación visible | Función |
 |---|---|---|---|
 | Alumno | `/alumno` | Mi asistencia, Mi horario | Porcentaje e historial del alumno y horario de su curso. |
-| Preceptor (también Docente) | `/preceptor` | Registrar asistencia, Reportes | Tomar asistencia y consultar reportes. |
-| Directivo | `/directivo` | Panel institucional, Reportes | Indicadores, riesgo y análisis. |
+| Preceptor (también Docente) | `/preceptor` | Registrar asistencia, Horarios, Reportes | Tomar asistencia, ver horarios (el Docente ve "Mis clases") y consultar reportes. |
+| Directivo | `/directivo` | Panel institucional, Horarios, Reportes | Indicadores, riesgo, análisis y consulta de horarios. |
 | Admin (Administrador y Administrador Académico) | `/admin` | Panel, Gestión académica, Horarios, Reportes, Auditoría, Usuarios | Gestión transversal; el backend igual limita por permiso lo que cada uno puede hacer. |
 
 `/login` solo pide email y contraseña: no hay selector de rol. El rol sale siempre de la base y se relee en cada request. Si la cuenta tiene `debe_cambiar_password`, Galisencia muestra primero la pantalla para elegir una contraseña nueva. `RutaProtegida` redirige al inicio del usuario. Esto mejora UX, no reemplaza RBAC del servidor.
+
+### Horarios
+
+La página de horarios muestra la grilla semanal con el formato de los horarios del colegio: 12 módulos de 07:40 a 21:40, la banda de "Cambio de turno", clases de uno o más módulos y celdas partidas en dos grupos. En cada clase se ve el aula (arriba a la derecha), la materia y el docente.
+
+- **Alumno:** "Mi horario", el de su curso.
+- **Docente:** "Mis clases", con el curso en cada clase.
+- **Preceptor y Directivo:** eligen año y división y consultan sin editar.
+- **Administrador Académico y Administrador:** además editan: un módulo libre abre "Nueva clase" (materia, docente, aula, grupo, duración y vigencia) y una clase abre "Editar clase" o "Quitar clase". Los choques que detecta la API (docente o aula ocupados, celda tomada) se muestran en el editor.
+- **Exportación:** "Imprimir / PDF" (A4 apaisado, blanco y negro), "Excel" del curso y, para quien edita, "Excel de todos los cursos" (una hoja por curso).
 
 El enlace lateral "Galiservas" se muestra únicamente a roles autorizados y abre la aplicación independiente en `http://localhost:5174`.
 

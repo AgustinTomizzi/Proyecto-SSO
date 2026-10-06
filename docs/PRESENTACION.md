@@ -35,7 +35,7 @@ Mostrar también el límite conocido: el ciclo se deriva del año de cada fecha 
 - `GET/POST/PUT cursos.php`: catálogo, alta y asignación de preceptor.
 - `GET/POST notas.php`: consulta y alta, con validación, auditoría y el mismo alcance.
 - `GET reportes.php`: porcentajes y riesgo, con filtros `cursoId`, `ciclo` y `materia` y alcance por rol.
-- `GET/POST/DELETE horarios.php`: horario de cada curso (imagen); cargar o borrar requiere `horarios.gestionar`.
+- `GET/POST/PUT/DELETE horario_grilla.php`: grilla semanal con el formato del colegio (módulos, grupos, aulas, vigencias y control de choques); editar requiere `horarios.gestionar`. `horarios.php` quedó como histórico de imágenes de solo lectura.
 - `GET/POST/PUT usuarios.php`: lista, crea y cambia rol, solo Administrador.
 - `GET auditoria.php`: filtros y límite de 500.
 - `GET/POST/PUT/DELETE recursos.php`: listado y administración con baja lógica.

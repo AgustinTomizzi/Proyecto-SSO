@@ -40,10 +40,12 @@ const NAV: Record<Rol, NavItem[]> = {
   ],
   preceptor: [
     { to: "/preceptor", label: "Registrar asistencia", icon: <IconClipboard /> },
+    { to: "/horarios", label: "Horarios", icon: <IconCalendar /> },
     { to: "/reportes", label: "Reportes", icon: <IconChart /> },
   ],
   directivo: [
     { to: "/directivo", label: "Panel institucional", icon: <IconSchool /> },
+    { to: "/horarios", label: "Horarios", icon: <IconCalendar /> },
     { to: "/reportes", label: "Reportes", icon: <IconChart /> },
   ],
   admin: [

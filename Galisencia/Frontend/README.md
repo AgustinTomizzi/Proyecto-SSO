@@ -32,7 +32,7 @@ src/
 │   ├── directivo/  # Panel institucional
 │   ├── admin/      # Panel de administración y gestión de usuarios
 │   ├── gestion/    # Gestión académica (alumnos, cursos)
-│   ├── horarios/   # Mi horario (alumno) y carga de horarios (admin)
+│   ├── horarios/   # Grilla semanal: ver, editar y exportar (PDF y Excel)
 │   ├── reportes/   # Reportes de asistencia
 │   ├── auditoria/  # Consulta de auditoría
 │   └── ui/         # Componentes genéricos (gráficos, diálogos, toasts, estados vacíos)

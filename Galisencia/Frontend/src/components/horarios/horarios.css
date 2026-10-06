@@ -1,8 +1,162 @@
 .horarios-page { max-width:1400px !important; }.horarios-head { position:relative; }.horarios-eyebrow { display:block; margin-bottom:5px; color:var(--accent); font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }.horarios-alert { margin-bottom:18px; padding:12px 15px; color:var(--danger-ink); background:var(--danger-bg); border:1px solid color-mix(in srgb,var(--danger) 28%,transparent); border-radius:11px; font-size:12.5px; font-weight:600; }.horarios-loading { min-height:260px; display:grid; place-content:center; justify-items:center; gap:12px; color:var(--text-3); font-size:12px; }.horarios-loading span { width:28px; height:28px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:horarios-spin .7s linear infinite; }@keyframes horarios-spin { to { transform:rotate(360deg); } }
-.horarios-grid { display:grid; grid-template-columns:minmax(0,920px); justify-content:center; gap:18px; }.horarios-grid--manage { grid-template-columns:repeat(2,minmax(0,1fr)); }.horario-card { overflow:hidden; background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow-sm); }.horario-card__header { min-height:78px; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:15px 18px; background:var(--card-gradient); border-bottom:1px solid var(--border); }.horario-card__course { display:flex; align-items:center; gap:12px; }.horario-card__course > span { width:44px; height:44px; display:grid; place-items:center; color:#fff; background:var(--stat-gradient); border-radius:12px; box-shadow:var(--shadow-accent); font-family:"Plus Jakarta Sans",sans-serif; font-size:15px; font-weight:800; }.horario-card__course h2 { font-family:"Plus Jakarta Sans",sans-serif; font-size:15px; }.horario-card__course p { margin-top:2px; color:var(--text-3); font-size:10.5px; }.horario-card__status { padding:5px 9px; border-radius:99px; font-size:9.5px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; }.horario-card__status.published { color:var(--success-ink); background:var(--success-bg); }.horario-card__status.pending { color:var(--warning-ink); background:var(--warning-bg); }
-.horario-card__preview { position:relative; width:100%; height:clamp(260px,38vw,440px); display:block; padding:0; overflow:hidden; background:var(--surface-2); border:0; cursor:zoom-in; }.horarios-grid--manage .horario-card__preview { height:300px; }.horario-card__preview img { width:100%; height:100%; display:block; object-fit:contain; transition:transform .25s ease; }.horario-card__preview:hover img { transform:scale(1.015); }.horario-card__preview > span { position:absolute; right:14px; bottom:14px; display:flex; align-items:center; gap:6px; padding:8px 11px; color:#fff; background:rgba(4,17,31,.78); border:1px solid rgba(255,255,255,.18); border-radius:9px; backdrop-filter:blur(8px); font:600 11px "Inter",sans-serif; opacity:0; transform:translateY(5px); transition:.2s; }.horario-card__preview:hover > span,.horario-card__preview:focus-visible > span { opacity:1; transform:none; }.horario-card__placeholder { height:260px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; padding:25px; color:var(--text-3); background:repeating-linear-gradient(135deg,var(--surface-2),var(--surface-2) 10px,var(--surface) 10px,var(--surface) 20px); text-align:center; }.horario-card__placeholder svg { width:42px; height:42px; margin-bottom:5px; color:var(--accent); }.horario-card__placeholder strong { color:var(--text-2); font-family:"Plus Jakarta Sans",sans-serif; font-size:14px; }.horario-card__placeholder span { max-width:300px; font-size:11.5px; line-height:1.5; }
-.horario-card__footer { display:flex; align-items:center; justify-content:space-between; gap:14px; min-height:70px; padding:12px 16px; border-top:1px solid var(--border); }.horario-card__meta { min-width:0; display:flex; flex:1; flex-direction:column; }.horario-card__meta strong { overflow:hidden; color:var(--text-2); font-size:10.5px; text-overflow:ellipsis; white-space:nowrap; }.horario-card__meta span { margin-top:2px; color:var(--text-3); font-size:9.5px; }.horario-card__actions { display:flex; justify-content:flex-end; gap:7px; flex-wrap:wrap; }.horario-card__actions .btn { display:inline-flex; align-items:center; gap:5px; }.horario-upload { cursor:pointer; }.horario-upload input { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }.horarios-empty { min-height:360px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px; color:var(--text-3); background:var(--surface); border:1px dashed var(--border-strong); border-radius:18px; text-align:center; }.horarios-empty svg { width:48px; height:48px; margin-bottom:13px; color:var(--accent); }.horarios-empty h2 { color:var(--text); font-family:"Plus Jakarta Sans",sans-serif; font-size:18px; }.horarios-empty p { max-width:420px; margin-top:6px; font-size:12.5px; }
-.horario-lightbox { position:fixed; inset:0; z-index:100; display:grid; place-items:center; padding:24px; background:rgba(2,9,18,.84); backdrop-filter:blur(8px); }.horario-lightbox > div { width:min(1200px,100%); max-height:calc(100dvh - 48px); display:flex; flex-direction:column; overflow:hidden; background:var(--surface); border:1px solid var(--border-strong); border-radius:18px; box-shadow:var(--shadow-lg); }.horario-lightbox header { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:13px 17px; border-bottom:1px solid var(--border); }.horario-lightbox header div { display:flex; flex-direction:column; }.horario-lightbox header strong { font-family:"Plus Jakarta Sans",sans-serif; }.horario-lightbox header span { color:var(--text-3); font-size:10.5px; }.horario-lightbox header button { width:34px; height:34px; display:grid; place-items:center; color:var(--text-2); background:var(--surface-2); border:1px solid var(--border); border-radius:9px; cursor:pointer; }.horario-lightbox img { min-height:0; width:100%; flex:1; object-fit:contain; background:var(--surface-2); }.horario-lightbox footer { display:flex; justify-content:flex-end; padding:12px 17px; border-top:1px solid var(--border); }.horario-lightbox footer .btn { display:flex; align-items:center; gap:7px; }
-@media (max-width:980px) { .horarios-grid--manage { grid-template-columns:minmax(0,1fr); }.horarios-grid--manage .horario-card__preview { height:clamp(260px,58vw,450px); } }
-@media (max-width:640px) { .horario-card__header { min-height:70px; padding:12px; }.horario-card__preview,.horarios-grid--manage .horario-card__preview { height:68vw; min-height:230px; }.horario-card__footer { align-items:stretch; flex-direction:column; }.horario-card__actions { justify-content:flex-start; }.horario-card__actions .btn,.horario-card__actions .horario-upload { flex:1; justify-content:center; }.horario-lightbox { align-items:end; padding:0; }.horario-lightbox > div { max-height:94dvh; border-radius:18px 18px 0 0; }.horario-lightbox img { min-height:260px; }.horario-lightbox footer .btn { width:100%; justify-content:center; } }
-@media (prefers-reduced-motion:reduce) { .horarios-loading span { animation:none; }.horario-card__preview img,.horario-card__preview > span { transition:none; } }
+.horarios-empty { min-height:360px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px; color:var(--text-3); background:var(--surface); border:1px dashed var(--border-strong); border-radius:18px; text-align:center; }.horarios-empty svg { width:48px; height:48px; margin-bottom:13px; color:var(--accent); }.horarios-empty h2 { color:var(--text); font-family:"Plus Jakarta Sans",sans-serif; font-size:18px; }.horarios-empty p { max-width:420px; margin-top:6px; font-size:12.5px; }
+
+/* ---------- Panel y barra de herramientas ---------- */
+.grilla-panel { overflow:hidden; background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow-sm); }
+.grilla-toolbar { display:flex; flex-direction:column; gap:14px; padding:14px 16px; background:var(--card-gradient); border-bottom:1px solid var(--border); }
+.grilla-toolbar__fila { display:flex; align-items:flex-end; flex-wrap:wrap; gap:10px 12px; }
+.grilla-toolbar__field { margin:0; }
+.grilla-toolbar__field > label { color:var(--text-3); font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.grilla-toolbar__field .input { padding:7px 11px; font-size:13px; }
+.grilla-toolbar__fecha { min-width:160px; }
+.grilla-imagen { display:inline-flex; align-items:center; gap:6px; padding:7px 11px; color:var(--text-2); background:var(--surface); border:1px dashed var(--border-strong); border-radius:9px; font-size:11.5px; font-weight:600; }
+.grilla-imagen:hover { color:var(--accent); border-color:var(--accent); }
+.grilla-acciones { display:flex; flex-wrap:wrap; gap:8px; margin-left:auto; }
+.grilla-acciones .btn-ghost { background:var(--surface); }
+.grilla-progreso { display:flex; align-items:center; gap:12px; color:var(--text-soft); font-size:12px; font-weight:600; }
+.grilla-progreso progress { flex:1; max-width:280px; height:6px; overflow:hidden; appearance:none; border:0; border-radius:99px; background:var(--surface-3,var(--surface-2)); }
+.grilla-progreso progress::-webkit-progress-bar { background:var(--surface-3,var(--surface-2)); border-radius:99px; }
+.grilla-progreso progress::-webkit-progress-value { background:linear-gradient(90deg,var(--accent),var(--green,var(--accent))); border-radius:99px; }
+.grilla-progreso progress::-moz-progress-bar { background:linear-gradient(90deg,var(--accent),var(--green,var(--accent))); border-radius:99px; }
+.grilla-aviso { margin:12px 16px 0; padding:9px 12px; color:var(--warning-ink); background:var(--warning-bg); border-radius:10px; font-size:12px; font-weight:600; }
+.grilla-panel > .horarios-loading { min-height:320px; }
+.grilla-vacio { min-height:300px; margin:16px; }
+.grilla-vacio__accion { margin-top:14px; }
+
+/* Selector de curso en dos pasos (año → división) */
+.grilla-cursos { display:flex; flex-direction:column; gap:9px; }
+.grilla-cursos__nivel { display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; }
+.grilla-cursos__rotulo { width:62px; color:var(--text-3); font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.grilla-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.grilla-chip { min-width:42px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:6px 12px; color:var(--text-soft); background:var(--surface); border:1px solid var(--border-strong); border-radius:999px; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; transition:background .15s, border-color .15s, color .15s, box-shadow .15s; }
+.grilla-chip:hover { color:var(--text); border-color:var(--accent); }
+.grilla-chip:focus-visible,.grilla-chip:focus-within { outline:none; box-shadow:0 0 0 3px var(--accent-glow); }
+.grilla-chip.is-active { color:#fff; background:linear-gradient(90deg,#0ea5e9,#10b981); border-color:transparent; box-shadow:var(--shadow-accent,var(--shadow-sm)); }
+.grilla-chip input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+
+/* ---------- Hoja (lo que se imprime) ---------- */
+.grilla-hoja { padding:14px 14px 12px; }
+.grilla-hoja__titulo { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 12px; margin:0 2px 10px; }
+.grilla-hoja__titulo h2 { color:var(--text); font-family:"Plus Jakarta Sans",sans-serif; font-size:19px; font-weight:800; }
+.grilla-hoja__titulo span { color:var(--text-3); font-size:12px; font-weight:600; }
+.grilla-hoja__pie { display:flex; justify-content:space-between; gap:12px; margin:8px 2px 0; color:var(--text-3); font-size:11px; }
+.grilla-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }
+
+/* ---------- Grilla ---------- */
+.grilla-scroll { width:100%; overflow-x:auto; border:1px solid var(--border); border-radius:12px; }
+.grilla-scroll:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.grilla { width:100%; min-width:980px; table-layout:fixed; border-collapse:collapse; font-size:12px; }
+.grilla-col-hora { width:104px; }
+.grilla th,.grilla td { border:1px solid var(--border); }
+.grilla tr > :first-child { border-left:0; }
+.grilla tr > :last-child { border-right:0; }
+.grilla thead th { border-top:0; }
+.grilla tbody tr:last-child > * { border-bottom:0; }
+.grilla thead th { height:40px; padding:6px; color:var(--text-2); background:var(--surface-2); font-family:"Plus Jakarta Sans",sans-serif; font-size:13px; font-weight:800; text-align:center; }
+.grilla thead .grilla-dia--activo { color:var(--accent); box-shadow:inset 0 -3px 0 var(--accent); }
+.grilla-dia-corto { display:none; }
+.grilla-hora,.grilla-banda th { position:sticky; left:0; z-index:2; padding:4px 8px; color:var(--text-soft); background:var(--surface-2); font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums; text-align:center; white-space:nowrap; }
+.grilla-esquina { position:sticky; left:0; z-index:3; }
+.grilla-fila { height:60px; }
+.grilla-celda { position:relative; padding:0; vertical-align:middle; }
+.grilla-celda--media:not(.grilla-celda--inicio) { border-left-style:dashed; }
+.grilla-celda--activa { background:var(--hl); }
+
+.grilla-banda { height:34px; }
+.grilla-banda th { color:var(--text-3); font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; white-space:normal; }
+.grilla-banda td { color:var(--text-3); background:repeating-linear-gradient(135deg,var(--surface-2),var(--surface-2) 7px,var(--surface) 7px,var(--surface) 14px); font-size:12px; font-weight:800; letter-spacing:.32em; text-align:center; text-transform:uppercase; }
+
+/* Cajas de clase: aula arriba a la derecha, materia al centro, docente abajo a la izquierda. */
+.grilla-cajas { position:absolute; inset:3px; display:flex; flex-direction:column; gap:3px; }
+.grilla-caja { position:relative; flex:1 1 0; min-height:0; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:17px 8px 17px; color:var(--text); background:var(--card-gradient),var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:9px; font:inherit; text-align:center; }
+.grilla-caja--g2 { border-left-color:var(--green,var(--accent)); }
+.grilla-caja__aula { position:absolute; top:4px; right:5px; max-width:calc(100% - 10px); overflow:hidden; padding:0 6px; color:var(--text-2); background:var(--surface); border:1px solid var(--border-strong); border-radius:999px; font-size:9.5px; font-weight:800; line-height:15px; text-overflow:ellipsis; white-space:nowrap; }
+.grilla-caja__materia { display:-webkit-box; overflow:hidden; color:var(--text); font-size:12px; font-weight:700; line-height:1.25; -webkit-box-orient:vertical; -webkit-line-clamp:5; line-clamp:5; overflow-wrap:break-word; hyphens:auto; }
+.grilla-celda[rowspan="1"] .grilla-caja__materia { -webkit-line-clamp:2; line-clamp:2; }
+.grilla-cajas--apiladas .grilla-caja__materia { -webkit-line-clamp:1; line-clamp:1; }
+.grilla-caja--media { padding-inline:3px; }
+.grilla-caja--media .grilla-caja__materia { font-size:10px; letter-spacing:-.01em; }
+.grilla-caja__pie { position:absolute; left:7px; right:7px; bottom:3px; overflow:hidden; color:var(--text-soft); font-size:10.5px; line-height:14px; text-align:left; text-overflow:ellipsis; white-space:nowrap; }
+.grilla-caja__pie--vacio { color:var(--text-3); font-style:italic; }
+.grilla-caja--btn { cursor:pointer; transition:border-color .15s, box-shadow .15s, transform .15s; }
+.grilla-caja--btn:hover { border-color:var(--accent); box-shadow:var(--shadow-sm); }
+.grilla-caja--btn:focus-visible { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
+
+.grilla-vacia { position:absolute; inset:3px; display:grid; place-items:center; padding:0; color:var(--text-3); background:transparent; border:1px dashed transparent; border-radius:8px; font:inherit; cursor:pointer; transition:background .15s, border-color .15s; }
+.grilla-vacia span { font-size:18px; font-weight:600; line-height:1; opacity:0; transition:opacity .15s; }
+.grilla-vacia:hover,.grilla-vacia:focus-visible { outline:none; color:var(--accent); background:var(--hl); border-color:var(--accent); }
+.grilla-vacia:hover span,.grilla-vacia:focus-visible span { opacity:1; }
+@media (hover:none) { .grilla-vacia span { opacity:.45; } }
+
+/* ---------- Editor de clase ---------- */
+.grilla-editor { max-width:500px; max-height:calc(100dvh - 40px); overflow-y:auto; }
+.grilla-editor__head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.grilla-editor__head .modal__msg { margin-top:3px; }
+.grilla-editor__close { width:32px; height:32px; display:grid; flex:none; place-items:center; color:var(--text-soft); background:var(--surface-2); border:1px solid var(--border); border-radius:9px; cursor:pointer; }
+.grilla-editor__close:hover:not(:disabled) { color:var(--text); border-color:var(--border-strong); }
+.grilla-editor__par { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 12px; }
+.grilla-editor__grupos { margin:0 0 14px; padding:0; border:0; }
+.grilla-editor__grupos legend { margin-bottom:6px; padding:0; color:var(--text-soft); font-size:13px; font-weight:600; }
+.grilla-editor__grupos .grilla-chip { position:relative; }
+.grilla-editor__hint { display:block; margin:-6px 0 4px; color:var(--text-3); font-size:11.5px; }
+.field .grilla-editor__hint { margin:0; }
+.grilla-editor__error { margin:12px 0 0; }
+.grilla-editor__actions { flex-wrap:wrap; }
+.grilla-editor__quitar { margin-right:auto; }
+
+@media (max-width:640px) {
+  .grilla-toolbar { padding:12px; }
+  .grilla-cursos__rotulo { width:100%; }
+  .grilla-toolbar__fecha { flex:1 1 auto; }
+  .grilla-acciones { width:100%; margin-left:0; }
+  .grilla-acciones .btn { flex:1 1 auto; }
+  .grilla-hoja { padding:10px 8px; }
+  .grilla-col-hora { width:84px; }
+  .grilla-hora { font-size:10.5px; white-space:normal; }
+  .grilla-editor__quitar { margin-right:0; }
+}
+@media (max-width:420px) { .grilla-editor__par { grid-template-columns:minmax(0,1fr); } }
+@media (prefers-reduced-motion:reduce) { .horarios-loading span { animation:none; }.grilla-caja--btn,.grilla-vacia,.grilla-vacia span,.grilla-chip { transition:none; } }
+
+/* ---------- Impresión / PDF: igual al horario oficial (blanco y negro, A4 apaisado, una hoja) ---------- */
+@media print {
+  @page { size:A4 landscape; margin:10mm; }
+  html,body { background:#fff !important; }
+  body * { visibility:hidden !important; }
+  .grilla-hoja,.grilla-hoja * { visibility:visible !important; }
+  .grilla-hoja { position:absolute; left:0; top:0; width:100%; padding:0; color:#000 !important; background:#fff !important; font-family:Arial,Helvetica,sans-serif; }
+
+  /* Con la ruta marcada (useImpresionGrilla), el resto de la app no ocupa lugar. */
+  html.grilla-imprimiendo .grilla-print-camino > :not(.grilla-print-camino):not(.grilla-hoja) { display:none !important; }
+  html.grilla-imprimiendo .grilla-print-camino { display:block !important; position:static !important; width:auto !important; max-width:none !important; height:auto !important; min-height:0 !important; margin:0 !important; padding:0 !important; overflow:visible !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:#fff !important; transform:none !important; }
+  html.grilla-imprimiendo .grilla-hoja { position:static; }
+
+  .grilla-hoja * { color:#000 !important; background:transparent !important; box-shadow:none !important; text-shadow:none !important; }
+  .grilla-hoja__titulo { display:block; margin:0 0 3mm; text-align:center; }
+  .grilla-hoja__titulo h2 { display:inline; font-family:Arial,Helvetica,sans-serif; font-size:20pt; font-weight:400; letter-spacing:0; }
+  .grilla-hoja__titulo span { display:inline; font-size:20pt; font-weight:400; }
+  .grilla-hoja__titulo span::before { content:" — "; }
+  .grilla-hoja__pie { margin:1mm 0 0; font-size:8pt; }
+  .grilla-scroll { overflow:visible; border:1.5pt solid #000 !important; border-radius:0; }
+  .grilla { min-width:0; width:100%; font-size:8pt; break-inside:avoid; }
+  .grilla th,.grilla td { border:.6pt solid #000 !important; }
+  .grilla-celda--media:not(.grilla-celda--inicio) { border-left-style:solid !important; }
+  .grilla tr > :first-child { border-right-width:1.5pt !important; }
+  .grilla thead th { height:11mm; border-bottom-width:1.5pt !important; font-family:Arial,Helvetica,sans-serif; font-size:16pt; font-weight:400; box-shadow:none; }
+  .grilla-col-hora { width:27mm; }
+  .grilla-hora { position:static; font-size:10pt; font-weight:400; }
+  .grilla-fila { height:11.2mm; }
+  .grilla-banda { height:9mm; }
+  .grilla-banda th { position:static; font-size:6pt; font-weight:400; letter-spacing:0; }
+  .grilla-banda td { font-size:20pt; font-weight:400; letter-spacing:0; }
+  .grilla-cajas { inset:0; gap:0; }
+  .grilla-cajas--apiladas .grilla-caja + .grilla-caja { border-top:.6pt solid #000 !important; }
+  .grilla-caja { padding:3.6mm 1.2mm; border:0 !important; border-radius:0; }
+  .grilla-caja__aula { top:.6mm; right:1.2mm; padding:0; border:0 !important; border-radius:0; font-size:8pt; font-weight:400; line-height:1.2; }
+  .grilla-caja__materia { font-size:8.5pt; font-weight:400; line-height:1.15; }
+  .grilla-caja--media .grilla-caja__materia { font-size:8pt; }
+  .grilla-caja__pie { left:1.2mm; right:1.2mm; bottom:.5mm; font-size:7pt; font-style:normal; line-height:1.2; }
+  .grilla-caja__pie--vacio { visibility:hidden !important; }
+  .grilla-vacia span,.grilla-sr { display:none !important; }
+  .grilla-vacia { border:0 !important; }
+}
