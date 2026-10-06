@@ -111,3 +111,7 @@ No puede violar validaciones: capacidad, solapamientos, FKs y protección del ú
 Un usuario autenticado no es automáticamente un usuario autorizado.
 
 Excepción previa al paso 2: si la cuenta tiene `debe_cambiar_password = 1`, `_common.php` responde `403` (`"codigo":"debe_cambiar_password"`) a todo endpoint salvo `sesion.php`, `cambiar_password.php` y `logout.php`. `cambiar_password.php` es autoservicio y no requiere permiso RBAC.
+
+## Notificaciones por email
+
+Cada usuario ve y cambia solo sus propias preferencias e historial (`/notificaciones.php`), sin permiso extra. El estado de la cola de envío (`?cola=1`) exige `config.gestionar` (Administrador).

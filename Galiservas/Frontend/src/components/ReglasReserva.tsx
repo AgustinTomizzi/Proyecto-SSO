@@ -8,6 +8,7 @@ const LIMITES = [
   ['reservas.duracion_maxima_min', 'Duración máxima', 'minutos por reserva'],
   ['reservas.anticipacion_minima_horas', 'Anticipación mínima', 'horas (0 = sin mínimo)'],
   ['reservas.anticipacion_maxima_dias', 'Anticipación máxima', 'días (0 = sin límite)'],
+  ['notificaciones.recordatorio_horas', 'Recordatorio por email', 'horas antes (0 = sin recordatorio)'],
 ] as const
 
 /** Edición de las reglas institucionales de reserva (permiso config.gestionar). */
@@ -42,8 +43,8 @@ export function ReglasReserva({ config, busy, onSave, onReset }: {
     if (!Object.keys(cambios).length) return setError('No hay cambios para guardar.')
     setError(await onSave(cambios))
   }
-  // Solo las claves de reservas: la configuración también tiene las reglas de asistencia de Galisencia.
-  const camposReserva = config.esquema.filter((campo) => campo.clave.startsWith('reservas.'))
+  // Solo las claves de reservas y recordatorios: la configuración también tiene las reglas de asistencia de Galisencia.
+  const camposReserva = config.esquema.filter((campo) => campo.clave.startsWith('reservas.') || campo.clave.startsWith('notificaciones.'))
   const restablecer = async () => {
     const error = await onReset(camposReserva.map((campo) => campo.clave))
     setError(error)
@@ -66,7 +67,7 @@ export function ReglasReserva({ config, busy, onSave, onReset }: {
     </fieldset>
     <fieldset className="reglas__grupo">
       <legend>Límites</legend>
-      <div className="field-grid field-grid--3">
+      <div className="field-grid">
         {LIMITES.map(([clave, nombre, ayuda]) => {
           const campo = esquema.get(clave)
           return <label key={clave}>{nombre}<input type="number" min={campo?.min} max={campo?.max} value={String(form[clave])} onChange={(e) => set(clave, e.target.value === '' ? '' : Number(e.target.value))} disabled={busy}/><small>{ayuda}</small></label>

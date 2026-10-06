@@ -808,6 +808,48 @@ async function main() {
     assert.deepEqual(restablecida.body.franjasReserva, [{ desde: "07:00", hasta: "22:00" }]);
   }
 
+  // ---- Notificaciones por email (cola, preferencias y recordatorios) ----
+  {
+    const misNotificaciones = async () => {
+      const r = await preceptor.request("/notificaciones.php");
+      expectStatus(r, 200, "notificaciones propias");
+      return r.body;
+    };
+    const inicial = await misNotificaciones();
+    assert.deepEqual(inicial.preferencias.map((p) => p.tipo), ["reserva_creada", "reserva_modificada", "reserva_cancelada", "reserva_recordatorio"]);
+    assert.ok(inicial.preferencias.every((p) => p.habilitada), "por defecto todas habilitadas");
+    assert.ok(inicial.notificaciones.some((n) => n.tipo === "reserva_creada" && n.asunto.includes("Aula 208")), "la reserva creada quedó en la cola");
+    assert.ok(inicial.notificaciones.some((n) => n.tipo === "reserva_recordatorio" && n.estado === "pendiente"), "recordatorio programado para la reserva futura");
+
+    expectStatus(await preceptor.json("/notificaciones.php", "PUT", { preferencias: { inventada: true } }), 400, "tipo de notificación inexistente");
+    expectStatus(await preceptor.json("/notificaciones.php", "PUT", { preferencias: { reserva_creada: "no" } }), 400, "valor no booleano");
+    expectStatus(await preceptor.json("/notificaciones.php", "PUT", { preferencias: { reserva_creada: false } }), 200, "apaga el aviso de reserva creada");
+
+    const nueva = await preceptor.json("/reservas.php", "POST", { resourceId: aula208.id, date: enDias(12), startTime: "13:00", endTime: "14:00", quantity: 1, reason: "notificaciones" });
+    expectStatus(nueva, 201, "reserva con el aviso apagado");
+    const idNueva = nueva.body.reserva.id;
+    const trasCrear = await misNotificaciones();
+    assert.equal(trasCrear.notificaciones.filter((n) => n.tipo === "reserva_creada").length, inicial.notificaciones.filter((n) => n.tipo === "reserva_creada").length, "sin aviso de creada");
+    const recordatorios = (lista) => lista.filter((n) => n.tipo === "reserva_recordatorio" && n.estado === "pendiente").length;
+    assert.equal(recordatorios(trasCrear.notificaciones), recordatorios(inicial.notificaciones) + 1, "el recordatorio sigue habilitado");
+
+    expectStatus(await preceptor.json("/reservas.php", "PUT", { id: idNueva, startTime: "14:00", endTime: "15:00" }), 200, "cambia el horario");
+    const trasEditar = await misNotificaciones();
+    assert.ok(trasEditar.notificaciones.some((n) => n.tipo === "reserva_modificada"), "aviso de modificación");
+    assert.equal(recordatorios(trasEditar.notificaciones), recordatorios(trasCrear.notificaciones), "el recordatorio se reprograma, no se duplica");
+
+    expectStatus(await preceptor.request(`/reservas.php?id=${idNueva}`, { method: "DELETE" }), 200, "cancela la reserva");
+    const trasCancelar = await misNotificaciones();
+    assert.ok(trasCancelar.notificaciones.some((n) => n.tipo === "reserva_cancelada"), "aviso de cancelación");
+    assert.equal(recordatorios(trasCancelar.notificaciones), recordatorios(inicial.notificaciones), "el recordatorio de la cancelada se quita");
+
+    expectStatus(await preceptor.json("/notificaciones.php", "PUT", { preferencias: { reserva_creada: true } }), 200, "vuelve a habilitar el aviso");
+    expectStatus(await preceptor.request("/notificaciones.php?cola=1"), 403, "preceptor no ve la cola");
+    const cola = await admin.request("/notificaciones.php?cola=1");
+    expectStatus(cola, 200, "admin ve el estado de la cola");
+    assert.ok(cola.body.porEstado.pendiente > 0);
+  }
+
   const auditoriaReservas = await admin.request("/auditoria.php?accion=reservas.crear&limit=10");
   expectStatus(auditoriaReservas, 200, "auditoria de reservas");
   assert.ok(

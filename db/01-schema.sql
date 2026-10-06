@@ -345,6 +345,37 @@ CREATE TABLE ciclos_lectivos (
   CONSTRAINT fk_ciclo_cerrado_por FOREIGN KEY (cerrado_por) REFERENCES usuarios (id_usuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Notificaciones por email: cola (notificaciones) y tipos apagados por usuario.
+CREATE TABLE notificaciones (
+  id_notificacion INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  usuario_id INT UNSIGNED NOT NULL,
+  tipo VARCHAR(40) NOT NULL,
+  destinatario VARCHAR(255) NOT NULL,
+  asunto VARCHAR(200) NOT NULL,
+  cuerpo TEXT NOT NULL,
+  -- Evita duplicados (por ejemplo, un solo recordatorio pendiente por reserva).
+  referencia VARCHAR(80) NULL,
+  estado ENUM('pendiente','enviada','error','cancelada') NOT NULL DEFAULT 'pendiente',
+  intentos TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  ultimo_error VARCHAR(255) NULL,
+  programada_para DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  enviada_en DATETIME NULL,
+  creada_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_notificacion),
+  UNIQUE KEY uq_notif_referencia (referencia),
+  KEY idx_notif_cola (estado, programada_para),
+  KEY idx_notif_usuario (usuario_id, creada_en),
+  CONSTRAINT fk_notif_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id_usuario) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE notificacion_preferencias (
+  usuario_id INT UNSIGNED NOT NULL,
+  tipo VARCHAR(40) NOT NULL,
+  habilitada TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (usuario_id, tipo),
+  CONSTRAINT fk_notif_pref_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id_usuario) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Configuracion institucional (clave/valor). Claves, tipos y valores por
 -- defecto: includes/config.php. Solo se guardan los valores modificados.
 CREATE TABLE config_institucion (

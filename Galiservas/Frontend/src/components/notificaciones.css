@@ -1,0 +1,13 @@
+/* Notificaciones por email: preferencias e historial. Usa los tokens del tema. */
+.notificaciones { align-items: start; }
+.notificaciones__ayuda { margin: 4px 0 14px; color: var(--text-soft); font-size: 13px; }
+.notificaciones__prefs, .notificaciones__lista { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.notificaciones__switch { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 10px; color: var(--text); font-size: 14px; border-radius: 10px; cursor: pointer; }
+.notificaciones__switch:hover { background: var(--surface-2); }
+.notificaciones__switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+.notificaciones__lista li { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
+.notificaciones__lista li:last-child { border-bottom: 0; }
+.notificaciones__icono { display: grid; flex: none; place-items: center; width: 32px; height: 32px; color: var(--accent); background: var(--surface-3, var(--surface-2)); border-radius: 9px; }
+.notificaciones__texto { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 2px; }
+.notificaciones__texto b { overflow: hidden; font-size: 13.5px; text-overflow: ellipsis; white-space: nowrap; }
+.notificaciones__texto small { color: var(--text-soft); font-size: 12px; }

@@ -22,8 +22,9 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 15. `db/15-ciclos-lectivos.sql`: tabla `ciclos_lectivos` (abre el año en curso), tipos `promocion`, `repitencia` y `egreso` en `alumno_movimientos` y permiso `ciclos.promover`. Idempotente.
 16. `db/16-config-institucion.sql`: tabla `config_institucion` (clave/valor) y permiso `config.gestionar` (Administrador). Idempotente.
 17. `db/17-justificaciones.sql`: tabla `justificaciones`, estado `justificado` y columna `justificacion_id` en `asistencias`, y permiso `asistencia.justificar` (Preceptor, Administrador Académico, Administrador). Idempotente.
+18. `db/18-notificaciones.sql`: tablas `notificaciones` (cola de emails) y `notificacion_preferencias`. Idempotente.
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `18-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `19-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -441,6 +442,23 @@ Propósito: la grilla. Una fila por curso, día, módulo y grupo, con vigencia. 
 
 Únicos e índices: (`curso_id`, `dia_semana`, `franja_id`, `grupo`, `vigente_desde`); `idx_clase_docente` e `idx_clase_aula`. La API valida lo que la base no puede expresar: con vigencias superpuestas, el curso completo choca con cualquier grupo del mismo módulo, y un docente o un aula no compartida no pueden estar en dos clases en el mismo día y módulo. El horario real del colegio ya trae un caso (aula 201, jueves 17:30–19:30, 6º 4ª y 7º 3ª): se cargó tal cual y la API lo marcaría al editar esas celdas.
 
+### `notificaciones` y `notificacion_preferencias`
+
+Propósito: notificaciones por email (`db/18-notificaciones.sql`). El backend encola y el worker `cli/enviar_notificaciones.php` envía por SMTP.
+
+| Campo (`notificaciones`) | Tipo y nulabilidad | Clave | Significado |
+|---|---|---|---|
+| `id_notificacion` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
+| `usuario_id` | `INT UNSIGNED NOT NULL` | FK a `usuarios` (CASCADE) | Destinatario. |
+| `tipo` | `VARCHAR(40) NOT NULL` | | `reserva_creada`, `reserva_modificada`, `reserva_cancelada` o `reserva_recordatorio`. |
+| `destinatario`, `asunto`, `cuerpo` | `VARCHAR`/`TEXT NOT NULL` | | Mensaje ya armado (texto plano). |
+| `referencia` | `VARCHAR(80) NULL` | UNIQUE | Evita duplicados: `reserva:{id}:recordatorio`. El worker la libera al enviar. |
+| `estado` | `ENUM('pendiente','enviada','error','cancelada')` | índice con `programada_para` | Estado del envío. |
+| `intentos`, `ultimo_error` | `TINYINT`, `VARCHAR(255) NULL` | | Reintentos (máximo 5) y último error SMTP. |
+| `programada_para`, `enviada_en`, `creada_en` | `DATETIME` | | Cuándo enviarla, cuándo se envió y alta. |
+
+`notificacion_preferencias(usuario_id, tipo, habilitada)`, con PK compuesta: solo guarda los tipos que el usuario cambió; sin fila, el tipo está habilitado.
+
 ### `justificaciones`
 
 Propósito: justificación de inasistencias por rango de fechas (`db/17-justificaciones.sql`). Las ausencias del rango quedan en `asistencias.estado = 'justificado'` con `justificacion_id`. El adjunto se guarda en la base (no en el disco del backend) para que funcione con varias réplicas.
@@ -458,7 +476,7 @@ Propósito: justificación de inasistencias por rango de fechas (`db/17-justific
 
 ### `config_institucion`
 
-Propósito: configuración institucional editable por la administración (`db/16-config-institucion.sql`). Las claves válidas, sus tipos, límites y valores por defecto se definen en `Galisencia/Galileo_Auth/includes/config.php`; la tabla guarda solo los valores cambiados. Contiene las reglas de reserva de Galiservas y las de cálculo de asistencia (ver `docs/API.md`).
+Propósito: configuración institucional editable por la administración (`db/16-config-institucion.sql`). Las claves válidas, sus tipos, límites y valores por defecto se definen en `Galisencia/Galileo_Auth/includes/config.php`; la tabla guarda solo los valores cambiados. Contiene las reglas de reserva de Galiservas, las horas del recordatorio por email y las reglas de cálculo de asistencia (ver `docs/API.md`).
 
 | Campo | Tipo y nulabilidad | Clave | Significado |
 |---|---|---|---|

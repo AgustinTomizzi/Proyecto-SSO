@@ -5,6 +5,8 @@ RUN docker-php-ext-install pdo pdo_mysql
 
 # Sesion (strict mode, cookie HttpOnly/SameSite) y ocultar errores/version.
 COPY docker/php-seguridad.ini /usr/local/etc/php/conf.d/seguridad.ini
+# Apache niega includes/, config/ y cli/: solo /api es público.
+COPY docker/apache-seguridad.conf /etc/apache2/conf-enabled/galileo-seguridad.conf
 
 WORKDIR /var/www/html
 

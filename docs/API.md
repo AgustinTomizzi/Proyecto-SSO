@@ -392,6 +392,25 @@ Una justificación cubre un rango de fechas de un alumno. Al crearla, sus ausenc
 - `POST /justificaciones.php`, permiso `asistencia.justificar` (Preceptor en sus cursos, Administrador Académico, Administrador). JSON `{"alumnoId":12,"desde":"2026-06-01","hasta":"2026-06-03","motivo":"Certificado médico"}` o `multipart/form-data` con los mismos campos y `archivo` (PDF, JPG o PNG según su contenido, hasta 5 MB). Hasta 60 días por justificación y hasta 30 días por adelantado. Errores: `400` validación o tipo de adjunto, `403` alumno fuera de alcance, `409` superposición con otra justificación del alumno, `413` adjunto grande. Responde `201` con `justificacion` y `ausenciasJustificadas`. Audita `asistencia.justificar` sin el motivo.
 - `DELETE /justificaciones.php` con `{"id":7}`: misma regla de permiso y alcance. Sus asistencias vuelven a `ausente`. Audita `asistencia.justificacion_eliminar`.
 
+## Notificaciones por email
+
+El backend no envía mails: los encola en `notificaciones` y el worker `cli/enviar_notificaciones.php` (servicio `notificador`) los manda por SMTP según `SMTP_*`. Encolar nunca hace fallar la operación que lo dispara.
+
+Avisos de reservas (`reservas.php`), para el usuario de la reserva:
+
+| Tipo | Cuándo |
+|---|---|
+| `reserva_creada` | Alta (`POST`). |
+| `reserva_modificada` | `PUT` que cambia recurso, fecha, horario o cantidad de una reserva activa. |
+| `reserva_cancelada` | `DELETE`, o `PUT` a `cancelada` o `rechazada`. |
+| `reserva_recordatorio` | Programado `notificaciones.recordatorio_horas` antes del inicio (24 por defecto; `0` lo desactiva). Hay uno solo pendiente por reserva: se reprograma al cambiarla y se quita al cancelarla o finalizarla. |
+
+- `GET /notificaciones.php`: cualquier sesión. Devuelve `preferencias` (`tipo`, `etiqueta`, `habilitada`; por defecto todas habilitadas) y las últimas 30 `notificaciones` propias (`asunto`, `estado` `pendiente`/`enviada`/`error`/`cancelada`, `programadaPara`, `enviadaEn`).
+- `PUT /notificaciones.php` con `{"preferencias":{"reserva_recordatorio":false}}`: cambio parcial de las propias (`400` con un tipo inexistente o un valor no booleano). Apagar los recordatorios quita los pendientes. Audita `notificaciones.preferencias`.
+- `GET /notificaciones.php?cola=1`, permiso `config.gestionar`: `smtpConfigurado`, conteo `porEstado` y las 50 últimas con problemas (`ultimoError`, `intentos`).
+
+Worker: toma lotes de 50 con `FOR UPDATE SKIP LOCKED` (admite más de una instancia), reintenta con espera creciente (5, 10, 15… minutos) y tras 5 intentos deja la notificación en `error`.
+
 ## Configuración institucional
 
 Claves, tipos, límites y valores por defecto en `includes/config.php`; la tabla `config_institucion` guarda solo los valores modificados y se lee en cada request.
@@ -411,6 +430,8 @@ Reglas de reserva:
 | `reservas.duracion_maxima_min` | `240` (15 a 900) | Duración máxima de una reserva. |
 | `reservas.anticipacion_minima_horas` | `0` (0 a 168) | Horas mínimas entre ahora y el inicio; `0` = sin mínimo. |
 | `reservas.anticipacion_maxima_dias` | `90` (0 a 365) | Días máximos hacia adelante; `0` = sin límite. |
+
+Recordatorios: `notificaciones.recordatorio_horas` (`24`, 0 a 168): horas antes del inicio de una reserva en que se envía el recordatorio; `0` lo desactiva.
 
 Reglas de asistencia (las usan `reportes.php` e `historial_alumno.php`, que las devuelven en `reglas`):
 

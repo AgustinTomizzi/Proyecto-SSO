@@ -12,6 +12,7 @@ import { SplashScreen, StatusScreen } from './components/StatusScreen'
 import { Calendario } from './components/Calendario'
 import { ReportesReservas } from './components/ReportesReservas'
 import { ReglasReserva } from './components/ReglasReserva'
+import { Notificaciones } from './components/Notificaciones'
 import { errorReglas, fechaMaxima, resumenReglas } from './reglas'
 import { avisarCierreSesion, canAccessGaliservas, escucharCierreSesion, GALISENCIA_URL, messageOf, normalize, urlLoginGalisencia } from './utils'
 import { useTheme } from './theme'
@@ -684,6 +685,7 @@ function App() {
     ...(admin ? [{ id: 'reports' as Page, label: 'Reportes', icon: 'chart' as const }] : []),
     ...(config?.puedeEditar ? [{ id: 'rules' as Page, label: 'Reglas', icon: 'sliders' as const }] : []),
     { id: 'mine', label: 'Mis reservas', icon: 'user' }, { id: 'new', label: 'Nueva reserva', icon: 'plus' },
+    { id: 'notifications', label: 'Notificaciones', icon: 'bell' },
   ]
   const visibleReservations = page === 'mine' ? reservations.filter((item) => !item.userId || item.userId === session.user.id) : reservations
   const catalogResources = (page === 'aulas' ? resources.filter((item) => item.location !== 'Pañol') : page === 'panol' ? resources.filter((item) => item.location === 'Pañol') : resources)
@@ -734,6 +736,7 @@ function App() {
         <Calendario scope={admin ? undefined : 'mine'} admin={admin} userId={session.user.id} version={reservations}
           puedeModificar={canChange} onEditar={setEditing} onCancelar={setCancelling}/>
       </>}
+      {page === 'notifications' && <><PageHead title="Notificaciones" sub="Elegí qué avisos por email recibir sobre tus reservas."/><Notificaciones onToast={setToast}/></>}
       {page === 'rules' && config?.puedeEditar && <>
         <PageHead title="Reglas de reserva" sub="Horario habilitado por turno, duración máxima y anticipación de las reservas."/>
         <FormCard step="01" title="Reglas institucionales" description="Se aplican a todas las reservas nuevas de Galiservas.">

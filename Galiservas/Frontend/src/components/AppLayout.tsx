@@ -89,7 +89,7 @@ export function AppLayout({ session, nav, page, onNavigate, theme, onToggleTheme
             <button type="button" className="app__action-btn" onClick={onToggleTheme} title={dark ? 'Modo claro' : 'Modo oscuro'} aria-label={dark ? 'Activar modo claro' : 'Activar modo oscuro'}>
               <Icon name={dark ? 'sun' : 'moon'} size={16} />
             </button>
-            <button type="button" className="app__action-btn app__notification" title="Notificaciones" aria-label="Notificaciones"><Icon name="bell" size={16} /><span /></button>
+            <button type="button" className="app__action-btn app__notification" title="Notificaciones" aria-label="Notificaciones" onClick={() => go('notifications')}><Icon name="bell" size={16} /><span /></button>
             <div className="app__user-pill"><span className="app__avatar app__avatar--small" aria-hidden="true"><span>{initials}</span></span><span>{session.user.email}</span></div>
           </div>
         </header>

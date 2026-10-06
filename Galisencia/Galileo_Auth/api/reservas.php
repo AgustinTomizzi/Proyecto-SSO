@@ -150,6 +150,7 @@ if ($method === "POST") {
         throw $e;
     }
     registrarAuditoria("reservas.crear", "reserva", $id, array_merge($datos, ["userId" => $userId, "status" => "confirmada"]));
+    notif_reserva($id, "creada");
     api_json(["ok" => true, "reserva" => array_merge(["id" => $id, "userId" => $userId, "status" => "confirmada"], $datos)], 201);
 }
 
@@ -173,6 +174,9 @@ if ($method === "DELETE") {
     }
     $pdo->prepare("UPDATE reservations SET status = 'cancelada' WHERE id_reservation = ?")->execute([$id]);
     registrarAuditoria("reservas.cancelar", "reserva", $id, ["antes" => $actual, "despues" => ["status" => "cancelada"]]);
+    if ($actual["status"] !== "cancelada") {
+        notif_reserva($id, "cancelada");
+    }
     api_json(["ok" => true]);
 }
 
@@ -208,4 +212,17 @@ try {
     throw $e;
 }
 registrarAuditoria("reservas.editar", "reserva", $id, ["antes" => $actual, "despues" => array_merge($datos, ["status" => $status])]);
+// Aviso: cancelada o rechazada -> "cancelada"; cambio de recurso, fecha, horario
+// o cantidad -> "modificada"; completada u otro cambio de estado -> sin aviso
+// (solo se actualiza el recordatorio).
+$cambioDatos = (int) $datos["resourceId"] !== (int) $actual["resource_id"] || $datos["date"] !== $actual["reservation_date"]
+    || substr($datos["startTime"], 0, 5) !== substr($actual["start_time"], 0, 5) || substr($datos["endTime"], 0, 5) !== substr($actual["end_time"], 0, 5)
+    || (int) $datos["quantity"] !== (int) $actual["quantity"];
+if (in_array($status, ["cancelada", "rechazada"], true) && $status !== $actual["status"]) {
+    notif_reserva($id, "cancelada");
+} elseif ($cambioDatos && in_array($status, ["pendiente", "confirmada"], true)) {
+    notif_reserva($id, "modificada");
+} elseif ($status !== $actual["status"]) {
+    notif_reserva($id, null);
+}
 api_json(["ok" => true]);

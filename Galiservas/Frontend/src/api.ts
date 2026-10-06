@@ -274,3 +274,23 @@ export async function updateConfig(valores: InstitutionConfig['valores']): Promi
 export async function resetConfig(claves: string[]): Promise<InstitutionConfig> {
   return parseConfig(await request('config_institucion.php', { method: 'DELETE', body: JSON.stringify({ claves }) }))
 }
+
+export interface NotificationsData {
+  preferencias: { tipo: string, etiqueta: string, habilitada: boolean }[]
+  notificaciones: { id: string, tipo: string, asunto: string, estado: string, programadaPara: string | null, enviadaEn: string | null, creadaEn: string | null }[]
+}
+
+/** Preferencias de avisos por email e historial propio. */
+export async function getNotifications(): Promise<NotificationsData> {
+  const data = await request('notificaciones.php')
+  const lista = (value: unknown) => Array.isArray(value) ? value.map(record) : []
+  return {
+    preferencias: lista(data.preferencias).map((p) => ({ tipo: text(p.tipo), etiqueta: text(p.etiqueta), habilitada: p.habilitada === true })),
+    notificaciones: lista(data.notificaciones).map((n) => ({ id: text(n.id), tipo: text(n.tipo), asunto: text(n.asunto), estado: text(n.estado), programadaPara: text(n.programadaPara) || null, enviadaEn: text(n.enviadaEn) || null, creadaEn: text(n.creadaEn) || null })),
+  }
+}
+
+export async function updateNotificationPreferences(preferencias: Record<string, boolean>): Promise<NotificationsData['preferencias']> {
+  const data = await request('notificaciones.php', { method: 'PUT', body: JSON.stringify({ preferencias }) })
+  return (Array.isArray(data.preferencias) ? data.preferencias.map(record) : []).map((p) => ({ tipo: text(p.tipo), etiqueta: text(p.etiqueta), habilitada: p.habilitada === true }))
+}

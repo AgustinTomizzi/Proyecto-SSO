@@ -64,6 +64,44 @@ services:
       retries: 3
       start_period: 10s
 
+  # Worker de notificaciones por email: misma imagen que el backend, corre
+  # cli/enviar_notificaciones.php en bucle y envía la cola por SMTP. Por
+  # defecto usa Mailpit (abajo); en producción, SMTP_* apuntan al servidor real.
+  notificador:
+    build:
+      context: ./Galisencia/Galileo_Auth
+      dockerfile: Dockerfile
+    command: ["php", "/var/www/html/cli/enviar_notificaciones.php", "--loop"]
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - DB_HOST=mysql
+      - DB_NAME=ProyectoEstela
+      - DB_USER=${DB_APP_USER:-galileo_app}
+      - DB_PASSWORD=${DB_APP_PASSWORD:?Definí DB_APP_PASSWORD en .env (ver .env.example)}
+      - SMTP_HOST=${SMTP_HOST-mailpit}
+      - SMTP_PORT=${SMTP_PORT:-1025}
+      - SMTP_SECURE=${SMTP_SECURE:-none}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-Galileo <no-responder@galileo.edu.ar>}
+      - NOTIF_INTERVALO=${NOTIF_INTERVALO:-30}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - galisencia-network
+    restart: unless-stopped
+
+  # Solo desarrollo: buzón de prueba. Todo lo que envía el notificador queda en
+  # http://localhost:8025 (solo desde esta máquina) y no sale a Internet.
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:${MAILPIT_PUERTO:-8025}:8025"
+    networks:
+      - galisencia-network
+    restart: unless-stopped
+
   # Solo desarrollo: expone la API en http://localhost:8080 (por ejemplo para
   # `npm run dev` de Galiservas). Activar con: docker compose --profile dev up
   backend-dev-port:

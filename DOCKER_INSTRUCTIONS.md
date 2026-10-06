@@ -4,8 +4,10 @@
 
 | Servicio | Build | Puertos | Rol |
 |---|---|---|---|
-| `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` en orden (00-usuario-app → 01-schema → 02-seed → 03 → … → 17) |
+| `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` en orden (00-usuario-app → 01-schema → 02-seed → 03 → … → 18) |
 | `backend` | `Galisencia/Galileo_Auth` | interno | API JSON PHP. Se conecta con el usuario `DB_APP_USER`, no con root. Sesiones en MySQL (`SESSION_STORE=db`), así que admite varias réplicas |
+| `notificador` | `Galisencia/Galileo_Auth` (misma imagen) | interno | Worker de notificaciones por email: corre `cli/enviar_notificaciones.php --loop` y envía la cola por SMTP (`SMTP_*` en `.env`) |
+| `mailpit` | imagen `axllent/mailpit` | `127.0.0.1:${MAILPIT_PUERTO:-8025}` | Solo desarrollo: buzón de prueba donde llegan los mails del notificador; no salen a Internet |
 | `backend-dev-port` | imagen `nginx:alpine` | `127.0.0.1:8080` | Solo con `--profile dev`: expone la API para desarrollo local |
 | `frontend` | `Galisencia/Frontend` | interno | React de Galisencia servido por nginx |
 | `galiservas` | `Galiservas/Frontend` | interno | React de Galiservas (base `/galiservas/`) servido por nginx |
@@ -61,6 +63,7 @@ docker compose up --build -d
 - Galiservas: <http://localhost:3000/galiservas/>
 - API: <http://localhost:3000/api/>
 - Backend directo: <http://localhost:8080> solo con `--profile dev`
+- Mails de prueba (Mailpit): <http://localhost:8025>
 
 Las dos apps están en el mismo origen, así que comparten la cookie de sesión. El enlace lateral "Galiservas" abre `/galiservas/` y "Volver a Galisencia" abre `/`.
 
@@ -105,11 +108,17 @@ Se inyectan como `args` en el service `galiservas` del compose:
   docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < db/05-seguridad.sql
   ```
   El volumen tiene que haberse creado con la misma `MYSQL_ROOT_PASSWORD` que hay ahora en `.env`.
+- **Volumen existente y migraciones nuevas:** las migraciones de `db/` son idempotentes; para sumar las nuevas a una base que ya tiene datos, aplicarlas en orden (por ejemplo de la 13 a la 18):
+  ```bash
+  for f in db/1[3-8]-*.sql; do docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < "$f"; done
+  ```
+- **No llegan los mails:** `docker compose logs notificador`. Con `SMTP_HOST` vacío el envío está deshabilitado y las notificaciones quedan en la cola; el Administrador ve el estado en `GET /api/notificaciones.php?cola=1`.
 
 ## Notas de seguridad
 
 - No hay contraseñas en el repositorio: todas salen de `.env` (ver `.env.example`).
 - El backend usa un usuario MySQL sin permisos de DDL; root queda solo para administrar.
+- Apache solo sirve `/api`: `includes/`, `config/` y `cli/` responden `403` aunque se llegue directo al backend (`docker/apache-seguridad.conf`). El worker además se niega a correr fuera de la línea de comandos.
 - Las cuentas demo (`demo1234`) deben cambiar la contraseña en el primer ingreso.
 - No exponer el puerto de MySQL externamente en producción.
 - Considerar HTTPS/TLS para producción; con HTTPS, usar `APP_ENV=prod` y descomentar HSTS en los `nginx.conf`.
