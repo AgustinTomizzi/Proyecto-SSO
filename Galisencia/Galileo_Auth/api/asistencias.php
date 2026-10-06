@@ -55,8 +55,9 @@ if ($method === "GET") {
         $where[] = "a.usuario_id = ?";
         $params[] = $usuarioId;
     } elseif (api_rol_es("Preceptor")) {
-        $where[] = "c.preceptor_id = ?";
-        $params[] = $usuarioId;
+        [$condicion, $extra] = api_sql_curso_del_preceptor($usuarioId, "a.curso_id");
+        $where[] = $condicion;
+        array_push($params, ...$extra);
     } elseif (api_rol_es("Docente")) {
         [$condicion, $extra] = api_sql_docente_dicta($usuarioId, "a.curso_id", "asi.materia_id");
         $where[] = $condicion;
@@ -117,7 +118,7 @@ try {
             $pdo->rollBack();
             api_json(["ok" => false, "error" => "solo podes operar sobre tu propia asistencia"], 403);
         }
-    } elseif (api_rol_es("Preceptor") && (int) $alumno["preceptor_id"] !== $usuarioId) {
+    } elseif (api_rol_es("Preceptor") && !in_array((int) $alumno["curso_id"], api_cursos_del_preceptor($usuarioId), true)) {
         $pdo->rollBack();
         api_json(["ok" => false, "error" => "el alumno no pertenece a uno de tus cursos asignados"], 403);
     } elseif (api_rol_es("Docente") && !api_docente_dicta($usuarioId, $alumno["curso_id"], $materia["id"])) {

@@ -4,7 +4,7 @@
 
 | Servicio | Build | Puertos | Rol |
 |---|---|---|---|
-| `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` en orden (00-usuario-app → 01-schema → 02-seed → 03 → … → 13) |
+| `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` en orden (00-usuario-app → 01-schema → 02-seed → 03 → … → 14) |
 | `backend` | `Galisencia/Galileo_Auth` | interno | API JSON PHP. Se conecta con el usuario `DB_APP_USER`, no con root. Sesiones en MySQL (`SESSION_STORE=db`), así que admite varias réplicas |
 | `backend-dev-port` | imagen `nginx:alpine` | `127.0.0.1:8080` | Solo con `--profile dev`: expone la API para desarrollo local |
 | `frontend` | `Galisencia/Frontend` | interno | React de Galisencia servido por nginx |

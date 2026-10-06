@@ -287,6 +287,15 @@ Validaciones (`400`): día 1 a 5, grupo 0 a 2, bloque hacia abajo y de hasta 4 m
 
 Choques (`409`), solo con vigencias superpuestas: el curso completo choca con cualquier grupo del mismo módulo (y viceversa) y un grupo no puede repetirse; un docente no puede estar en dos clases en el mismo día y módulo; un aula no compartida tampoco (Playón, Campo y Patio sí admiten varias). Cada alta, edición o baja se audita como `horarios.gestionar` sobre `horario_clase` con antes/después.
 
+## Suplencias
+
+Un preceptor cubre temporalmente un curso ajeno. Mientras la suplencia está vigente (`desde <= hoy <= hasta`), el curso entra en su alcance en todos los endpoints (alumnos, asistencias, notas, historial, reportes y cursos). Permiso `suplencias.crear` (Preceptor, Administrador Académico, Administrador).
+
+- `GET /suplencias.php`: las suplencias de los últimos 30 días en adelante. El Preceptor solo ve las suyas; quien tiene `cursos.asignar` ve todas. Cada una trae `vigente`.
+- `GET /suplencias.php?catalogo=1`: los 39 cursos (con su `preceptorId` titular), los preceptores (solo para quien gestiona) y `maxDiasPreceptor`.
+- `POST /suplencias.php` con `{"cursoId":4,"desde":"2026-10-06","hasta":"2026-10-10","motivo":"Licencia"}`. Quien gestiona indica además `preceptorId`. Un Preceptor solo registra suplencias propias, que no pueden empezar en el pasado ni durar más de 30 días. Errores: `400` fechas o motivo inválidos, usuario sin rol Preceptor, curso que ya es del preceptor; `404` curso o preceptor inexistente; `409` superposición con otra suplencia del mismo preceptor en el curso. Responde `201` con `suplencia` y audita `suplencias.crear`.
+- `DELETE /suplencias.php` con `{"id":7}`: el Preceptor solo quita las suyas (`403`); quien gestiona, cualquiera. Audita `suplencias.eliminar`.
+
 ## Usuarios y roles
 
 ### Listar: **Implementada**

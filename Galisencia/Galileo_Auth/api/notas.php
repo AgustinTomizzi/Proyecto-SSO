@@ -28,8 +28,9 @@ if ($method === "GET") {
         $where[] = "a.usuario_id = ?";
         $params[] = usuarioActual();
     } elseif (api_rol_es("Preceptor")) {
-        $where[] = "c.preceptor_id = ?";
-        $params[] = usuarioActual();
+        [$condicion, $extra] = api_sql_curso_del_preceptor(usuarioActual(), "a.curso_id");
+        $where[] = $condicion;
+        array_push($params, ...$extra);
     } elseif (api_rol_es("Docente")) {
         [$condicion, $extra] = api_sql_docente_dicta(usuarioActual(), "a.curso_id", "n.materia_id");
         $where[] = $condicion;
@@ -55,7 +56,7 @@ if ($method === "POST") {
     $stmt->execute([$alumnoId]);
     $alumno = $stmt->fetch();
     if (!$alumno) api_json(["ok" => false, "error" => "alumno inexistente o inactivo"], 400);
-    if (api_rol_es("Preceptor") && (int) $alumno["preceptor_id"] !== (int) usuarioActual()) {
+    if (api_rol_es("Preceptor") && !in_array((int) $alumno["curso_id"], api_cursos_del_preceptor(usuarioActual()), true)) {
         api_json(["ok" => false, "error" => "el alumno no pertenece a uno de tus cursos"], 403);
     }
     if (api_rol_es("Docente") && !api_docente_dicta(usuarioActual(), $alumno["curso_id"], $materia["id"])) {

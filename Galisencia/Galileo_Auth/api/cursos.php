@@ -15,8 +15,9 @@ if ($method === "GET") {
     ";
     $params = [];
     if (api_rol_es("Preceptor")) {
-        $sql .= " WHERE c.preceptor_id = ?";
-        $params[] = usuarioActual();
+        [$condicion, $extra] = api_sql_curso_del_preceptor(usuarioActual(), "c.id_cursos");
+        $sql .= " WHERE " . $condicion;
+        array_push($params, ...$extra);
     } elseif (api_rol_es("Docente")) {
         $sql .= " WHERE c.id_cursos IN (SELECT hc.curso_id FROM horario_clases hc WHERE hc.docente_id = ? AND " . API_CLASE_VIGENTE . ")";
         $params[] = usuarioActual();

@@ -41,7 +41,8 @@ INSERT INTO permisos (nombre, descripcion) VALUES
   ('reservas.administrar', 'Administrar todas las reservas'),
   ('galiservas.acceder', 'Acceder al sistema Galiservas'),
   ('horarios.ver', 'Ver el horario del curso'),
-  ('horarios.gestionar', 'Cargar, reemplazar y eliminar horarios');
+  ('horarios.gestionar', 'Cargar, reemplazar y eliminar horarios'),
+  ('suplencias.crear', 'Registrar suplencias de preceptores');
 
 -- Galisencia admite todos los perfiles; Galiservas solo Preceptor, Docente y Administrador.
 INSERT INTO rol_sistema (rol_id, sistema_id)
@@ -55,7 +56,7 @@ WHERE r.nombre = 'Alumno' AND p.nombre IN ('asistencia.ver','notas.ver','horario
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Preceptor' AND p.nombre IN ('horarios.ver','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','reportes.ver','recursos.ver','reservas.ver','reservas.crear','reservas.editar','reservas.cancelar','galiservas.acceder');
+WHERE r.nombre = 'Preceptor' AND p.nombre IN ('suplencias.crear','horarios.ver','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','reportes.ver','recursos.ver','reservas.ver','reservas.crear','reservas.editar','reservas.cancelar','galiservas.acceder');
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
@@ -63,7 +64,7 @@ WHERE r.nombre = 'Directivo' AND p.nombre IN ('alumnos.ver','cursos.ver','asiste
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Administrador Academico' AND p.nombre IN ('alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','cursos.crear','cursos.asignar','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','reportes.ver','horarios.ver','horarios.gestionar');
+WHERE r.nombre = 'Administrador Academico' AND p.nombre IN ('suplencias.crear','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','cursos.crear','cursos.asignar','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','reportes.ver','horarios.ver','horarios.gestionar');
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p

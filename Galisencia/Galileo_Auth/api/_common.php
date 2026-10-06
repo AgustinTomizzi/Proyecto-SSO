@@ -306,6 +306,11 @@ function api_id_positivo($valor)
     return $id === false ? null : (int) $id;
 }
 
+/**
+ * Cursos a cargo del preceptor: los que tiene asignados más los que cubre
+ * con una suplencia vigente hoy. $bloquear toma FOR UPDATE sobre los cursos
+ * asignados (para operaciones que cambian alumnos de curso).
+ */
 function api_cursos_del_preceptor($usuarioId, $bloquear = false)
 {
     global $pdo;
@@ -315,7 +320,22 @@ function api_cursos_del_preceptor($usuarioId, $bloquear = false)
     }
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$usuarioId]);
-    return array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN));
+    $cursos = array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN));
+    $stmt = $pdo->prepare("SELECT DISTINCT curso_id FROM cursos_suplencias WHERE preceptor_id = ? AND desde <= CURDATE() AND hasta >= CURDATE()");
+    $stmt->execute([$usuarioId]);
+    return array_values(array_unique(array_merge($cursos, array_map("intval", $stmt->fetchAll(PDO::FETCH_COLUMN)))));
+}
+
+/**
+ * Condición SQL: la columna de curso es de un curso a cargo del preceptor
+ * (asignado o en suplencia vigente). Devuelve [sql, params].
+ */
+function api_sql_curso_del_preceptor($usuarioId, $columnaCurso)
+{
+    return [
+        "($columnaCurso IN (SELECT id_cursos FROM cursos WHERE preceptor_id = ?) OR $columnaCurso IN (SELECT curso_id FROM cursos_suplencias WHERE preceptor_id = ? AND desde <= CURDATE() AND hasta >= CURDATE()))",
+        [$usuarioId, $usuarioId],
+    ];
 }
 
 // ---- Alcance del Docente: lo que dicta según la grilla vigente hoy ----

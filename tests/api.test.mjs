@@ -756,6 +756,57 @@ async function main() {
     "No se registró la creación de la reserva en la auditoría"
   );
 
+  // ---- Suplencias: un preceptor cubre temporalmente un curso ajeno ----
+  {
+    const diaArg = (desplazamiento) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(Date.now() + desplazamiento * 86400000));
+    const cursosDe = async (sesion) => (await sesion.request("/cursos.php")).body.cursos.map((c) => Number(c.id)).sort((a, b) => a - b);
+    expectStatus(await alumno.request("/suplencias.php"), 403, "alumno sin acceso a suplencias");
+    expectStatus(await directivo.request("/suplencias.php"), 403, "directivo sin acceso a suplencias");
+    const antes = await cursosDe(preceptor);
+    assert.ok(!antes.includes(4), "el curso 4 no es del preceptor");
+
+    const propia = await preceptor.json("/suplencias.php", "POST", { cursoId: 4, desde: diaArg(0), hasta: diaArg(5), motivo: "Licencia de la titular" });
+    expectStatus(propia, 201, "preceptor registra su suplencia");
+    const creadas = [propia.body.suplencia.id];
+    try {
+      assert.equal(propia.body.suplencia.vigente, true);
+      assert.ok((await cursosDe(preceptor)).includes(4), "la suplencia vigente suma el curso");
+      const alumnosCubiertos = (await preceptor.request("/alumnos.php")).body.alumnos.filter((a) => Number(a.cursoId) === 4);
+      assert.ok(alumnosCubiertos.length > 0, "ve a los alumnos del curso cubierto");
+      const materias = (await preceptor.request("/materias.php")).body.materias;
+      expectStatus(await preceptor.json("/asistencias.php", "POST", { alumnoId: alumnosCubiertos[0].id, materiaId: materias[0].id, fecha: "2025-11-03", estado: "presente" }), 200, "registra asistencia en el curso cubierto");
+
+      expectStatus(await preceptor.json("/suplencias.php", "POST", { cursoId: 4, desde: diaArg(2), hasta: diaArg(3) }), 409, "suplencia superpuesta");
+      expectStatus(await preceptor.json("/suplencias.php", "POST", { cursoId: 6, desde: diaArg(0), hasta: diaArg(40) }), 400, "suplencia propia de más de 30 días");
+      expectStatus(await preceptor.json("/suplencias.php", "POST", { cursoId: 6, desde: diaArg(-3), hasta: diaArg(2) }), 400, "suplencia que empieza en el pasado");
+      expectStatus(await preceptor.json("/suplencias.php", "POST", { cursoId: 1, desde: diaArg(0), hasta: diaArg(2) }), 400, "suplencia sobre un curso propio");
+
+      const futura = await preceptor.json("/suplencias.php", "POST", { cursoId: 6, desde: diaArg(10), hasta: diaArg(12) });
+      expectStatus(futura, 201, "suplencia futura");
+      creadas.push(futura.body.suplencia.id);
+      assert.ok(!(await cursosDe(preceptor)).includes(6), "una suplencia futura todavía no da alcance");
+
+      const catalogo = await academica.request("/suplencias.php?catalogo=1");
+      expectStatus(catalogo, 200, "catálogo de suplencias para la administración");
+      assert.ok(catalogo.body.cursos.length === 39 && catalogo.body.preceptores.some((p) => Number(p.id) === 4));
+      const deGestion = await academica.json("/suplencias.php", "POST", { cursoId: 1, preceptorId: 4, desde: diaArg(0), hasta: diaArg(60) });
+      expectStatus(deGestion, 201, "la administración registra una suplencia larga para otra preceptora");
+      creadas.push(deGestion.body.suplencia.id);
+      expectStatus(await academica.json("/suplencias.php", "POST", { cursoId: 2, preceptorId: 6, desde: diaArg(0), hasta: diaArg(2) }), 400, "suplencia para alguien sin rol Preceptor");
+      const listaPreceptor = await preceptor.request("/suplencias.php");
+      assert.ok(listaPreceptor.body.suplencias.every((x) => x.preceptorId === "3"), "el preceptor solo ve las suyas");
+      expectStatus(await preceptor.json("/suplencias.php", "DELETE", { id: deGestion.body.suplencia.id }), 403, "el preceptor no quita suplencias ajenas");
+
+      const auditoriaSuplencias = await admin.request("/auditoria.php?accion=suplencias.crear&limit=10");
+      assert.ok(auditoriaSuplencias.body.registros.some((r) => r.entidadId === String(propia.body.suplencia.id)), "alta auditada");
+    } finally {
+      for (const id of creadas) {
+        expectStatus(await academica.json("/suplencias.php", "DELETE", { id }), 200, `quita la suplencia ${id}`);
+      }
+    }
+    assert.ok(!(await cursosDe(preceptor)).includes(4), "sin la suplencia vuelve a sus cursos");
+  }
+
   // ---- Re-autenticación del preceptor en acciones sensibles (alumnos) ----
   expectStatus(
     await preceptor.json("/alumnos.php", "PUT", {

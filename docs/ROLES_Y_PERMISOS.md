@@ -39,6 +39,7 @@ Los seis roles están asociados a **Galisencia**. Galiservas está asociado excl
 | `galiservas.acceder` | No | Sí | No | No | Sí | Sí |
 | `horarios.ver` | Sí | Sí | Sí | Sí | Sí | Sí |
 | `horarios.gestionar` | No | No | No | Sí | No | Sí |
+| `suplencias.crear` | No | Sí | No | Sí | No | Sí |
 
 `Administrador` recibe todos los permisos con un `CROSS JOIN`, de modo que también recibirá futuros permisos al regenerar un seed adaptado. La migración eleva `admin@galileo.edu.ar` a este rol.
 
@@ -55,6 +56,8 @@ No puede acceder a Galiservas, gestionar alumnos/cursos, tomar asistencia, carga
 Puede gestionar alumnos de cursos asignados, ver historial, tomar/corregir asistencia, consultar riesgo de sus cursos y operar reservas propias confirmadas automáticamente. Baja y cambio de curso exigen reingresar su contraseña.
 
 No puede crear/asignar cursos, cargar notas, ver reportes ajenos, administrar reservas ajenas, recursos, usuarios o auditoría. Alumnos, asistencia, notas, reportes e historial aplican alcance por `preceptor_id`.
+
+Suplencias: puede registrar las propias (hasta 30 días, sin fechas pasadas) para cubrir un curso ajeno; mientras están vigentes el curso entra en su alcance. Administración Académica y Administrador las gestionan para cualquier preceptor.
 
 ### Directivo
 
@@ -84,7 +87,7 @@ No puede violar validaciones: capacidad, solapamientos, FKs y protección del ú
 
 | Recurso | Usuario común | Administrador funcional |
 |---|---|---|
-| Alumnos de preceptor | Solo cursos con `preceptor_id` propio | Según permiso. |
+| Alumnos de preceptor | Cursos con `preceptor_id` propio y cursos con suplencia vigente | Según permiso. |
 | Cursos de preceptor | Solo asignados | Todos según permiso. |
 | Asistencia/notas | Alumno: solo lo suyo. Preceptor: sus cursos. Docente: los pares curso/materia que dicta según la grilla. Directivo y Admin. Académico: sin restricción de curso | Según permiso. |
 | Reservas | Solo `user_id` propio | Todas con `reservas.administrar`. |

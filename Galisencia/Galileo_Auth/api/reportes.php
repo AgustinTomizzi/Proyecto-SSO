@@ -48,8 +48,9 @@ if ($esAlumno) {
     $where[] = "a.usuario_id = ?";
     $params[] = $usuarioId;
 } elseif ($esPreceptor) {
-    $where[] = "c.preceptor_id = ?";
-    $params[] = $usuarioId;
+    [$condicion, $extra] = api_sql_curso_del_preceptor($usuarioId, "a.curso_id");
+    $where[] = $condicion;
+    array_push($params, ...$extra);
 } elseif ($esDocente) {
     $where[] = "a.curso_id IN (SELECT hc.curso_id FROM horario_clases hc WHERE hc.docente_id = ? AND " . API_CLASE_VIGENTE . ")";
     $params[] = $usuarioId;

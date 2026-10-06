@@ -18,8 +18,9 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 11. `db/11-alumno-usuario.sql`: `alumnos.usuario_id` (FK única a `usuarios`) con backfill por email para usuarios con rol Alumno. Idempotente.
 12. `db/12-actividad-demo.sql`: **solo demo**, no ejecutar en una instalación real. Genera, relativo a la fecha de creación de la base, 8 semanas de asistencias de cada alumno según la grilla de su curso (con tardanzas, ausencias y algunos alumnos en riesgo) y reservas de Galiservas pasadas (finalizadas) y de las tres semanas siguientes (confirmadas).
 13. `db/13-sesiones.sql`: tabla `sesiones` (sesiones PHP en la base, `SESSION_STORE=db`). Idempotente.
+14. `db/14-suplencias.sql`: tabla `cursos_suplencias` y permiso `suplencias.crear` (Preceptor, Administrador Académico, Administrador). Idempotente.
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `14-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `15-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 
@@ -435,6 +436,20 @@ Propósito: la grilla. Una fila por curso, día, módulo y grupo, con vigencia. 
 | `vigente_hasta` | `DATE NULL` | CHECK ≥ desde | Hasta cuándo; `NULL` = vigente. |
 
 Únicos e índices: (`curso_id`, `dia_semana`, `franja_id`, `grupo`, `vigente_desde`); `idx_clase_docente` e `idx_clase_aula`. La API valida lo que la base no puede expresar: con vigencias superpuestas, el curso completo choca con cualquier grupo del mismo módulo, y un docente o un aula no compartida no pueden estar en dos clases en el mismo día y módulo. El horario real del colegio ya trae un caso (aula 201, jueves 17:30–19:30, 6º 4ª y 7º 3ª): se cargó tal cual y la API lo marcaría al editar esas celdas.
+
+### `cursos_suplencias`
+
+Propósito: un preceptor cubre temporalmente un curso ajeno (`db/14-suplencias.sql`).
+
+| Campo | Tipo y nulabilidad | Clave | Significado |
+|---|---|---|---|
+| `id_suplencia` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | PK | Identificador. |
+| `curso_id` | `INT UNSIGNED NOT NULL` | FK a `cursos` (CASCADE) | Curso cubierto. |
+| `preceptor_id` | `INT UNSIGNED NOT NULL` | FK a `usuarios` (CASCADE) | Preceptor que cubre. |
+| `desde`, `hasta` | `DATE NOT NULL` | CHECK hasta ≥ desde | Período; el curso entra en su alcance solo dentro de él. |
+| `motivo` | `VARCHAR(255) NULL` | | Motivo informado. |
+| `creado_por` | `INT UNSIGNED NULL` | FK a `usuarios` (SET NULL) | Quién la registró. |
+| `creado_en` | `DATETIME NOT NULL` | | Alta. |
 
 ### `sesiones`
 
