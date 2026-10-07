@@ -26,8 +26,9 @@ La base compartida se llama `ProyectoEstela`. Para una instalación nueva, la fu
 19. `db/19-familias.sql`: rol `Tutor` (Galisencia, lectura de asistencia, notas y horarios), tabla `tutor_alumno` y permiso `tutores.gestionar`. Idempotente.
 20. `db/20-identidades-oidc.sql`: tabla `usuario_identidades` (ingreso institucional por OIDC). Idempotente.
 21. `db/21-proteccion-datos.sql`: tabla `consentimientos` y permiso `datos.exportar` (Administrador Académico, Administrador). Idempotente.
+22. `db/22-restablecer-password.sql`: permiso `usuarios.restablecer_password` (Administrador). Idempotente.
 
-Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `22-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
+Los scripts solo corren al crear el volumen de MySQL. Cada migración nueva lleva el número siguiente (la próxima es `23-...`), es idempotente y, si cambia el esquema canónico, también se refleja en `01-schema.sql` y `02-seed.sql`. `04-horarios.sql` (horario como imagen) queda como histórico: la grilla de `06` la reemplaza y la imagen pasa a solo lectura cuando la interfaz use la grilla.
 
 **Zona horaria:** cada conexión PDO fija `time_zone = '-03:00'` y el contenedor MySQL arranca con `--default-time-zone=-03:00`, así que `NOW()` y `CURDATE()` devuelven hora argentina. Las columnas `DATETIME` guardan esa hora local.
 

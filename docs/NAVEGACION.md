@@ -59,6 +59,10 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 
 Filtros por ciclo, curso, materia y situación (todos, en riesgo general o por materia). "Excel" descarga un libro con el resumen por alumno (clases, presentes, tardes, ausentes, justificadas, porcentaje y situación) y todos los registros del filtro; "CSV" baja los registros; "Imprimir / PDF" imprime en A4 el resumen por alumno con los filtros y las reglas aplicadas, sin el resto de la aplicación.
 
+### Usuarios: restablecer contraseña
+
+En "Usuarios", el Administrador tiene la columna "Contraseña" con el botón "Restablecer". Al confirmar, se genera una contraseña temporal que aparece en la fila para pasársela a la persona, que la cambia en su próximo ingreso.
+
 ### Estado del sistema
 
 El Administrador (`config.gestionar`) tiene "Estado del sistema" en el menú:

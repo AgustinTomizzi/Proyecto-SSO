@@ -344,6 +344,11 @@ Exige nombre, email válido/único, contraseña de al menos ocho caracteres (`pa
 
 Valida IDs positivos, rol y usuario existentes; actualiza y audita. Impide quitar el rol al último `Administrador` (`409`). El cambio aplica desde el siguiente request de las sesiones ya abiertas, porque el rol se relee de la base en cada request. `400`, `404` o `200`; métodos restantes `405`.
 
+**Restablecer contraseña:** `PUT /usuarios.php` con `{"accion":"restablecer_password","id":7,"passwordTemporal":"..."}` (8 a 72 caracteres), permiso `usuarios.restablecer_password` (Administrador).
+- La cuenta queda con esa contraseña temporal y `debe_cambiar_password`, así que tiene que elegir una nueva en el próximo ingreso. Sus sesiones abiertas también quedan obligadas al cambio.
+- Se borran sus intentos fallidos de ingreso.
+- Responde `400`, `404` o `200`. Audita `usuarios.restablecer_password` sin la contraseña.
+
 Los usuarios se crean solo por esta API (el formulario PHP legado se eliminó).
 
 ## Reportes

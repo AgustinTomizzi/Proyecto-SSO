@@ -47,7 +47,8 @@ INSERT INTO permisos (nombre, descripcion) VALUES
   ('config.gestionar', 'Modificar la configuracion institucional'),
   ('asistencia.justificar', 'Justificar inasistencias de alumnos'),
   ('tutores.gestionar', 'Crear cuentas de tutores y vincularlas con alumnos'),
-  ('datos.exportar', 'Exportar los datos personales de un alumno (derecho de acceso)');
+  ('datos.exportar', 'Exportar los datos personales de un alumno (derecho de acceso)'),
+  ('usuarios.restablecer_password', 'Restablecer la contrasena de un usuario');
 
 -- Galisencia admite todos los perfiles; Galiservas solo Preceptor, Docente y Administrador.
 INSERT INTO rol_sistema (rol_id, sistema_id)

@@ -1341,6 +1341,23 @@ async function main() {
     assert.ok(Array.isArray(estadoSistema.body.alertas));
   }
 
+  // ---- Restablecer contraseña (Administrador) ----
+  {
+    const cuenta = await crearUsuario("restablecer", "Docente");
+    const restablecer = (sesion, cuerpo) => sesion.json("/usuarios.php", "PUT", { accion: "restablecer_password", ...cuerpo });
+    expectStatus(await restablecer(preceptor, { id: cuenta.id, passwordTemporal: "Temporal-2026!" }), 403, "el preceptor no restablece contraseñas");
+    expectStatus(await restablecer(admin, { id: cuenta.id, passwordTemporal: "corta" }), 400, "temporal demasiado corta");
+    expectStatus(await restablecer(admin, { id: 999999, passwordTemporal: "Temporal-2026!" }), 404, "usuario inexistente");
+    expectStatus(await restablecer(admin, { id: cuenta.id, passwordTemporal: "Temporal-2026!" }), 200, "el admin restablece la contraseña");
+    expectStatus(await new PhpSession().login(cuenta.email, "demo1234"), 401, "la contraseña anterior ya no sirve");
+    const conTemporal = await new PhpSession().login(cuenta.email, "Temporal-2026!");
+    expectStatus(conTemporal, 200, "entra con la temporal");
+    assert.equal(conTemporal.body.usuario.debeCambiarPassword, true, "la temporal obliga a cambiarla");
+    const auditoriaReset = await admin.request("/auditoria.php?accion=usuarios.restablecer_password&limit=5");
+    assert.ok(auditoriaReset.body.registros.some((r) => r.entidadId === String(cuenta.id)), "restablecimiento auditado");
+    assert.ok(!JSON.stringify(auditoriaReset.body.registros).includes("Temporal-2026"), "sin la contraseña en la auditoría");
+  }
+
   expectStatus(await admin.request("/logout.php", { method: "POST" }), 200, "logout del admin");
   expectStatus(await admin.request("/usuarios.php"), 401, "sesion destruida tras logout");
 

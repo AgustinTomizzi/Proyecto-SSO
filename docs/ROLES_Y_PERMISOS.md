@@ -45,6 +45,7 @@ Los seis roles están asociados a **Galisencia**. Galiservas está asociado excl
 | `asistencia.justificar` | No | Sí | No | Sí | No | Sí | No |
 | `tutores.gestionar` | No | No | No | Sí | No | Sí | No |
 | `datos.exportar` | No | No | No | Sí | No | Sí | No |
+| `usuarios.restablecer_password` | No | No | No | No | No | Sí | No |
 
 `Administrador` recibe todos los permisos con un `CROSS JOIN`, de modo que también recibirá futuros permisos al regenerar un seed adaptado. La migración eleva `admin@galileo.edu.ar` a este rol.
 

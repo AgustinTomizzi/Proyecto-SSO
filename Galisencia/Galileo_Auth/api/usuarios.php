@@ -55,6 +55,34 @@ if ($method === "POST") {
     api_json(["ok" => true, "usuario" => ["id" => $id, "nombre" => $nombre, "apellido" => $apellido, "email" => $email, "rolId" => $rolId, "rol" => $rol]], 201);
 }
 
+if ($method === "PUT" && (api_body()["accion"] ?? "") === "restablecer_password") {
+    // Contraseña temporal elegida por el Administrador: la cuenta queda obligada
+    // a cambiarla (debe_cambiar_password); las sesiones abiertas de esa cuenta
+    // también quedan bloqueadas hasta el cambio, porque se relee en cada pedido.
+    api_requerir_permiso("usuarios.restablecer_password");
+    $d = api_body();
+    $id = (int) ($d["id"] ?? 0);
+    $temporal = (string) ($d["passwordTemporal"] ?? "");
+    if ($id <= 0 || strlen($temporal) < 8 || strlen($temporal) > 72) {
+        api_json(["ok" => false, "error" => "id y una contraseña temporal de 8 a 72 caracteres son requeridos"], 400);
+    }
+    $stmt = $pdo->prepare("UPDATE usuarios SET contrasena = ?, debe_cambiar_password = 1 WHERE id_usuario = ?");
+    $stmt->execute([password_hash($temporal, PASSWORD_DEFAULT), $id]);
+    if ($stmt->rowCount() === 0) {
+        $existe = $pdo->prepare("SELECT 1 FROM usuarios WHERE id_usuario = ?");
+        $existe->execute([$id]);
+        if (!$existe->fetchColumn()) {
+            api_json(["ok" => false, "error" => "usuario no encontrado"], 404);
+        }
+    }
+    // Se limpian los intentos fallidos para que pueda entrar con la temporal.
+    $email = $pdo->prepare("SELECT email FROM usuarios WHERE id_usuario = ?");
+    $email->execute([$id]);
+    $pdo->prepare("DELETE FROM login_intentos WHERE email = ?")->execute([(string) $email->fetchColumn()]);
+    registrarAuditoria("usuarios.restablecer_password", "usuario", $id, null);
+    api_json(["ok" => true]);
+}
+
 if ($method === "PUT") {
     api_requerir_permiso("usuarios.editar_rol");
     $d = api_body();
