@@ -1,0 +1,38 @@
+# Producción: plantilla que la imagen de nginx completa con ${DOMINIO}.
+# Puerto 80: desafío de Let's Encrypt y redirección a HTTPS.
+server {
+    listen 80;
+    server_name ${DOMINIO};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMINIO};
+
+    ssl_certificate /etc/letsencrypt/live/${DOMINIO}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMINIO}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:10m;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    include /etc/nginx/rutas.inc;
+}
+
+# Cualquier otro nombre (por ejemplo, la IP directa): se rechaza.
+server {
+    listen 80 default_server;
+    listen 443 ssl default_server;
+    server_name _;
+    ssl_certificate /etc/letsencrypt/live/${DOMINIO}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMINIO}/privkey.pem;
+    return 444;
+}

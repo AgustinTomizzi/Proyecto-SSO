@@ -1,0 +1,46 @@
+# Producción (servidor con dominio propio). Se usa junto con docker-compose.yml:
+#   docker compose -f docker-compose.yml -f deploy/produccion/compose.produccion.yml up -d --build
+# - nginx con HTTPS de Let's Encrypt para DOMINIO (plantilla nginx.conf.template).
+# - certbot renueva el certificado solo; nginx se recarga cada 6 h para tomarlo.
+# - Mailpit no corre; el envío de emails usa SMTP_* del .env (vacío = deshabilitado).
+# Ver docs/DESPLIEGUE.md.
+services:
+  proxy:
+    environment:
+      - DOMINIO=${DOMINIO:?Definí DOMINIO en .env (por ejemplo galileo-eest5.duckdns.org)}
+    # La imagen de nginx convierte las plantillas de /etc/nginx/templates con las
+    # variables de entorno; el bucle recarga nginx para tomar certificados renovados.
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["(while :; do sleep 6h; nginx -s reload; done) & exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
+    volumes: !override
+      - ./deploy/produccion/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./proxy/rutas.inc:/etc/nginx/rutas.inc:ro
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot-webroot:/var/www/certbot:ro
+    ports: !override
+      - "${PROD_HTTP_PUERTO:-80}:80"
+      - "${PROD_HTTPS_PUERTO:-443}:443"
+
+  certbot:
+    image: certbot/certbot:latest
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"]
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    networks:
+      - galisencia-network
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Buzón de prueba: no se levanta en producción.
+  mailpit:
+    profiles: ["solo-desarrollo"]
+
+volumes:
+  letsencrypt:
+  certbot-webroot:

@@ -125,6 +125,8 @@ El servicio `notificador` aplica una vez por día los plazos de retención (`ret
 
 El proxy redirige HTTP a HTTPS y agrega HSTS (`proxy/https.conf`). La redirección asume el puerto 443 estándar.
 
+Para un servidor en internet con certificado de Let's Encrypt que se renueva solo, usar el kit de `deploy/produccion/` (ver `docs/DESPLIEGUE.md`).
+
 La PWA (instalar Galisencia en el celular y su modo sin conexión) necesita HTTPS: los navegadores solo registran service workers en HTTPS o en `localhost`.
 
 ## Zona horaria

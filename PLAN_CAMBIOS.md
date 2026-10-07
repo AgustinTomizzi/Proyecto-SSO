@@ -155,5 +155,5 @@ Diseño de lo que se implementa ahora (OIDC, portal de familias, PWA y medidas t
 - **OIDC / SSO institucional** con Google o Microsoft Workspace.
 - **Portal de familias:** rol Tutor con alumnos vinculados, notificaciones de inasistencia.
 - **PWA** para que el preceptor tome asistencia desde el celular.
-- **Planes y facturación**, backups automáticos, monitoreo. *(a futuro)*
+- **Planes y facturación** *(por ahora gratis; el cobro, a futuro)*, **backups automáticos y monitoreo** (implementados: ver `DOCKER_INSTRUCTIONS.md`) y **despliegue en un servidor** (ver `docs/DESPLIEGUE.md`).
 - **Protección de datos:** revisar con un abogado la Ley 25.326 (datos de menores), política de retención y consentimiento.
