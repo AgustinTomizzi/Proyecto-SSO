@@ -126,3 +126,7 @@ Cada usuario ve y cambia solo sus propias preferencias e historial (`/notificaci
 ## Protección de datos
 
 Todos los roles tienen que aceptar la versión vigente de la política de privacidad antes de operar: el backend lo exige en cada pedido (`debe_aceptar_politica`). Cada usuario puede descargar los datos de su cuenta. Los datos de un alumno los descargan el propio alumno, sus tutores y quien tiene `datos.exportar` (Administración Académica y Administrador). Detalle en `docs/PROTECCION_DE_DATOS.md`.
+
+## Monitoreo
+
+`/api/salud.php` es público y no expone datos. El estado del sistema (`/api/estado_sistema.php` y la página "Estado del sistema") exige `config.gestionar` (Administrador).

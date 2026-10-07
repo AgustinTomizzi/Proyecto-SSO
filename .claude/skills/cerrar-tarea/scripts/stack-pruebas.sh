@@ -8,6 +8,8 @@
 cd "$(git rev-parse --show-toplevel)" || exit 1
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROYECTO="${PRUEBAS_PROYECTO:-pruebas}"
+# Backups del stack de pruebas aparte de los del stack principal.
+export BACKUP_DIR="${BACKUP_DIR:-./backups-pruebas}"
 if [ "$PROYECTO" = "galileo" ]; then echo "El proyecto de pruebas no puede ser el principal (galileo)."; exit 1; fi
 DC="docker compose -p $PROYECTO -f docker-compose.yml -f $DIR/compose.pruebas.yml"
 case "$1" in

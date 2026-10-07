@@ -1325,6 +1325,22 @@ async function main() {
     assert.ok(auditoriaExport.body.registros.every((r) => !JSON.stringify(r.detalle ?? {}).includes("dni")), "sin el contenido exportado");
   }
 
+  // ---- Monitoreo: salud pública y estado del sistema para el Administrador ----
+  {
+    const salud = await new PhpSession().request("/salud.php");
+    expectStatus(salud, 200, "salud pública sin sesión");
+    assert.deepEqual(salud.body, { ok: true }, "la salud no expone detalles");
+    expectStatus(await preceptor.request("/estado_sistema.php"), 403, "el preceptor no ve el estado del sistema");
+    expectStatus(await new PhpSession().request("/estado_sistema.php"), 401, "el estado del sistema exige sesión");
+    const estadoSistema = await admin.request("/estado_sistema.php");
+    expectStatus(estadoSistema, 200, "el administrador ve el estado del sistema");
+    for (const clave of ["base", "backup", "notificaciones", "retencion", "sesionesActivas", "alertas"]) {
+      assert.ok(clave in estadoSistema.body, `estado del sistema incluye ${clave}`);
+    }
+    assert.ok(estadoSistema.body.base.tamanioMb > 0 && estadoSistema.body.base.alumnos > 0);
+    assert.ok(Array.isArray(estadoSistema.body.alertas));
+  }
+
   expectStatus(await admin.request("/logout.php", { method: "POST" }), 200, "logout del admin");
   expectStatus(await admin.request("/usuarios.php"), 401, "sesion destruida tras logout");
 

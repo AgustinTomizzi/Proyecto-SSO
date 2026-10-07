@@ -1,6 +1,13 @@
 # Las contraseñas salen de .env (copiar .env.example y cambiarlas).
 # docker compose falla con un mensaje claro si falta alguna.
 
+# Logs de Docker acotados (10 MB x 3 por servicio) para que no llenen el disco.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   # Base de datos MySQL (única, compartida: ProyectoEstela)
   mysql:
@@ -22,6 +29,7 @@ services:
     networks:
       - galisencia-network
     restart: unless-stopped
+    logging: *logging
     healthcheck:
       # Por TCP y con el usuario de la app: solo pasa cuando terminó la inicialización.
       test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u\"$$DB_APP_USER\" -p\"$$DB_APP_PASSWORD\" -e 'SELECT 1' ProyectoEstela > /dev/null 2>&1"]
@@ -62,12 +70,16 @@ services:
       - OIDC_PRUEBA_ISSUER=${OIDC_PRUEBA_ISSUER:-}
       - OIDC_PRUEBA_CLIENT_ID=${OIDC_PRUEBA_CLIENT_ID:-}
       - OIDC_PRUEBA_CLIENT_SECRET=${OIDC_PRUEBA_CLIENT_SECRET:-}
+    # Solo lectura: el monitoreo (estado_sistema.php) lee el estado del último backup.
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups:ro
     depends_on:
       mysql:
         condition: service_healthy
     networks:
       - galisencia-network
     restart: unless-stopped
+    logging: *logging
     healthcheck:
       test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://localhost/api/login.php"]
       interval: 30s
@@ -102,6 +114,31 @@ services:
     networks:
       - galisencia-network
     restart: unless-stopped
+    logging: *logging
+
+  # Backups diarios de la base (deploy/backup/respaldar.sh): mysqldump comprimido
+  # en BACKUP_DIR (./backups), 14 diarios y 6 mensuales. Restaurar con
+  # deploy/backup/restaurar.sh. Usa la misma imagen que la base (mysqldump igual).
+  backup:
+    image: mysql:8.0
+    entrypoint: ["sh", "/respaldar.sh"]
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - DB_HOST=mysql
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?Definí MYSQL_ROOT_PASSWORD en .env (ver .env.example)}
+      - BACKUP_HORA=${BACKUP_HORA:-03:00}
+      - BACKUP_DIAS=${BACKUP_DIAS:-14}
+      - BACKUP_MESES=${BACKUP_MESES:-6}
+    volumes:
+      - ./deploy/backup/respaldar.sh:/respaldar.sh:ro
+      - ${BACKUP_DIR:-./backups}:/backups
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - galisencia-network
+    restart: unless-stopped
+    logging: *logging
 
   # Solo desarrollo: buzón de prueba. Todo lo que envía el notificador queda en
   # http://localhost:8025 (solo desde esta máquina) y no sale a Internet.
@@ -112,6 +149,7 @@ services:
     networks:
       - galisencia-network
     restart: unless-stopped
+    logging: *logging
 
   # Solo pruebas: proveedor OIDC mínimo (tools/oidc-prueba) para probar el
   # ingreso institucional sin Internet. Activar con --profile oidc-prueba y
@@ -157,6 +195,7 @@ services:
     networks:
       - galisencia-network
     restart: unless-stopped
+    logging: *logging
 
   # Frontend Galiservas, compilado con base /galiservas/. Sin puerto propio:
   # se accede por el proxy en /galiservas/.
@@ -171,6 +210,7 @@ services:
     networks:
       - galisencia-network
     restart: unless-stopped
+    logging: *logging
 
   # Único punto de entrada: / -> Galisencia, /galiservas/ -> Galiservas,
   # /api/ -> backend. Mismo origen para las dos apps, así la cookie de sesión
@@ -196,6 +236,7 @@ services:
     networks:
       - galisencia-network
     restart: unless-stopped
+    logging: *logging
 
 configs:
   backend_dev_proxy:

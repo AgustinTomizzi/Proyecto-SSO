@@ -9,6 +9,7 @@
 | `notificador` | `Galisencia/Galileo_Auth` (misma imagen) | interno | Worker de notificaciones por email: corre `cli/enviar_notificaciones.php --loop` y envía la cola por SMTP (`SMTP_*` en `.env`) |
 | `mailpit` | imagen `axllent/mailpit` | `127.0.0.1:${MAILPIT_PUERTO:-8025}` | Solo desarrollo: buzón de prueba donde llegan los mails del notificador; no salen a Internet |
 | `oidc-prueba` | imagen `node:22-alpine` + `tools/oidc-prueba` | `127.0.0.1:${OIDC_PRUEBA_PUERTO:-9100}` | Solo con `--profile oidc-prueba`: proveedor OIDC de prueba para el ingreso institucional sin Internet (ver `docs/AUTENTICACION.md`) |
+| `backup` | imagen `mysql:8.0` + `deploy/backup/respaldar.sh` | interno | Backup diario de la base (`BACKUP_HORA`) en `BACKUP_DIR`: 14 diarios y 6 mensuales |
 | `backend-dev-port` | imagen `nginx:alpine` | `127.0.0.1:8080` | Solo con `--profile dev`: expone la API para desarrollo local |
 | `frontend` | `Galisencia/Frontend` | interno | React de Galisencia servido por nginx |
 | `galiservas` | `Galiservas/Frontend` | interno | React de Galiservas (base `/galiservas/`) servido por nginx |
@@ -83,6 +84,34 @@ El proxy reparte los pedidos entre las réplicas y vuelve a resolver sus IPs sol
 Las credenciales de Google o Microsoft van en `.env` (`OIDC_*`, ver `.env.example` y `docs/AUTENTICACION.md`), junto con `APP_URL`, la URL pública con la que se registra el redirect_uri. La librería OIDC se instala con Composer al construir la imagen del backend (etapa `dependencias`), así que `vendor/` no se versiona.
 
 Para probar sin credenciales reales, usar el proveedor de prueba: en `.env` poner `OIDC_PRUEBA_ISSUER=http://oidc-prueba:9100`, `OIDC_PRUEBA_CLIENT_ID=galileo-pruebas` y `OIDC_PRUEBA_CLIENT_SECRET` con cualquier valor, y levantar con `docker compose --profile oidc-prueba up -d`. Nunca en producción: el backend lo ignora con `APP_ENV=prod`.
+
+## Backups
+
+- **Qué hace:** el servicio `backup` hace todos los días, a las `BACKUP_HORA` (03:00), un `mysqldump` consistente (`--single-transaction`) comprimido en `BACKUP_DIR/diario` (`./backups`).
+- **Cuántos conserva:** `BACKUP_DIAS` diarios (14) y `BACKUP_MESES` mensuales (6), en `mensual/`, copiados el día 1.
+- **Al arrancar:** si todavía no hay ninguno, hace uno.
+- **Estado:** el resultado queda en `BACKUP_DIR/estado.json` y se ve en "Estado del sistema".
+
+Respaldo manual:
+
+```bash
+docker compose exec backup sh /respaldar.sh --ahora
+```
+
+Restaurar (reemplaza la base; antes guarda un respaldo de seguridad en `backups/seguridad/` y pide escribir `RESTAURAR`):
+
+```bash
+bash deploy/backup/restaurar.sh backups/diario/galileo-20261007-030000.sql.gz
+docker compose restart backend notificador
+```
+
+Los backups quedan en el mismo equipo que la base. Copiarlos a otro lugar (otra PC, un disco, la nube) de vez en cuando protege ante la pérdida del equipo.
+
+## Monitoreo
+
+- **"Estado del sistema" (Administrador):** muestra el último backup, la base, el disco, la cola de emails, las sesiones activas y la retención, con alertas.
+- **Monitor externo:** `GET /api/salud.php` responde `200` o `503`. Para recibir un aviso si el sitio se cae, configurar un monitor gratuito (por ejemplo UptimeRobot, tipo HTTP(s), cada 5 minutos) apuntando a `https://<dominio>/api/salud.php`.
+- **Logs:** acotados a 10 MB × 3 por servicio (`x-logging`). Se ven con `docker compose logs -f <servicio>`.
 
 ## Retención de datos
 

@@ -59,6 +59,13 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 
 Filtros por ciclo, curso, materia y situación (todos, en riesgo general o por materia). "Excel" descarga un libro con el resumen por alumno (clases, presentes, tardes, ausentes, justificadas, porcentaje y situación) y todos los registros del filtro; "CSV" baja los registros; "Imprimir / PDF" imprime en A4 el resumen por alumno con los filtros y las reglas aplicadas, sin el resto de la aplicación.
 
+### Estado del sistema
+
+El Administrador (`config.gestionar`) tiene "Estado del sistema" en el menú:
+
+- Muestra un resumen ("Todo en orden" o las alertas) y tarjetas de último backup, base de datos, disco, emails, sesiones activas y retención.
+- Se actualiza solo cada minuto.
+
 ### Privacidad
 
 - **Antes de operar:** después del cambio de contraseña inicial, cada cuenta ve la política de privacidad y tiene que aceptarla ("Leí la política… y acepto"). Si la escuela publica una versión nueva, se vuelve a pedir. Galiservas muestra "Aceptá la política de privacidad" y deriva a Galisencia, que vuelve sola a Galiservas al aceptar.

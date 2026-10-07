@@ -22,3 +22,7 @@ graphify-out/
 
 # Dependencias PHP (Composer): se instalan en el build de la imagen.
 Galisencia/Galileo_Auth/vendor/
+
+# Backups de la base (servicio backup): nunca al repo.
+backups/
+backups-pruebas/

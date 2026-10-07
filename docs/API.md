@@ -383,6 +383,17 @@ Filtros opcionales: `usuarioId`, `entidad`, `accion`, `desde`, `hasta`, `limit`.
 
 Orden descendente. `detalle` se decodifica a JSON. Si falta la tabla devuelve `500` con instrucción de migración. Otro método: `405`.
 
+## Monitoreo
+
+- `GET /salud.php` (público, también `HEAD`): `200 {"ok":true}` si la API y la base responden y `503 {"ok":false}` si no. No expone detalles. Es la URL para monitores externos como UptimeRobot.
+- `GET /estado_sistema.php`, permiso `config.gestionar`. Devuelve:
+  - `base`: versión, tamaño en MB, alumnos activos y usuarios.
+  - `backup`: el `estado.json` del servicio backup más `horasDesdeUltimo`.
+  - `disco`: espacio de la carpeta de backups.
+  - `notificaciones`: SMTP configurado, conteo por estado y antigüedad del pendiente más viejo.
+  - `retencion.ultima` y `sesionesActivas` (actividad en los últimos 30 minutos).
+  - `alertas`: lista de textos para lo que necesita atención, por ejemplo un backup fallido o de más de un día, el disco al 90 %, emails con error o atascados, o una retención que no corrió.
+
 ## Protección de datos
 
 Ver `docs/PROTECCION_DE_DATOS.md`.
