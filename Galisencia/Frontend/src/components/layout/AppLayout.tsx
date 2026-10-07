@@ -11,6 +11,8 @@ interface NavItem {
   to: string;
   label: string;
   icon: ReactNode;
+  /** Solo se muestra con este permiso. */
+  permiso?: string;
 }
 
 const iconProps = {
@@ -58,6 +60,7 @@ const NAV: Record<Rol, NavItem[]> = {
     { to: "/reportes", label: "Reportes", icon: <IconChart /> },
     { to: "/auditoria", label: "Auditoría", icon: <IconShield /> },
     { to: "/usuarios", label: "Usuarios", icon: <IconPeople /> },
+    { to: "/admin/estado", label: "Estado del sistema", icon: <IconChart />, permiso: "config.gestionar" },
     { to: "/privacidad", label: "Privacidad", icon: <IconShield /> },
   ],
   tutor: [
@@ -97,7 +100,7 @@ export default function AppLayout() {
   if (!usuario) return null;
 
   const galiservasUrl = (import.meta as any).env?.VITE_GALISERVAS_URL ?? "/galiservas/";
-  const items = NAV[usuario.rol];
+  const items = NAV[usuario.rol].filter((item) => !item.permiso || usuario.permisos.includes(item.permiso));
   const activeItem = items.find((item) => item.to === location.pathname) ?? items[0];
   const puedeAbrirGaliservas = usuario.permisos.includes("galiservas.acceder") && usuario.sistemas.includes("Galiservas");
   const initials = iniciales(usuario.nombre);
@@ -132,7 +135,7 @@ export default function AppLayout() {
         {!collapsed && <div className="app__nav-label">Navegación</div>}
         <nav className="app__nav" aria-label="Navegación principal">
           {items.map((item) => (
-            <NavLink key={item.to} to={item.to} title={collapsed ? item.label : undefined} className={({ isActive }) => `app__nav-link${isActive ? " on" : ""}`}>
+            <NavLink key={item.to} to={item.to} end title={collapsed ? item.label : undefined} className={({ isActive }) => `app__nav-link${isActive ? " on" : ""}`}>
               <span className="app__nav-icon">{item.icon}</span>{!collapsed && <span>{item.label}</span>}
             </NavLink>
           ))}

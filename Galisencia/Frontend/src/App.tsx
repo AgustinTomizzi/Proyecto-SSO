@@ -17,6 +17,7 @@ import UsuariosPage from "./components/admin/UsuariosPage";
 import HorariosPage from "./components/horarios/HorariosPage";
 import FamiliaPage from "./components/familia/FamiliaPage";
 import PrivacidadPage from "./components/privacidad/PrivacidadPage";
+import EstadoSistemaPage from "./components/admin/EstadoSistemaPage";
 import AceptarPoliticaPage from "./components/privacidad/AceptarPoliticaPage";
 
 function RutaProtegida({
@@ -132,6 +133,10 @@ export default function App() {
             }
           />
           <Route path="/privacidad" element={<PrivacidadPage />} />
+          <Route
+            path="/admin/estado"
+            element={<RutaConPermiso permiso="config.gestionar"><EstadoSistemaPage /></RutaConPermiso>}
+          />
           <Route
             path="/familia"
             element={
