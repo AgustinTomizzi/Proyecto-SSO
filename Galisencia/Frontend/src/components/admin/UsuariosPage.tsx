@@ -4,7 +4,14 @@ import { useToast } from "../../components/ui/Toast";
 import { apiGet, apiSend } from "../../data/apiClient";
 import type { Rol } from "../../data/types";
 import { ROL_LABEL } from "../../data/types";
+import ConfirmDialog from "../ui/ConfirmDialog";
 import "./UsuariosPage.css";
+
+/** Contraseña temporal aleatoria (la cuenta la cambia en el próximo ingreso). */
+function generarTemporal(): string {
+  const alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  return Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => alfabeto[b % alfabeto.length]).join("");
+}
 
 interface Usuario {
   id: string;
@@ -28,6 +35,23 @@ export default function UsuariosPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRolId, setEditRolId] = useState<number>(0);
+  const puedeRestablecer = usuario?.permisos.includes("usuarios.restablecer_password") ?? false;
+  const [aRestablecer, setARestablecer] = useState<Usuario | null>(null);
+  const [temporales, setTemporales] = useState<Record<string, string>>({});
+
+  const restablecer = async () => {
+    if (!aRestablecer) return;
+    const temporal = generarTemporal();
+    try {
+      await apiSend("/usuarios.php", "PUT", { accion: "restablecer_password", id: aRestablecer.id, passwordTemporal: temporal });
+      setTemporales((prev) => ({ ...prev, [aRestablecer.id]: temporal }));
+      push("Contraseña restablecida: pasale la temporal a la persona");
+    } catch (err) {
+      push(err instanceof Error ? err.message : "No se pudo restablecer la contraseña", "error");
+    } finally {
+      setARestablecer(null);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -123,6 +147,7 @@ export default function UsuariosPage() {
                   <th>Email</th>
                   <th>Rol actual</th>
                   <th>Cambiar rol</th>
+                  {puedeRestablecer && <th>Contraseña</th>}
                 </tr>
               </thead>
               <tbody>
@@ -169,6 +194,15 @@ export default function UsuariosPage() {
                         </select>
                       )}
                     </td>
+                    {puedeRestablecer && (
+                      <td>
+                        {temporales[u.id] ? (
+                          <span className="text-sm">Temporal: <code>{temporales[u.id]}</code></span>
+                        ) : (
+                          <button className="btn btn-sm btn-ghost" onClick={() => setARestablecer(u)} aria-label={`Restablecer la contraseña de ${u.nombre} ${u.apellido}`}>Restablecer</button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -176,6 +210,14 @@ export default function UsuariosPage() {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        open={aRestablecer !== null}
+        title="Restablecer contraseña"
+        message={aRestablecer ? `Se genera una contraseña temporal para ${aRestablecer.email}. Su contraseña actual deja de funcionar y tiene que elegir una nueva en el próximo ingreso.` : undefined}
+        confirmLabel="Restablecer"
+        onConfirm={() => void restablecer()}
+        onCancel={() => setARestablecer(null)}
+      />
     </div>
   );
 }
