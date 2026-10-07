@@ -398,6 +398,9 @@ export default function LoginPage() {
           <p className="login__demo">
             Usuarios de demostración: contraseña <code>demo1234</code>
           </p>
+          <p className="login__demo">
+            <a href="/privacidad">Política de privacidad</a>
+          </p>
         </div>
 
         <div className="login__footer">

@@ -173,7 +173,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setCargando(false);
       return;
     }
-    if (usuario.debeCambiarPassword) return;
+    if (usuario.debeCambiarPassword || usuario.debeAceptarPolitica) return;
     let cancelled = false;
     setCargando(true);
     (async () => {

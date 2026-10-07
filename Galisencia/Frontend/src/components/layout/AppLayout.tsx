@@ -37,16 +37,19 @@ const NAV: Record<Rol, NavItem[]> = {
   alumno: [
     { to: "/alumno", label: "Mi asistencia", icon: <IconBook /> },
     { to: "/horarios", label: "Mi horario", icon: <IconCalendar /> },
+    { to: "/privacidad", label: "Privacidad", icon: <IconShield /> },
   ],
   preceptor: [
     { to: "/preceptor", label: "Registrar asistencia", icon: <IconClipboard /> },
     { to: "/horarios", label: "Horarios", icon: <IconCalendar /> },
     { to: "/reportes", label: "Reportes", icon: <IconChart /> },
+    { to: "/privacidad", label: "Privacidad", icon: <IconShield /> },
   ],
   directivo: [
     { to: "/directivo", label: "Panel institucional", icon: <IconSchool /> },
     { to: "/horarios", label: "Horarios", icon: <IconCalendar /> },
     { to: "/reportes", label: "Reportes", icon: <IconChart /> },
+    { to: "/privacidad", label: "Privacidad", icon: <IconShield /> },
   ],
   admin: [
     { to: "/admin", label: "Panel", icon: <IconChart /> },
@@ -55,10 +58,12 @@ const NAV: Record<Rol, NavItem[]> = {
     { to: "/reportes", label: "Reportes", icon: <IconChart /> },
     { to: "/auditoria", label: "Auditoría", icon: <IconShield /> },
     { to: "/usuarios", label: "Usuarios", icon: <IconPeople /> },
+    { to: "/privacidad", label: "Privacidad", icon: <IconShield /> },
   ],
   tutor: [
     { to: "/familia", label: "Familia", icon: <IconPeople /> },
     { to: "/horarios", label: "Horarios", icon: <IconCalendar /> },
+    { to: "/privacidad", label: "Privacidad", icon: <IconShield /> },
   ],
 };
 

@@ -85,6 +85,7 @@ function parseSession(data: JsonRecord): Session {
     permissions: parsePermissions(data.permisos ?? data.permissions),
     systems: parsePermissions(data.sistemas ?? data.systems),
     mustChangePassword: record(data.usuario ?? data.user).debeCambiarPassword === true,
+    mustAcceptPolicy: record(data.usuario ?? data.user).debeAceptarPolitica === true,
   }
 }
 

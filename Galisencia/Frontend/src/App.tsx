@@ -16,6 +16,8 @@ import AuditoriaPage from "./components/auditoria/AuditoriaPage";
 import UsuariosPage from "./components/admin/UsuariosPage";
 import HorariosPage from "./components/horarios/HorariosPage";
 import FamiliaPage from "./components/familia/FamiliaPage";
+import PrivacidadPage from "./components/privacidad/PrivacidadPage";
+import AceptarPoliticaPage from "./components/privacidad/AceptarPoliticaPage";
 
 function RutaProtegida({
   rol,
@@ -44,7 +46,7 @@ export default function App() {
   // Login único: si se llegó desde Galiservas (/login?next=…), volver allá
   // cuando haya sesión y no quede un cambio de contraseña pendiente.
   useEffect(() => {
-    if (!usuario || usuario.debeCambiarPassword) return;
+    if (!usuario || usuario.debeCambiarPassword || usuario.debeAceptarPolitica) return;
     const pedido = location.pathname === "/login" ? destinoSeguro(new URLSearchParams(location.search).get("next")) : null;
     const destino = pedido ?? tomarDestino();
     if (destino) window.location.assign(destino);
@@ -52,6 +54,8 @@ export default function App() {
 
   if (loading) return null;
   if (usuario?.debeCambiarPassword) return <CambiarPasswordPage />;
+  // La política de privacidad también se puede leer sin aceptarla todavía.
+  if (usuario?.debeAceptarPolitica && location.pathname !== "/privacidad") return <AceptarPoliticaPage />;
 
   return (
     <>
@@ -61,6 +65,7 @@ export default function App() {
           element={usuario ? <Navigate to={HOME[usuario.rol]} replace /> : <LoginPage />}
         />
 
+        {!usuario && <Route path="/privacidad" element={<PrivacidadPage />} />}
         <Route element={usuario ? <AppLayout /> : <Navigate to="/login" replace />}>
           <Route
             path="/alumno"
@@ -126,6 +131,7 @@ export default function App() {
               </RutaProtegida>
             }
           />
+          <Route path="/privacidad" element={<PrivacidadPage />} />
           <Route
             path="/familia"
             element={

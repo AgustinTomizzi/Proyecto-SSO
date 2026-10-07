@@ -9,6 +9,7 @@ import SuplenciasPanel from "../suplencias/SuplenciasPanel";
 import PromocionPanel from "../promocion/PromocionPanel";
 import JustificacionesPanel from "../justificaciones/JustificacionesPanel";
 import TutoresPanel from "../familia/TutoresPanel";
+import { descargarDatos } from "../privacidad/descargarDatos";
 
 type Vista = "alumnos" | "suplencias" | "justificaciones" | "familias" | "promocion";
 
@@ -21,6 +22,7 @@ export default function GestionPage() {
   const puedePromocion = usuario?.permisos.includes("ciclos.promover") ?? false;
   const puedeJustificar = usuario?.permisos.includes("asistencia.justificar") ?? false;
   const puedeFamilias = usuario?.permisos.includes("tutores.gestionar") ?? false;
+  const puedeExportar = usuario?.permisos.includes("datos.exportar") ?? false;
   const pestanas: [Vista, string][] = [
     ["alumnos", "Alumnos"],
     ...(puedeSuplencias ? [["suplencias", "Suplencias"] as [Vista, string]] : []),
@@ -107,6 +109,16 @@ export default function GestionPage() {
       push("Alumno dado de baja");
     } catch (e) {
       push(e instanceof Error ? e.message : "No se pudo dar de baja al alumno", "error");
+    }
+  };
+
+  // Derecho de acceso: descarga el JSON con los datos personales del alumno.
+  const exportarDatos = async (id: string) => {
+    try {
+      await descargarDatos(id);
+      push("Datos del alumno descargados");
+    } catch (e) {
+      push(e instanceof Error ? e.message : "No se pudieron exportar los datos", "error");
     }
   };
 
@@ -271,6 +283,11 @@ export default function GestionPage() {
                           <button className="btn btn-soft btn-sm" onClick={() => editar(a)}>
                             Editar
                           </button>
+                          {puedeExportar && (
+                            <button className="btn btn-ghost btn-sm" onClick={() => void exportarDatos(a.id)} aria-label={`Exportar los datos personales de ${a.nombre} ${a.apellido}`}>
+                              Datos
+                            </button>
+                          )}
                           <button
                             className="btn btn-danger btn-sm"
                             onClick={() => setConfirmId(a.id)}

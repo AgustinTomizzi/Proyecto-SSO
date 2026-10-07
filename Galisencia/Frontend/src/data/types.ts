@@ -22,6 +22,11 @@ export interface Usuario {
   /** Sólo tutores: sus alumnos vinculados. */
   alumnos?: AlumnoVinculado[];
   debeCambiarPassword: boolean;
+  /** Falta aceptar la versión vigente de la política de privacidad. */
+  debeAceptarPolitica: boolean;
+  versionPolitica?: string;
+  /** "oidc" si entró con Google o Microsoft. */
+  metodoIngreso?: string;
 }
 
 /** "justificado" no se carga a mano: lo pone una justificación (justificaciones.php). */

@@ -1,3 +1,4 @@
+import { apiSend } from "../data/apiClient";
 import { vaciarCola } from "../data/colaAsistencia";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Usuario } from "../data/types";
@@ -11,6 +12,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<Usuario>;
   logout: () => Promise<void>;
   cambiarPassword: (actual: string, nueva: string) => Promise<void>;
+  /** Registra la aceptación de la política de privacidad vigente. */
+  aceptarPolitica: (version: string) => Promise<void>;
   /** Error al consultar la sesión porque el servidor no respondió. */
   errorConexion: string | null;
   reintentarSesion: () => void;
@@ -84,8 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsuario(await auth.restaurarSesion());
   }
 
+  async function aceptarPolitica(version: string) {
+    await apiSend("/consentimiento.php", "POST", { version });
+    setUsuario(await auth.restaurarSesion());
+  }
+
   return (
-    <AuthContext.Provider value={{ usuario, loading, login, logout, cambiarPassword, errorConexion, reintentarSesion }}>
+    <AuthContext.Provider value={{ usuario, loading, login, logout, cambiarPassword, aceptarPolitica, errorConexion, reintentarSesion }}>
       {children}
     </AuthContext.Provider>
   );

@@ -20,7 +20,7 @@ import './App.css'
 
 const emptyForm = (): ReservationInput => ({ resourceId: '', date: hoyLocal(), start: '08:00', end: '09:00', quantity: 1, reason: '' })
 
-const stateFor = (session: Session) => !canAccessGaliservas(session) ? 'forbidden' as const : session.mustChangePassword ? 'password' as const : 'ready' as const
+const stateFor = (session: Session) => !canAccessGaliservas(session) ? 'forbidden' as const : session.mustChangePassword ? 'password' as const : session.mustAcceptPolicy ? 'policy' as const : 'ready' as const
 const canAdmin = (session: Session) => {
   const role = normalize(session.user.role)
   const permissions = session.permissions.map(normalize)
@@ -545,7 +545,7 @@ function PageHead({ title, sub, children }: { title: ReactNode, sub: string, chi
 function App() {
   const { theme, toggle: toggleTheme } = useTheme()
   const [session, setSession] = useState<Session | null>(null)
-  const [authState, setAuthState] = useState<'loading' | 'guest' | 'offline' | 'forbidden' | 'password' | 'ready'>('loading')
+  const [authState, setAuthState] = useState<'loading' | 'guest' | 'offline' | 'forbidden' | 'password' | 'policy' | 'ready'>('loading')
   const [authError, setAuthError] = useState('')
   const [page, setPage] = useState<Page>('dashboard')
   const [resources, setResources] = useState<Resource[]>([])
@@ -667,6 +667,10 @@ function App() {
   if (authState === 'forbidden') return <StatusScreen kicker="Acceso restringido" title="Tu rol no puede ingresar" actions={<a className="login__submit" href={GALISENCIA_URL}>Volver a Galisencia</a>}>
     <p>Galiservas está disponible únicamente para Preceptores, Docentes y Administradores.</p>
   </StatusScreen>
+  if (authState === 'policy') return <StatusScreen kicker="Protección de datos" title="Aceptá la política de privacidad" actions={<>
+    <a className="login__submit" href={urlLoginGalisencia()}>Leerla y aceptarla en Galisencia</a>
+    <button type="button" className="login__sso" onClick={() => void restore()}>Ya la acepté</button>
+  </>}><p>Antes de usar Galiservas tenés que aceptar la versión vigente de la política de privacidad. La aceptás en Galisencia y volvés acá automáticamente.</p></StatusScreen>
   if (authState === 'password') return <StatusScreen kicker="Contraseña inicial" title="Cambiá tu contraseña" actions={<>
     <a className="login__submit" href={urlLoginGalisencia()}>Cambiarla en Galisencia</a>
     <button type="button" className="login__sso" onClick={() => void restore()}>Ya la cambié</button>

@@ -13,6 +13,9 @@ interface BackendUser {
   curso?: string;
   alumnos?: AlumnoVinculado[];
   debeCambiarPassword?: boolean;
+  debeAceptarPolitica?: boolean;
+  versionPolitica?: string;
+  metodoIngreso?: string;
 }
 
 interface SessionResponse {
@@ -49,6 +52,9 @@ function toUser(data: SessionResponse): Usuario {
     curso: user.curso,
     alumnos: user.alumnos?.map((a) => ({ ...a, id: String(a.id), cursoId: a.cursoId === null || a.cursoId === undefined ? null : String(a.cursoId) })),
     debeCambiarPassword: Boolean(user.debeCambiarPassword),
+    debeAceptarPolitica: Boolean(user.debeAceptarPolitica),
+    versionPolitica: user.versionPolitica,
+    metodoIngreso: user.metodoIngreso,
   };
 }
 

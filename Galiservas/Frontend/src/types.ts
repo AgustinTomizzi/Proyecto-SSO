@@ -12,6 +12,8 @@ export interface Session {
   permissions: string[]
   systems: string[]
   mustChangePassword: boolean
+  /** Falta aceptar la política de privacidad (se acepta en Galisencia). */
+  mustAcceptPolicy: boolean
 }
 
 export interface Resource {
