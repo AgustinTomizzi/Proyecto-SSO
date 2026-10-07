@@ -82,6 +82,9 @@ if ($rol === "alumno") {
 if ($rol === "tutor") {
     $usuario["alumnos"] = api_alumnos_vinculados((int) $u["id_usuario"]);
 }
+[$versionPolitica, $politicaPendiente] = api_politica_pendiente((int) $u["id_usuario"]);
+$usuario["debeAceptarPolitica"] = $politicaPendiente;
+$usuario["versionPolitica"] = $versionPolitica;
 
 api_json([
     "ok" => true,

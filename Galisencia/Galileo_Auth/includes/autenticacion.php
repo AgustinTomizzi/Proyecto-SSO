@@ -73,6 +73,8 @@ function auth_iniciar_sesion(array $usuario): void
 {
     // Nuevo ID de sesión: evita la fijación de sesión.
     session_regenerate_id(true);
+    // Nada de la sesión anterior pasa a la nueva cuenta (política, método de ingreso, OIDC).
+    unset($_SESSION["politica_aceptada"], $_SESSION["auth_metodo"], $_SESSION["auth_proveedor"]);
     $_SESSION["id_usuario"] = $usuario["id_usuario"];
     $_SESSION["nombre"] = $usuario["nombre"];
     $_SESSION["apellido"] = $usuario["apellido"];

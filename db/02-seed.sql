@@ -46,7 +46,8 @@ INSERT INTO permisos (nombre, descripcion) VALUES
   ('ciclos.promover', 'Promover alumnos y cerrar el ciclo lectivo'),
   ('config.gestionar', 'Modificar la configuracion institucional'),
   ('asistencia.justificar', 'Justificar inasistencias de alumnos'),
-  ('tutores.gestionar', 'Crear cuentas de tutores y vincularlas con alumnos');
+  ('tutores.gestionar', 'Crear cuentas de tutores y vincularlas con alumnos'),
+  ('datos.exportar', 'Exportar los datos personales de un alumno (derecho de acceso)');
 
 -- Galisencia admite todos los perfiles; Galiservas solo Preceptor, Docente y Administrador.
 INSERT INTO rol_sistema (rol_id, sistema_id)
@@ -73,7 +74,7 @@ WHERE r.nombre = 'Directivo' AND p.nombre IN ('alumnos.ver','cursos.ver','asiste
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p
-WHERE r.nombre = 'Administrador Academico' AND p.nombre IN ('tutores.gestionar','asistencia.justificar','ciclos.promover','suplencias.crear','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','cursos.crear','cursos.asignar','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','reportes.ver','horarios.ver','horarios.gestionar');
+WHERE r.nombre = 'Administrador Academico' AND p.nombre IN ('datos.exportar','tutores.gestionar','asistencia.justificar','ciclos.promover','suplencias.crear','alumnos.ver','alumnos.crear','alumnos.editar','alumnos.dar_baja','cursos.ver','cursos.crear','cursos.asignar','asistencia.ver','asistencia.registrar','asistencia.editar','notas.ver','notas.crear','reportes.ver','horarios.ver','horarios.gestionar');
 
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.id_rol, p.id_permiso FROM roles r CROSS JOIN permisos p

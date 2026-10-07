@@ -59,6 +59,17 @@ La página de horarios muestra la grilla semanal con el formato de los horarios 
 
 Filtros por ciclo, curso, materia y situación (todos, en riesgo general o por materia). "Excel" descarga un libro con el resumen por alumno (clases, presentes, tardes, ausentes, justificadas, porcentaje y situación) y todos los registros del filtro; "CSV" baja los registros; "Imprimir / PDF" imprime en A4 el resumen por alumno con los filtros y las reglas aplicadas, sin el resto de la aplicación.
 
+### Privacidad
+
+- **Antes de operar:** después del cambio de contraseña inicial, cada cuenta ve la política de privacidad y tiene que aceptarla ("Leí la política… y acepto"). Si la escuela publica una versión nueva, se vuelve a pedir. Galiservas muestra "Aceptá la política de privacidad" y deriva a Galisencia, que vuelve sola a Galiservas al aceptar.
+- **"Privacidad" en el menú de todos los roles:**
+  - La política.
+  - "Descargar los datos de mi cuenta".
+  - Para el alumno, "Descargar mis datos de alumno".
+  - Para la familia, un botón por hijo.
+- **Administración:** en "Gestión académica", el botón "Datos" de cada alumno descarga sus datos personales (permiso `datos.exportar`).
+- **Política pública:** se puede leer sin sesión en `/privacidad` (enlace en el login).
+
 ### Galisencia en el celular (PWA)
 
 Galisencia se puede instalar en el celular ("Agregar a la pantalla de inicio"), con su ícono y en pantalla completa; tiene un atajo directo a "Registrar asistencia". En producción necesita HTTPS.

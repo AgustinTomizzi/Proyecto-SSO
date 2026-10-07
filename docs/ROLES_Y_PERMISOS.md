@@ -44,6 +44,7 @@ Los seis roles están asociados a **Galisencia**. Galiservas está asociado excl
 | `config.gestionar` | No | No | No | No | No | Sí | No |
 | `asistencia.justificar` | No | Sí | No | Sí | No | Sí | No |
 | `tutores.gestionar` | No | No | No | Sí | No | Sí | No |
+| `datos.exportar` | No | No | No | Sí | No | Sí | No |
 
 `Administrador` recibe todos los permisos con un `CROSS JOIN`, de modo que también recibirá futuros permisos al regenerar un seed adaptado. La migración eleva `admin@galileo.edu.ar` a este rol.
 
@@ -121,3 +122,7 @@ Excepción previa al paso 2: si la cuenta tiene `debe_cambiar_password = 1`, `_c
 ## Notificaciones por email
 
 Cada usuario ve y cambia solo sus propias preferencias e historial (`/notificaciones.php`), sin permiso extra. El estado de la cola de envío (`?cola=1`) exige `config.gestionar` (Administrador).
+
+## Protección de datos
+
+Todos los roles tienen que aceptar la versión vigente de la política de privacidad antes de operar: el backend lo exige en cada pedido (`debe_aceptar_politica`). Cada usuario puede descargar los datos de su cuenta. Los datos de un alumno los descargan el propio alumno, sus tutores y quien tiene `datos.exportar` (Administración Académica y Administrador). Detalle en `docs/PROTECCION_DE_DATOS.md`.

@@ -112,7 +112,7 @@ Se sigue `docs/AUTENTICACION.md`, con estos ajustes:
 
 ## 4.4 Protección de datos (medidas técnicas)
 
-> Esto **no reemplaza** la revisión legal. Queda marcado como borrador para que lo revise un abogado (Ley 25.326, datos de menores, inscripción de bases ante la AAIP).
+> Implementado: ver `docs/PROTECCION_DE_DATOS.md` (inventario, medidas y pendientes legales). Esto **no reemplaza** la revisión legal. Queda marcado como borrador para que lo revise un abogado (Ley 25.326, datos de menores, inscripción de bases ante la AAIP).
 
 - **Política de privacidad:** página pública `/privacidad`, con el texto en un solo archivo y marcado "Borrador sujeto a revisión legal". Cubre responsable, finalidades, datos que se tratan (con mención especial a menores y datos de salud de las justificaciones), plazos de conservación, derechos de acceso, rectificación y supresión, cómo ejercerlos y la AAIP como órgano de control.
 - **Consentimiento informado:**

@@ -15,6 +15,9 @@ if (!$usuario) {
 // Quien entró por OIDC no usa la contraseña local: no se le pide cambiarla.
 $usuario["debeCambiarPassword"] = (bool) $usuario["debe_cambiar_password"] && ($_SESSION["auth_metodo"] ?? "local") !== "oidc";
 $usuario["metodoIngreso"] = $_SESSION["auth_metodo"] ?? "local";
+[$versionPolitica, $politicaPendiente] = api_politica_pendiente((int) usuarioActual());
+$usuario["debeAceptarPolitica"] = $politicaPendiente;
+$usuario["versionPolitica"] = $versionPolitica;
 unset($usuario["debe_cambiar_password"]);
 $usuarioIdSesion = usuarioActual();
 if (strcasecmp((string) $usuario["rol"], "Alumno") === 0) {

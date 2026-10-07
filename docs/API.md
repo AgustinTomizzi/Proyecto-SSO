@@ -383,6 +383,19 @@ Filtros opcionales: `usuarioId`, `entidad`, `accion`, `desde`, `hasta`, `limit`.
 
 Orden descendente. `detalle` se decodifica a JSON. Si falta la tabla devuelve `500` con instrucción de migración. Otro método: `405`.
 
+## Protección de datos
+
+Ver `docs/PROTECCION_DE_DATOS.md`.
+
+- **Política de privacidad:** hasta aceptar la versión vigente (`privacidad.version_politica`), todos los endpoints responden `403` con `codigo: "debe_aceptar_politica"`. Se exceptúan `sesion.php`, `login.php`, `logout.php`, `cambiar_password.php`, `consentimiento.php` y los de OIDC. Si además falta cambiar la contraseña inicial, primero se pide eso (`debe_cambiar_password`). `login.php` y `sesion.php` devuelven `debeAceptarPolitica` y `versionPolitica`.
+- `GET /consentimiento.php`: `versionVigente`, `pendiente` y las `aceptaciones` propias.
+- `POST /consentimiento.php` con `{"version":"2026-1"}`: registra la aceptación (`409` con una versión que no es la vigente). Audita `privacidad.aceptar_politica`.
+- `GET /datos_personales.php?alumnoId=12`: descarga (`Content-Disposition: attachment`) el JSON con los datos del alumno: datos, cuenta, tutores, asistencias, notas, justificaciones sin el archivo y movimientos.
+  - Lo pueden pedir el permiso `datos.exportar` (Administración Académica y Administrador), el propio alumno o un tutor vinculado; el resto recibe `403`.
+  - Sin `alumnoId`, cualquier sesión descarga los datos de su cuenta: consentimientos, identidades OIDC, preferencias, avisos, reservas y alumnos vinculados.
+  - Audita `privacidad.exportar` sin el contenido.
+- **Retención:** `php cli/retencion.php`. También la corre el `notificador` una vez por día. Audita `privacidad.retencion` con la cantidad borrada.
+
 ## Ingreso institucional (OIDC)
 
 Ver `docs/AUTENTICACION.md`. Resumen:
@@ -463,6 +476,8 @@ Reglas de reserva:
 | `reservas.anticipacion_maxima_dias` | `90` (0 a 365) | Días máximos hacia adelante; `0` = sin límite. |
 
 Recordatorios: `notificaciones.recordatorio_horas` (`24`, 0 a 168): horas antes del inicio de una reserva en que se envía el recordatorio; `0` lo desactiva. `notificaciones.hora_resumen_inasistencias` (`18:00`): hora del aviso diario de inasistencias a las familias.
+
+Protección de datos: `privacidad.version_politica` (`2026-1`; texto de 1 a 20 caracteres; cambiarla vuelve a pedir la aceptación a todos) y plazos de retención `retencion.auditoria_meses` (24), `retencion.notificaciones_meses` (6), `retencion.login_intentos_dias` (30) y `retencion.adjuntos_meses` (24).
 
 Reglas de asistencia (las usan `reportes.php` e `historial_alumno.php`, que las devuelven en `reglas`):
 

@@ -12,6 +12,7 @@ if (PHP_SAPI !== "cli") {
 
 require_once __DIR__ . "/../config/database.php";
 require_once __DIR__ . "/../includes/smtp.php";
+require_once __DIR__ . "/../includes/retencion.php";
 
 const NOTIF_MAX_INTENTOS = 5;
 const NOTIF_LOTE = 50;
@@ -74,6 +75,14 @@ if ($cfg["host"] === "") {
 }
 $intervalo = max(5, (int) (getenv("NOTIF_INTERVALO") ?: 30));
 do {
+    // Una vez por día, la política de retención de datos.
+    try {
+        if (retencion_corresponde($pdo)) {
+            notif_log("retención aplicada: " . json_encode(retencion_aplicar($pdo)));
+        }
+    } catch (Throwable $e) {
+        notif_log("error al aplicar la retención: " . $e->getMessage());
+    }
     if ($cfg["host"] !== "") {
         try {
             [$ok, $errores] = notif_procesar($pdo, $cfg);

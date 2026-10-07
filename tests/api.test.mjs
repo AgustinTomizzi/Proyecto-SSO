@@ -85,6 +85,11 @@ async function login(email, role) {
     );
     password = PASSWORD_PRUEBA;
   }
+  // Protección de datos: acepta la versión vigente de la política de privacidad.
+  const estado = await session.request("/sesion.php");
+  if (estado.body?.usuario?.debeAceptarPolitica) {
+    expectStatus(await session.json("/consentimiento.php", "POST", { version: estado.body.usuario.versionPolitica }), 200, `aceptación de la política de ${email}`);
+  }
   session.password = password;
   return session;
 }
@@ -168,6 +173,11 @@ async function main() {
   const sesionDocente = await docente.request("/sesion.php");
   expectStatus(sesionDocente, 200, "sesion del docente tras el cambio");
   assert.equal(sesionDocente.body.usuario.debeCambiarPassword, false);
+  // Después del cambio de contraseña falta aceptar la política de privacidad.
+  const docenteSinPolitica = await docente.request("/cursos.php");
+  expectStatus(docenteSinPolitica, 403, "tras el cambio falta aceptar la política");
+  assert.equal(docenteSinPolitica.body.codigo, "debe_aceptar_politica");
+  expectStatus(await docente.json("/consentimiento.php", "POST", { version: sesionDocente.body.usuario.versionPolitica }), 200, "el docente acepta la política");
   assert.notEqual((await docente.request("/cursos.php")).body?.codigo, "debe_cambiar_password", "tras el cambio ya puede operar");
   expectStatus(await new PhpSession().login("docente@galileo.edu.ar", PASSWORD_DEMO), 401, "la contraseña demo ya no sirve");
 
@@ -549,6 +559,7 @@ async function main() {
     assert.equal(loginNuevo.body.usuario.debeCambiarPassword, true, "primer ingreso con cambio obligatorio");
     assert.equal(loginNuevo.body.usuario.id, String(conUsuario.body.alumno.id), "la sesión resuelve el alumno por FK");
     expectStatus(await sesionNueva.json("/cambiar_password.php", "POST", { actual: "Inicial-2026", nueva: PASSWORD_PRUEBA }), 200, "el alumno nuevo cambia su contraseña");
+    expectStatus(await sesionNueva.json("/consentimiento.php", "POST", { version: loginNuevo.body.usuario.versionPolitica }), 200, "el alumno nuevo acepta la política");
     const horarioNuevo = await sesionNueva.request("/horario_grilla.php");
     expectStatus(horarioNuevo, 200, "el alumno nuevo ve el horario de su curso");
     assert.ok(horarioNuevo.body.clases.every((c) => c.cursoId === "11"));
@@ -1157,6 +1168,9 @@ async function main() {
     assert.equal(loginNuevo.body.usuario.rol, "tutor");
     assert.equal(loginNuevo.body.usuario.debeCambiarPassword, true);
     assert.deepEqual(loginNuevo.body.usuario.alumnos.map((a) => String(a.id)), [String(ajeno.id)]);
+    expectStatus(await sesionNueva.json("/cambiar_password.php", "POST", { actual: "Inicial-2026!", nueva: PASSWORD_PRUEBA }), 200, "el tutor nuevo cambia su contraseña");
+    expectStatus(await sesionNueva.json("/consentimiento.php", "POST", { version: loginNuevo.body.usuario.versionPolitica }), 200, "el tutor nuevo acepta la política");
+    expectStatus(await sesionNueva.request(`/historial_alumno.php?id=${ajeno.id}`), 200, "con el vínculo ve a su alumno");
     const tutorNuevoId = nuevo.body.tutor.tutorId;
     expectStatus(await academica.json("/tutores.php", "DELETE", { tutorId: tutorNuevoId, alumnoId: ajeno.id }), 200, "desvincula");
     expectStatus(await academica.json("/tutores.php", "DELETE", { tutorId: tutorNuevoId, alumnoId: ajeno.id }), 404, "vínculo inexistente");
@@ -1249,6 +1263,66 @@ async function main() {
       assert.ok(auditoriaOidc.body.registros.length >= 3, "rechazos auditados");
       assert.ok(auditoriaOidc.body.registros.every((r) => !JSON.stringify(r.detalle ?? {}).includes("nadie@")), "la auditoría no guarda el email rechazado");
     }
+  }
+
+  // ---- Protección de datos: consentimiento, derecho de acceso y versión de la política ----
+  {
+    // Una cuenta nueva: primero cambia la contraseña y después tiene que aceptar la política.
+    const emailNuevo = `privacidad.${Date.now()}@familias.test`;
+    const alumnoP = (await academica.request("/alumnos.php")).body.alumnos[0];
+    expectStatus(await academica.json("/tutores.php", "POST", { alumnoId: alumnoP.id, email: emailNuevo, nombre: "Pri", apellido: "Vacidad", passwordInicial: "Inicial-2026!" }), 201, "cuenta para probar el consentimiento");
+    const nueva = new PhpSession();
+    const ingreso = await nueva.login(emailNuevo, "Inicial-2026!");
+    expectStatus(ingreso, 200, "ingreso de la cuenta nueva");
+    assert.equal(ingreso.body.usuario.debeAceptarPolitica, true);
+    expectStatus(await nueva.json("/cambiar_password.php", "POST", { actual: "Inicial-2026!", nueva: PASSWORD_PRUEBA }), 200, "cambia la contraseña inicial");
+    const bloqueada = await nueva.request("/notificaciones.php");
+    expectStatus(bloqueada, 403, "sin aceptar la política no opera");
+    assert.equal(bloqueada.body.codigo, "debe_aceptar_politica");
+    const politica = await nueva.request("/consentimiento.php");
+    expectStatus(politica, 200, "consulta la versión vigente");
+    assert.equal(politica.body.pendiente, true);
+    expectStatus(await nueva.json("/consentimiento.php", "POST", { version: "1999-1" }), 409, "aceptar una versión vieja");
+    expectStatus(await nueva.json("/consentimiento.php", "POST", { version: politica.body.versionVigente }), 200, "acepta la política");
+    expectStatus(await nueva.request("/notificaciones.php"), 200, "con la política aceptada ya opera");
+
+    // Una versión nueva de la política vuelve a pedir la aceptación.
+    expectStatus(await admin.json("/config_institucion.php", "PUT", { valores: { "privacidad.version_politica": "mala version!" } }), 400, "versión con caracteres inválidos");
+    expectStatus(await admin.json("/config_institucion.php", "PUT", { valores: { "privacidad.version_politica": "2099-1" } }), 200, "publica una versión nueva");
+    const preceptorBloqueado = await preceptor.request("/cursos.php");
+    expectStatus(preceptorBloqueado, 403, "la versión nueva vuelve a pedir la aceptación");
+    assert.equal(preceptorBloqueado.body.codigo, "debe_aceptar_politica");
+    assert.equal((await preceptor.request("/sesion.php")).body.usuario.debeAceptarPolitica, true);
+    for (const sesion of [preceptor, admin]) {
+      expectStatus(await sesion.json("/consentimiento.php", "POST", { version: "2099-1" }), 200, "acepta la versión nueva");
+    }
+    expectStatus(await preceptor.request("/cursos.php"), 200, "vuelve a operar");
+    expectStatus(await admin.json("/config_institucion.php", "DELETE", { claves: ["privacidad.version_politica"] }), 200, "vuelve a la versión por defecto");
+
+    // Derecho de acceso: exportación de datos personales.
+    const sesionAlumno = await alumno.request("/sesion.php");
+    const idPropio = sesionAlumno.body.usuario.id;
+    const propios = await alumno.request(`/datos_personales.php?alumnoId=${idPropio}`);
+    expectStatus(propios, 200, "el alumno exporta sus datos");
+    assert.match(propios.headers.get("content-disposition") ?? "", /attachment/);
+    assert.ok(Array.isArray(propios.body.asistencias) && propios.body.alumno.nombre, "incluye datos y asistencias");
+    assert.equal(propios.body.alumno.usuarioId, undefined, "sin ids internos de la cuenta");
+    const otro = (await academica.request("/alumnos.php")).body.alumnos.find((a) => String(a.id) !== String(idPropio));
+    expectStatus(await alumno.request(`/datos_personales.php?alumnoId=${otro.id}`), 403, "no exporta datos de otro alumno");
+    expectStatus(await preceptor.request(`/datos_personales.php?alumnoId=${idPropio}`), 403, "el preceptor no tiene datos.exportar");
+    const deAdministracion = await academica.request(`/datos_personales.php?alumnoId=${idPropio}`);
+    expectStatus(deAdministracion, 200, "la administración exporta");
+    assert.ok("dni" in deAdministracion.body.alumno && Array.isArray(deAdministracion.body.tutores));
+    const familiaP = await login("familia@galileo.edu.ar", "tutor");
+    expectStatus(await familiaP.request(`/datos_personales.php?alumnoId=${idPropio}`), 200, "la familia exporta los datos de su hija");
+    expectStatus(await familiaP.request(`/datos_personales.php?alumnoId=${otro.id}`), otro.id === undefined ? 400 : 403, "la familia no exporta datos ajenos");
+    const cuenta = await preceptor.request("/datos_personales.php");
+    expectStatus(cuenta, 200, "cada uno exporta los datos de su cuenta");
+    assert.equal(cuenta.body.cuenta.email, "preceptor@galileo.edu.ar");
+    assert.ok(Array.isArray(cuenta.body.reservas) && Array.isArray(cuenta.body.consentimientos));
+    const auditoriaExport = await admin.request("/auditoria.php?accion=privacidad.exportar&limit=10");
+    assert.ok(auditoriaExport.body.registros.length >= 3, "las exportaciones se auditan");
+    assert.ok(auditoriaExport.body.registros.every((r) => !JSON.stringify(r.detalle ?? {}).includes("dni")), "sin el contenido exportado");
   }
 
   expectStatus(await admin.request("/logout.php", { method: "POST" }), 200, "logout del admin");

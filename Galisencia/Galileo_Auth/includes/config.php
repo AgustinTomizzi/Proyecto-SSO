@@ -27,6 +27,11 @@ function config_esquema()
         "reservas.anticipacion_maxima_dias" => ["tipo" => "int", "min" => 0, "max" => 365, "defecto" => 90, "etiqueta" => "Anticipación máxima (días; 0 = sin límite)"],
         "notificaciones.recordatorio_horas" => ["tipo" => "int", "min" => 0, "max" => 168, "defecto" => 24, "etiqueta" => "Recordatorio antes de una reserva (horas; 0 = sin recordatorio)"],
         "notificaciones.hora_resumen_inasistencias" => ["tipo" => "hora", "defecto" => "18:00", "etiqueta" => "Hora del aviso diario de inasistencias a las familias"],
+        "privacidad.version_politica" => ["tipo" => "texto", "defecto" => "2026-1", "etiqueta" => "Versión vigente de la política de privacidad (cambiarla vuelve a pedir la aceptación)"],
+        "retencion.auditoria_meses" => ["tipo" => "int", "min" => 6, "max" => 120, "defecto" => 24, "etiqueta" => "Conservación de la auditoría (meses)"],
+        "retencion.notificaciones_meses" => ["tipo" => "int", "min" => 1, "max" => 60, "defecto" => 6, "etiqueta" => "Conservación de notificaciones enviadas o fallidas (meses)"],
+        "retencion.login_intentos_dias" => ["tipo" => "int", "min" => 1, "max" => 365, "defecto" => 30, "etiqueta" => "Conservación de intentos de ingreso (días)"],
+        "retencion.adjuntos_meses" => ["tipo" => "int", "min" => 6, "max" => 120, "defecto" => 24, "etiqueta" => "Conservación de certificados adjuntos de justificaciones (meses)"],
         "asistencia.valor_tarde_pct" => ["tipo" => "int", "min" => 0, "max" => 100, "defecto" => 50, "etiqueta" => "Valor de una llegada tarde (% de un presente)"],
         "asistencia.valor_justificado_pct" => ["tipo" => "int", "min" => 0, "max" => 100, "defecto" => 0, "etiqueta" => "Valor de una inasistencia justificada (% de un presente)"],
         "asistencia.umbral_regularidad_pct" => ["tipo" => "int", "min" => 1, "max" => 100, "defecto" => 75, "etiqueta" => "Asistencia mínima para la regularidad (%)"],
@@ -89,6 +94,11 @@ function config_validar(array $definicion, $valor)
         case "hora":
             if (!is_string($valor) || !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $valor)) {
                 return [false, "debe ser una hora HH:MM"];
+            }
+            return [true, $valor];
+        case "texto":
+            if (!is_string($valor) || !preg_match('/^[A-Za-z0-9._-]{1,20}$/', $valor)) {
+                return [false, "debe tener de 1 a 20 caracteres (letras, números, punto, guion)"];
             }
             return [true, $valor];
     }

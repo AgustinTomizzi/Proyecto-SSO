@@ -4,7 +4,7 @@
 
 | Servicio | Build | Puertos | Rol |
 |---|---|---|---|
-| `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` en orden (00-usuario-app → 01-schema → 02-seed → 03 → … → 20) |
+| `mysql` | imagen `mysql:8.0` | interno | Base única `ProyectoEstela`, inicializada con `db/` en orden (00-usuario-app → 01-schema → 02-seed → 03 → … → 21) |
 | `backend` | `Galisencia/Galileo_Auth` | interno | API JSON PHP. Se conecta con el usuario `DB_APP_USER`, no con root. Sesiones en MySQL (`SESSION_STORE=db`), así que admite varias réplicas |
 | `notificador` | `Galisencia/Galileo_Auth` (misma imagen) | interno | Worker de notificaciones por email: corre `cli/enviar_notificaciones.php --loop` y envía la cola por SMTP (`SMTP_*` en `.env`) |
 | `mailpit` | imagen `axllent/mailpit` | `127.0.0.1:${MAILPIT_PUERTO:-8025}` | Solo desarrollo: buzón de prueba donde llegan los mails del notificador; no salen a Internet |
@@ -84,6 +84,10 @@ Las credenciales de Google o Microsoft van en `.env` (`OIDC_*`, ver `.env.exampl
 
 Para probar sin credenciales reales, usar el proveedor de prueba: en `.env` poner `OIDC_PRUEBA_ISSUER=http://oidc-prueba:9100`, `OIDC_PRUEBA_CLIENT_ID=galileo-pruebas` y `OIDC_PRUEBA_CLIENT_SECRET` con cualquier valor, y levantar con `docker compose --profile oidc-prueba up -d`. Nunca en producción: el backend lo ignora con `APP_ENV=prod`.
 
+## Retención de datos
+
+El servicio `notificador` aplica una vez por día los plazos de retención (`retencion.*` en `config_institucion`). Para correrla a mano: `docker compose exec backend php /var/www/html/cli/retencion.php`. Detalle en `docs/PROTECCION_DE_DATOS.md`.
+
 ## HTTPS
 
 1. Copiar el certificado y la clave como `fullchain.pem` y `privkey.pem` en una carpeta (por defecto `proxy/certs/`, que no se versiona) o indicar otra con `TLS_CERT_DIR`.
@@ -117,9 +121,9 @@ Se inyectan como `args` en el service `galiservas` del compose:
   docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < db/05-seguridad.sql
   ```
   El volumen tiene que haberse creado con la misma `MYSQL_ROOT_PASSWORD` que hay ahora en `.env`.
-- **Volumen existente y migraciones nuevas:** las migraciones de `db/` son idempotentes; para sumar las nuevas a una base que ya tiene datos, aplicarlas en orden (por ejemplo de la 13 a la 20):
+- **Volumen existente y migraciones nuevas:** las migraciones de `db/` son idempotentes; para sumar las nuevas a una base que ya tiene datos, aplicarlas en orden (por ejemplo de la 13 a la 21):
   ```bash
-  for f in db/{1[3-9],20}-*.sql; do docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < "$f"; done
+  for f in db/{1[3-9],2[01]}-*.sql; do docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < "$f"; done
   ```
 - **No llegan los mails:** `docker compose logs notificador`. Con `SMTP_HOST` vacío el envío está deshabilitado y las notificaciones quedan en la cola; el Administrador ve el estado en `GET /api/notificaciones.php?cola=1`.
 

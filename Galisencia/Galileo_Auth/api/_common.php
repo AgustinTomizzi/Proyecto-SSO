@@ -476,3 +476,31 @@ if (
 ) {
     api_json(["ok" => false, "error" => "tenés que cambiar tu contraseña antes de continuar", "codigo" => "debe_cambiar_password"], 403);
 }
+
+/** Versión vigente de la política de privacidad y si el usuario la aceptó. */
+function api_politica_pendiente($usuarioId)
+{
+    global $pdo;
+    $version = (string) config_institucion()["privacidad.version_politica"];
+    if (($_SESSION["politica_aceptada"] ?? null) === $version) {
+        return [$version, false];
+    }
+    $stmt = $pdo->prepare("SELECT 1 FROM consentimientos WHERE usuario_id = ? AND version = ?");
+    $stmt->execute([$usuarioId, $version]);
+    if ($stmt->fetchColumn()) {
+        $_SESSION["politica_aceptada"] = $version;
+        return [$version, false];
+    }
+    return [$version, true];
+}
+
+// Protección de datos: hasta aceptar la versión vigente de la política de
+// privacidad solo se puede consultar la sesión, aceptarla, cambiar la
+// contraseña o salir (la política es pública en /privacidad).
+if (
+    estaLogueado()
+    && !in_array(basename((string) ($_SERVER["SCRIPT_NAME"] ?? "")), ["login.php", "sesion.php", "cambiar_password.php", "logout.php", "consentimiento.php", "oidc_login.php", "oidc_callback.php", "oidc_proveedores.php"], true)
+    && api_politica_pendiente((int) usuarioActual())[1]
+) {
+    api_json(["ok" => false, "error" => "tenés que aceptar la política de privacidad antes de continuar", "codigo" => "debe_aceptar_politica"], 403);
+}
